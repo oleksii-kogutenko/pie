@@ -34,11 +34,9 @@ public:
     typedef std::vector<uchar> Digest;
     typedef DigestFormatter<Digest::value_type> Formatter;
 
-    static const size_t digest_size = digestSize;
-
     DigestContext()
         : _ctx()
-        , _digest(digest_size)
+        , _digest(digestSize)
     {}
 
     void init();
