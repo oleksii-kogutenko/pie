@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
       return -1;
     }
   
-    FsIndexer fsIndexer;
+    pie::lib::FsIndexer fsIndexer;
     fsIndexer.enumerate_dir(argv[1]);
 
     return 0;

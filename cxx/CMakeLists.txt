@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(pie)
 
-add_subdirectory(lib)
+include_directories("piel", "pie")
+
+add_subdirectory(piel)
 add_subdirectory(pie)
