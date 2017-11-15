@@ -35,12 +35,30 @@ namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
 
+// Forward
+class BaseIndex;
+
+//! Filesystem indexer.
 class FsIndexer
 {
 public:
     FsIndexer();
     ~FsIndexer();
-    void enumerate_dir(const fs::path& dir) const;
+
+    //! Build filesystem index.
+    /*!
+     * \param dir indexed directory.
+     * \return an index.
+     */
+    BaseIndex build_dir_index(const fs::path& dir) const;
+
+protected:
+
+    //! Format source specification for the filesystem item.
+    //! \param item filesystem item.
+    //! \return filesystem source specification in form: 'file:\\' + item.native().
+    std::string fs_source(const fs::path& item) const;
+
 };
 
 } } // namespace piel::lib

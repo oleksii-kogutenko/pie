@@ -39,42 +39,68 @@
 
 namespace piel { namespace lib {
 
+//! \brief Checksums formatter.
+//! \param value_type Digest container value_type
+//!
+//! Usage:
+//! \code{.cpp}
+//!  std::string str;
+//!  std::for_each(digest.begin(), digest.end(), DigestFormatter(str));
+//! \endcode
+//!
 template<typename value_type> class DigestFormatter
 {
 public:
-    DigestFormatter(std::string& str)
+    //! Constructor.
+    //! \param str reference to string what will be used to store format result.
+    DigestFormatter(std::string& str)    
         : _str(str)
     {}
 
+    //! Functor called to collect checksum bytes.
+    //! \param v checksum data byte.
     void operator()(const value_type& v)
     {
         _str.append((boost::format("%1$02x") % (int)v).str());
     }
 
 private:
-    std::string& _str;
+    std::string& _str; //!< Reference to format result.
 };
 
+//! Wrapper for C data structures used by openssl library.
+//! Also wraps openssl C api used calculate checksums.
+//!
+//! \param CTX Type of the OpenSSL api context structure.
+//! \param digestSize the digest size in bytes.
 template<typename CTX, size_t digestSize> class DigestContext
 {
 public:
-    typedef unsigned char uchar;
+    typedef unsigned char uchar;                            //!< Digest data container value_type.
+    typedef std::vector<uchar> Digest;                      //!< Type of a digest data container.
+    typedef DigestFormatter<Digest::value_type> Formatter;  //!< Type of a digest formatter.
 
-    typedef std::vector<uchar> Digest;
-    typedef DigestFormatter<Digest::value_type> Formatter;
-
+    //! Constructor.
     DigestContext()
         : _ctx()
         , _digest(digestSize)
     {}
 
+    //! Init internal data.
     void init();
+
+    //! Process data block.
+    //! \param data Pointer to a data block.
+    //! \param size Data block size.
     void update(const void *data, size_t size);
+
+    //! Finalize calculations.
+    //! \return Reference to digest data container
     Digest& finalize();
 
 private:
-    Digest _digest;
-    CTX _ctx;
+    Digest _digest; //!< Digest data container.
+    CTX _ctx;       //!< OpenSSL api context structure.
 };
 
 // SHA-256
@@ -92,6 +118,8 @@ template<> DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::Digest& DigestContext
     return _digest;
 }
 
+//! Wrapper for SHA-256 checksums calculation.
+//! \sa DigestContext
 typedef DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH> Sha256Context;
 
 // SHA-1
@@ -108,6 +136,9 @@ template<> DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::Digest& DigestContext<SHA_C
     SHA1_Final(_digest.data(), &_ctx);
     return _digest;
 }
+
+//! Wrapper for SHA-1 checksums calculation.
+//! \sa DigestContext
 typedef DigestContext<SHA_CTX,SHA_DIGEST_LENGTH> ShaContext;
 
 // MD5
@@ -124,23 +155,35 @@ template<> DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::Digest& DigestContext<MD5_C
     MD5_Final(_digest.data(), &_ctx);
     return _digest;
 }
+
+//! Wrapper for MD5 checksums calculation.
+//! \sa DigestContext
 typedef DigestContext<MD5_CTX,MD5_DIGEST_LENGTH> Md5Context;
 
-template<class DigestCtx> class ChecksumDigestBuilder
+//! Upper level template class for checksums calculations.
+//!
+//! \param DigestContext The exact context type to calculate a checksums.
+//! \sa DigestContext, Sha256Context, ShaContext, Md5Context.
+template<class DigestContext> class ChecksumDigestBuilder
 {
 public:
+    //! Constructor.
     ChecksumDigestBuilder()
         : _buf(_buf_size)
         , _bad(false)
     {}
 
-    typedef typename DigestCtx::Digest Digest;
-    typedef typename DigestCtx::Formatter Formatter;
+    typedef typename DigestContext::Digest Digest;          //!< Digest container data type.
+    typedef typename DigestContext::Formatter Formatter;    //!< Digest formatter.
 
+    //! Calculate checksum for input stream data.
+    //! \param is Input stream to process.
+    //! \return Digest container.
+    //! \sa bool bad() const
     Digest digest_for(std::istream& is)
     {
         reset();
-        DigestCtx context;
+        DigestContext context;
         context.init();
         std::streamsize readed = 0;
         do {
@@ -153,15 +196,44 @@ public:
         return context.finalize();
     }
 
+    //! Calculate checksum for input stream data and return it string representation.
+    //! \param is Input stream to process.
+    //! \return Checksum value formatted as string.
+    //! \sa bool bad() const, Digest digest_for(std::istream& is), DigestFormatter
+    std::string str_digest_for(std::istream& is)
+    {
+        std::string result;
+        Formatter resultFormatter(result);
+        Digest digest = digest_for(is);
+        std::for_each(digest.begin(), digest.end(), resultFormatter);
+        return result;
+    }
+
+    //! Method will return istream.bad() after last digest_for(istream) str_digest_for(istream)
+    //! call. Must be used to check if there are no IO errors during last calculation.
+    //! \return istream.bad() result after calculations.
+    //! \sa std::istream::bad()
+    bool bad() const
+    {
+        return _bad;
+    }
+
+    //! Calculate checksum for string data.
+    //! \param string String to process.
+    //! \return Digest container.
     Digest digest_for(const std::string& string)
     {
         reset();
-        DigestCtx context;
+        DigestContext context;
         context.init();
         context.update(string.c_str(), string.size());
         return context.finalize();
     }
 
+    //! Calculate checksum for string data and return it string representation.
+    //! \param string String to process.
+    //! \return Checksum value formatted as string.
+    //! \sa Digest digest_for(const std::string& string), DigestFormatter
     std::string str_digest_for(const std::string& string)
     {
         std::string result;
@@ -171,33 +243,25 @@ public:
         return result;
     }
 
-    std::string str_digest_for(std::istream& is)
-    {
-        std::string result;
-        Formatter resultFormatter(result);
-        Digest digest = digest_for(is);
-        std::for_each(digest.begin(), digest.end(), resultFormatter);
-        return result;
-    }
-    
-    bool bad() const
-    {
-        return _bad;
-    }
-
 private:
-    
+
+    //! Reset internal state.
     void reset() {
         _bad = false;
     }
 
-    static const size_t _buf_size = 640*1024; // 640K buffer
-    std::vector<std::istream::char_type> _buf;
-    bool _bad;
+    static const size_t _buf_size = 640*1024;   //!< Size of the internal IO buffer.
+    std::vector<std::istream::char_type> _buf;  //!< Internal IO buffer.
+    bool _bad;                                  //!< Field to store istream.bad() result after calculations based on istream data.
 };
 
+//! SHA-256 checksums builder.
 typedef ChecksumDigestBuilder<Sha256Context> Sha256DigestBuilder;
+
+//! SHA-1 checksums builder.
 typedef ChecksumDigestBuilder<ShaContext> ShaDigestBuilder;
+
+//! MD-5 checksums builder.
 typedef ChecksumDigestBuilder<Md5Context> Md5DigestBuilder;
 
 } } // namespace piel::lib

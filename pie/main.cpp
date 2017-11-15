@@ -28,15 +28,23 @@
 
 #include <iostream>
 #include <fsindexer.h>
+#include <baseindex.h>
 
 int main(int argc, char **argv) {
 
+    int result = -1;
+
     if (argc < 2) {
-        return -1;
+        return result;
     }
 
-    piel::lib::FsIndexer fsIndexer;
-    fsIndexer.enumerate_dir(argv[1]);
+    piel::lib::FsIndexer fs_indexer;
+    piel::lib::BaseIndex dir_index = fs_indexer.build_dir_index(argv[1]);
 
-    return 0;
+    if (!dir_index.empty())
+    {
+        result = 0;
+    }
+
+    return result;
 }

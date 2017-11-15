@@ -27,6 +27,7 @@
  */
 
 #include <fsindexer.h>
+#include <baseindex.h>
 
 #include <boost_filesystem_ext.hpp>
 #include <checksumdigestbuilder.hpp>
@@ -34,6 +35,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
 #include <queue>
 
 namespace piel { namespace lib {
@@ -46,12 +48,21 @@ FsIndexer::~FsIndexer()
 {
 }
 
-void FsIndexer::enumerate_dir(const fs::path& dir) const
+std::string FsIndexer::fs_source(const fs::path& item) const
 {
-    Sha256DigestBuilder sha256_digest_builder;
+    return std::string("file://").append(fs::absolute(item).native());
+}
 
-    if (!is_directory(dir))
-        return;
+BaseIndex FsIndexer::build_dir_index(const fs::path& dir) const
+{
+    BaseIndex result;
+
+    if (!is_directory(dir)) {
+        BOOST_LOG_TRIVIAL(debug) << dir << " is not a directory!";
+        return result;
+    }
+
+    Sha256DigestBuilder sha256_digest_builder;
 
     std::queue<fs::path> directories;
     directories.push(dir);
@@ -59,6 +70,9 @@ void FsIndexer::enumerate_dir(const fs::path& dir) const
     while(!directories.empty()) {
         fs::path p = directories.front();
         directories.pop();
+
+        BOOST_LOG_TRIVIAL(trace) << "d " << p.generic_string();
+
         for (fs::directory_iterator i = fs::directory_iterator(p); i != fs::end(i); i++)
         {
             fs::directory_entry e = *i;
@@ -66,16 +80,26 @@ void FsIndexer::enumerate_dir(const fs::path& dir) const
             if (fs::is_symlink(e.path()))
             {
                 fs::path relative = fs::make_relative(dir, e.path());
+
+                std::string name = relative.generic_string();
                 std::string target = fs::read_symlink(e.path()).generic_string();
-                //std::cout << "s " << relative.generic_string() << " " << sha256_digest_builder.str_digest_for(target) << std::endl;
-                std::cout << relative.generic_string() << "," << sha256_digest_builder.str_digest_for(target) << std::endl;
+                std::string hash = sha256_digest_builder.str_digest_for(target);
+
+                BOOST_LOG_TRIVIAL(trace) << "s " << name << " " << hash;
+
+                result.put(name, hash, fs_source(e.path()));
             }
             else if (fs::is_regular_file(e.path()))
             {
                 fs::path relative = fs::make_relative(dir, e.path());
+
+                std::string name = relative.generic_string();
                 std::ifstream target(e.path().c_str(), std::ifstream::in|std::ifstream::binary);
-                //std::cout << "f " << relative.generic_string() << " " << sha256_digest_builder.str_digest_for(target) << std::endl;
-                std::cout << relative.generic_string() << "," << sha256_digest_builder.str_digest_for(target) << std::endl;
+                std::string hash = sha256_digest_builder.str_digest_for(target);
+
+                BOOST_LOG_TRIVIAL(trace) << "f " << name << " " << hash << std::endl;
+
+                result.put(name, hash, fs_source(e.path()));
             }
             else if (fs::is_directory(e.path()))
             {
