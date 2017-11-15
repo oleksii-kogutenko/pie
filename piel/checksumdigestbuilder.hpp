@@ -37,7 +37,7 @@
 #include <algorithm>
 #include <boost/format.hpp>
 
-namespace pie { namespace lib {
+namespace piel { namespace lib {
 
 template<typename value_type> class DigestFormatter
 {
@@ -200,6 +200,6 @@ typedef ChecksumDigestBuilder<Sha256Context> Sha256DigestBuilder;
 typedef ChecksumDigestBuilder<ShaContext> ShaDigestBuilder;
 typedef ChecksumDigestBuilder<Md5Context> Md5DigestBuilder;
 
-} }; // pie::lib
+} } // namespace piel::lib
 
 #endif // CHECKSUM_DIGEST_BUILDER_HPP

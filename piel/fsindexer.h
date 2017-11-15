@@ -31,19 +31,18 @@
 
 #include <boost/filesystem.hpp>
 
-namespace pie { namespace lib {
+namespace piel { namespace lib {
+
+namespace fs = boost::filesystem;
 
 class FsIndexer
 {
 public:
-  FsIndexer();
-
-  ~FsIndexer();
-  
-  void enumerate_dir(const boost::filesystem::path& dir) const;
-  
+    FsIndexer();
+    ~FsIndexer();
+    void enumerate_dir(const fs::path& dir) const;
 };
 
-} } // pie::lib
+} } // namespace piel::lib
 
 #endif // FSINDEXER_H

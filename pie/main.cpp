@@ -27,15 +27,15 @@
  */
 
 #include <iostream>
-#include <FsIndexer.h>
+#include <fsindexer.h>
 
 int main(int argc, char **argv) {
-  
+
     if (argc < 2) {
       return -1;
     }
-  
-    pie::lib::FsIndexer fsIndexer;
+
+    piel::lib::FsIndexer fsIndexer;
     fsIndexer.enumerate_dir(argv[1]);
 
     return 0;
