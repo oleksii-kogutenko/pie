@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017, <copyright holder> <email>
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -12,7 +12,7 @@
  *     * Neither the name of the <organization> nor the
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY <copyright holder> <email> ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,7 +23,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 #ifndef CHECKSUM_DIGEST_BUILDER_HPP
@@ -129,9 +129,9 @@ typedef DigestContext<MD5_CTX,MD5_DIGEST_LENGTH> Md5Context;
 template<class DigestCtx> class ChecksumDigestBuilder
 {
 public:
-    ChecksumDigestBuilder() 
-      : _buf(_buf_size)
-      , _bad(false)
+    ChecksumDigestBuilder()
+        : _buf(_buf_size)
+        , _bad(false)
     {}
 
     typedef typename DigestCtx::Digest Digest;
@@ -149,7 +149,7 @@ public:
                 context.update(_buf.data(), readed);
             }
         } while(!is.eof() & !is.fail() & !is.bad());
-	_bad = is.bad();
+        _bad = is.bad();
         return context.finalize();
     }
 
@@ -178,7 +178,7 @@ public:
         Digest digest = digest_for(is);
         std::for_each(digest.begin(), digest.end(), resultFormatter);
         return result;
-    }    
+    }
     
     bool bad() const
     {
@@ -188,9 +188,9 @@ public:
 private:
     
     void reset() {
-	_bad = false;
+        _bad = false;
     }
-  
+
     static const size_t _buf_size = 640*1024; // 640K buffer
     std::vector<std::istream::char_type> _buf;
     bool _bad;
