@@ -34,20 +34,27 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace piel { namespace lib {
 
+////////////////////////////////////////////////////////////////////////////////
+//! File constants.
+struct DigestConstants {
+    static const size_t _buf_size = 640*1024;   //!< Size of the internal IO buffers.
+};
+
+////////////////////////////////////////////////////////////////////////////////
 //! \brief Checksums formatter.
 //! \param value_type Digest container value_type
-//!
 //! Usage:
 //! \code{.cpp}
 //!  std::string str;
 //!  std::for_each(digest.begin(), digest.end(), DigestFormatter(str));
 //! \endcode
-//!
 template<typename value_type> class DigestFormatter
 {
 public:
@@ -68,18 +75,49 @@ private:
     std::string& _str; //!< Reference to format result.
 };
 
-//! Wrapper for C data structures used by openssl library.
-//! Also wraps openssl C api used calculate checksums.
-//!
-//! \param CTX Type of the OpenSSL api context structure.
-//! \param digestSize the digest size in bytes.
-template<typename CTX, size_t digestSize> class DigestContext
-{
-public:
+////////////////////////////////////////////////////////////////////////////////
+//! Interface of C api & data structures wrappers which are used for work with
+//! OpenSSL library.
+struct IDigestContext {
     typedef unsigned char uchar;                            //!< Digest data container value_type.
     typedef std::vector<uchar> Digest;                      //!< Type of a digest data container.
     typedef DigestFormatter<Digest::value_type> Formatter;  //!< Type of a digest formatter.
 
+    //! Init internal data.
+    virtual void init() = 0;
+
+    //! Process data block.
+    //! \param data Pointer to a data block.
+    //! \param size Data block size.
+    virtual void update(const void *data, size_t size) = 0;
+
+    //! Finalize calculations.
+    //! \return Reference to digest data container
+    virtual Digest& finalize() = 0;
+
+    //! Get checksum name.
+    //! \return Checksum name.
+    virtual std::string name() = 0;
+
+    //! Format digest string.
+    //! \return Digest string representation.
+    static std::string format(const Digest& digest) {
+        std::string result;
+        Formatter resultFormatter(result);
+        std::for_each(digest.begin(), digest.end(), resultFormatter);
+        return result;
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//! Template for wrappers of C api & data structures used by OpenSSL library for
+//! calculating checksums.
+//! \param CTX Type of the OpenSSL api context structure.
+//! \param digestSize the digest size in bytes.
+template<typename CTX, size_t digestSize> class DigestContext
+        : public IDigestContext
+{
+public:
     //! Constructor.
     DigestContext()
         : _ctx()
@@ -98,68 +136,118 @@ public:
     //! \return Reference to digest data container
     Digest& finalize();
 
+    //! Get checksum name.
+    //! \return Checksum name.
+    std::string name();
+
 private:
     Digest _digest; //!< Digest data container.
     CTX _ctx;       //!< OpenSSL api context structure.
 };
 
-// SHA-256
+////////////////////////////////////////////////////////////////////////////////
+//! SHA-256 specialization.
+//! \sa void DigestContext::init()
 template<> void DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::init()
 {
     SHA256_Init(&_ctx);
 }
+
+//! SHA-256 specialization.
+//! \sa void DigestContext::update(const void *data, size_t size)
 template<> void DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::update(const void *data, size_t size)
 {
     SHA256_Update(&_ctx, data, size);
 }
+
+//! SHA-256 specialization.
+//! \sa DigestContext::Digest DigestContext::finalize()
 template<> DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::Digest& DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::finalize()
 {
     SHA256_Final(_digest.data(), &_ctx);
     return _digest;
 }
 
-//! Wrapper for SHA-256 checksums calculation.
+//! SHA-256 specialization.
+//! \sa std::string DigestContext::name() const
+template<> std::string DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::name()
+{
+    return "SHA-256";
+}
+
+//! Type of OpenSSL api wrapper for SHA-256 checksums calculation.
 //! \sa DigestContext
 typedef DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH> Sha256Context;
 
-// SHA-1
+////////////////////////////////////////////////////////////////////////////////
+//! SHA-1 specialization.
+//! \sa void DigestContext::init()
 template<> void DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::init()
 {
     SHA1_Init(&_ctx);
 }
+
+//! SHA1 specialization.
+//! \sa void DigestContext::update(const void *data, size_t size)
 template<> void DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::update(const void *data, size_t size)
 {
     SHA1_Update(&_ctx, data, size);
 }
+
+//! SHA1 specialization.
+//! \sa DigestContext::Digest DigestContext::finalize()
 template<> DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::Digest& DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::finalize()
 {
     SHA1_Final(_digest.data(), &_ctx);
     return _digest;
 }
 
-//! Wrapper for SHA-1 checksums calculation.
+//! SHA-1 specialization.
+//! \sa std::string DigestContext::name() const
+template<> std::string DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::name()
+{
+    return "SHA-1";
+}
+
+//! Type of OpenSSL api wrapper for SHA-1 checksums calculation.
 //! \sa DigestContext
 typedef DigestContext<SHA_CTX,SHA_DIGEST_LENGTH> ShaContext;
 
-// MD5
+////////////////////////////////////////////////////////////////////////////////
+//! MD5 specialization.
+//! \sa void DigestContext::init()
 template<> void DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::init()
 {
     MD5_Init(&_ctx);
 }
+
+////! MD5 specialization.
+////! \sa void DigestContext::update(const void *data, size_t size)
 template<> void DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::update(const void *data, size_t size)
 {
     MD5_Update(&_ctx, data, size);
 }
+
+////! MD5 specialization.
+////! \sa DigestContext::Digest DigestContext::finalize()
 template<> DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::Digest& DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::finalize()
 {
     MD5_Final(_digest.data(), &_ctx);
     return _digest;
 }
 
-//! Wrapper for MD5 checksums calculation.
-//! \sa DigestContext
+////! SHA-1 specialization.
+////! \sa std::string DigestContext::name() const
+template<> std::string DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::name()
+{
+    return "MD5";
+}
+
+////! Type of OpenSSL api wrapper for MD5 checksums calculation.
+////! \sa DigestContext
 typedef DigestContext<MD5_CTX,MD5_DIGEST_LENGTH> Md5Context;
 
+////////////////////////////////////////////////////////////////////////////////
 //! Upper level template class for checksums calculations.
 //!
 //! \param DigestContext The exact context type to calculate a checksums.
@@ -169,7 +257,7 @@ template<class DigestContext> class ChecksumDigestBuilder
 public:
     //! Constructor.
     ChecksumDigestBuilder()
-        : _buf(_buf_size)
+        : _buf(DigestConstants::_buf_size)
         , _bad(false)
     {}
 
@@ -202,11 +290,7 @@ public:
     //! \sa bool bad() const, Digest digest_for(std::istream& is), DigestFormatter
     std::string str_digest_for(std::istream& is)
     {
-        std::string result;
-        Formatter resultFormatter(result);
-        Digest digest = digest_for(is);
-        std::for_each(digest.begin(), digest.end(), resultFormatter);
-        return result;
+        return DigestContext::format(digest_for(is));
     }
 
     //! Method will return istream.bad() after last digest_for(istream) str_digest_for(istream)
@@ -236,11 +320,7 @@ public:
     //! \sa Digest digest_for(const std::string& string), DigestFormatter
     std::string str_digest_for(const std::string& string)
     {
-        std::string result;
-        Formatter resultFormatter(result);
-        Digest digest = digest_for(string);
-        std::for_each(digest.begin(), digest.end(), resultFormatter);
-        return result;
+        return DigestContext::format(digest_for(string));
     }
 
 private:
@@ -263,6 +343,132 @@ typedef ChecksumDigestBuilder<ShaContext> ShaDigestBuilder;
 
 //! MD-5 checksums builder.
 typedef ChecksumDigestBuilder<Md5Context> Md5DigestBuilder;
+
+class MultiChecksumsDigestBuilder {
+public:
+    //! Constructor
+    MultiChecksumsDigestBuilder()
+        : _contexts()
+        , _buf(DigestConstants::_buf_size)
+        , _bad(false)
+    {
+        _contexts.push_back(boost::shared_ptr<IDigestContext>(new Sha256Context()));
+        _contexts.push_back(boost::shared_ptr<IDigestContext>(new ShaContext()));
+        _contexts.push_back(boost::shared_ptr<IDigestContext>(new Md5Context()));
+    }
+
+    //! Method will return istream.bad() after last digests_for(istream) str_digests_for(istream)
+    //! call. Must be used to check if there are no IO errors during last calculation.
+    //! \return istream.bad() result after calculations.
+    //! \sa std::istream::bad()
+    bool bad() const
+    {
+        return _bad;
+    }
+
+    //! Calculate checksums for input stream data.
+    //! \param is Input stream to process.
+    //! \return map of the digest containers.
+    //! \sa bool bad() const
+    std::map<std::string, IDigestContext::Digest> digests_for(std::istream& is)
+    {
+        reset();
+        std::map<std::string, IDigestContext::Digest> digests;
+        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
+
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            (*i)->init();
+        }
+        std::streamsize readed = 0;
+        do {
+            readed = is.read(_buf.data(), _buf.size()).gcount();
+            if (readed != 0) {
+                for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+                    (*i)->update(_buf.data(), readed);
+                }
+            }
+        } while(!is.eof() & !is.fail() & !is.bad());
+        _bad = is.bad();
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            digests.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
+        }
+        return digests;
+    }
+
+    //! Calculate checksums for input stream data.
+    //! \param is Input stream to process.
+    //! \return map of the digest containers.
+    //! \sa bool bad() const
+    std::map<std::string, std::string> str_digests_for(std::istream& is)
+    {
+        reset();
+        std::map<std::string, std::string> digests;
+        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
+
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            (*i)->init();
+        }
+        std::streamsize readed = 0;
+        do {
+            readed = is.read(_buf.data(), _buf.size()).gcount();
+            if (readed != 0) {
+                for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+                    (*i)->update(_buf.data(), readed);
+                }
+            }
+        } while(!is.eof() & !is.fail() & !is.bad());
+        _bad = is.bad();
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            digests.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
+        }
+        return digests;
+    }
+
+    //! Calculate checksums for string data.
+    //! \param string String to process.
+    //! \return map of the digest containers.
+    std::map<std::string, IDigestContext::Digest> digests_for(const std::string& string)
+    {
+        reset();
+        std::map<std::string, IDigestContext::Digest> digests;
+        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
+
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            (*i)->init();
+            (*i)->update(string.c_str(), string.size());
+            digests.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
+        }
+        return digests;
+    }
+
+    //! Calculate checksums for string data.
+    //! \param string String to process.
+    //! \return map of the digest containers.
+    std::map<std::string, std::string> str_digests_for(const std::string& string)
+    {
+        reset();
+        std::map<std::string, std::string> digests;
+        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
+
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            (*i)->init();
+            (*i)->update(string.c_str(), string.size());
+            digests.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
+        }
+        return digests;
+    }
+
+private:
+    std::vector<boost::shared_ptr<IDigestContext> > _contexts;
+
+    //! Reset internal state.
+    void reset() {
+        _bad = false;
+    }
+
+    std::vector<std::istream::char_type> _buf;  //!< Internal IO buffer.
+    bool _bad;                                  //!< Field to store istream.bad() result after calculations based on istream data.
+};
 
 } } // namespace piel::lib
 
