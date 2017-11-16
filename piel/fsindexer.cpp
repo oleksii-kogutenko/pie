@@ -88,7 +88,7 @@ BaseIndex FsIndexer::build_dir_index(const fs::path& dir) const
                 std::string name = relative.generic_string();
                 std::string target = fs::read_symlink(e.path()).generic_string();
 
-                std::map<std::string, std::string> checksums = digest_builder.str_digests_for(target);
+                MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
                 std::string hash = checksums[sha256_context.name()];
 
                 BOOST_LOG_TRIVIAL(trace) << "s " << name << " " << hash;
@@ -106,7 +106,7 @@ BaseIndex FsIndexer::build_dir_index(const fs::path& dir) const
                 std::string name = relative.generic_string();
                 std::ifstream target(e.path().c_str(), std::ifstream::in|std::ifstream::binary);
 
-                std::map<std::string, std::string> checksums = digest_builder.str_digests_for(target);
+                MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
                 std::string hash = checksums[sha256_context.name()];
 
                 BOOST_LOG_TRIVIAL(trace) << "f " << name << " " << hash << std::endl;

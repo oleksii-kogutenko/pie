@@ -32,6 +32,7 @@
 #include <openssl/sha.h>
 #include <openssl/md5.h>
 
+#include <map>
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -346,6 +347,10 @@ typedef ChecksumDigestBuilder<Md5Context> Md5DigestBuilder;
 
 class MultiChecksumsDigestBuilder {
 public:
+
+    typedef std::map<std::string, std::string> StrDigests;
+    typedef std::map<std::string, IDigestContext::Digest> Digests;
+
     //! Constructor
     MultiChecksumsDigestBuilder()
         : _contexts()
@@ -370,10 +375,10 @@ public:
     //! \param is Input stream to process.
     //! \return map of the digest containers.
     //! \sa bool bad() const
-    std::map<std::string, IDigestContext::Digest> digests_for(std::istream& is)
+    Digests digests_for(std::istream& is)
     {
         reset();
-        std::map<std::string, IDigestContext::Digest> digests;
+        Digests digests;
         typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
 
         for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
@@ -399,10 +404,10 @@ public:
     //! \param is Input stream to process.
     //! \return map of the digest containers.
     //! \sa bool bad() const
-    std::map<std::string, std::string> str_digests_for(std::istream& is)
+    StrDigests str_digests_for(std::istream& is)
     {
         reset();
-        std::map<std::string, std::string> digests;
+        StrDigests digests;
         typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
 
         for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
@@ -427,10 +432,10 @@ public:
     //! Calculate checksums for string data.
     //! \param string String to process.
     //! \return map of the digest containers.
-    std::map<std::string, IDigestContext::Digest> digests_for(const std::string& string)
+    Digests digests_for(const std::string& string)
     {
         reset();
-        std::map<std::string, IDigestContext::Digest> digests;
+        Digests digests;
         typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
 
         for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
@@ -444,10 +449,10 @@ public:
     //! Calculate checksums for string data.
     //! \param string String to process.
     //! \return map of the digest containers.
-    std::map<std::string, std::string> str_digests_for(const std::string& string)
+    StrDigests str_digests_for(const std::string& string)
     {
         reset();
-        std::map<std::string, std::string> digests;
+        StrDigests digests;
         typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
 
         for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
