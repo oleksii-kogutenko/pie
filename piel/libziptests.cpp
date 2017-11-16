@@ -7,10 +7,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <iosfwd>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/categories.hpp>
-#include <boost/iostreams/concepts.hpp>
 
 LibzipTests::LibzipTests()
 {
@@ -18,6 +16,35 @@ LibzipTests::LibzipTests()
 }
 
 struct ZipEntry;
+
+struct ZipEntryAttributes {
+/*
+#define ZIP_OPSYS_DOS	  	0x00u
+#define ZIP_OPSYS_AMIGA	 	0x01u
+#define ZIP_OPSYS_OPENVMS	0x02u
+#define ZIP_OPSYS_UNIX	  	0x03u
+#define ZIP_OPSYS_VM_CMS	0x04u
+#define ZIP_OPSYS_ATARI_ST	0x05u
+#define ZIP_OPSYS_OS_2		0x06u
+#define ZIP_OPSYS_MACINTOSH	0x07u
+#define ZIP_OPSYS_Z_SYSTEM	0x08u
+#define ZIP_OPSYS_CPM	  	0x09u
+#define ZIP_OPSYS_WINDOWS_NTFS	0x0au
+#define ZIP_OPSYS_MVS	  	0x0bu
+#define ZIP_OPSYS_VSE	  	0x0cu
+#define ZIP_OPSYS_ACORN_RISC	0x0du
+#define ZIP_OPSYS_VFAT	  	0x0eu
+#define ZIP_OPSYS_ALTERNATE_MVS	0x0fu
+#define ZIP_OPSYS_BEOS	  	0x10u
+#define ZIP_OPSYS_TANDEM	0x11u
+#define ZIP_OPSYS_OS_400	0x12u
+#define ZIP_OPSYS_OS_X	  	0x13u
+#define ZIP_OPSYS_DEFAULT	ZIP_OPSYS_UNIX
+*/
+    zip_uint8_t opsys;
+    zip_uint32_t attributes;
+};
+
 struct ZipFile {
 
     ZipFile(const std::string& filename)
@@ -75,6 +102,37 @@ protected:
         return ::zip_fread(zip_file, buf, size);
     }
 
+    zip_stat_t stat(zip_int64_t entry_index) const {
+        zip_stat_t result;
+        ::zip_stat_init(&result);
+        // TODO: errors processing
+        ::zip_stat_index(_zip, entry_index, ZIP_FL_UNCHANGED, &result);
+        return result;
+    }
+
+    zip_stat_t stat(const std::string& entry_name) const {
+        zip_stat_t result;
+        ::zip_stat_init(&result);
+        // TODO: errors processing
+        ::zip_stat(_zip, entry_name.c_str(), ZIP_FL_UNCHANGED, &result);
+        return result;
+    }
+
+    ZipEntryAttributes file_get_external_attributes(zip_int64_t entry_index) const {
+        ZipEntryAttributes result = { 0 };
+        // TODO: errors processing
+        ::zip_file_get_external_attributes(_zip, entry_index, ZIP_FL_UNCHANGED, &result.opsys, &result.attributes);
+        return result;
+    }
+
+    ZipEntryAttributes file_get_external_attributes(const std::string& entry_name) const {
+        ZipEntryAttributes result = { 0 };
+        // TODO: errors processing
+        zip_stat_t zip_stat = stat(entry_name);
+        ::zip_file_get_external_attributes(_zip, zip_stat.index, ZIP_FL_UNCHANGED, &result.opsys, &result.attributes);
+        return result;
+    }
+
 private:
     int _error;
     zip_t *_zip;
@@ -106,6 +164,14 @@ struct ZipEntry {
 
     std::string name() const {
         return _name;
+    }
+
+    zip_stat_t stat() const {
+        return _owner->stat(_name);
+    }
+
+    ZipEntryAttributes attributes() const {
+        return _owner->file_get_external_attributes(_name);
     }
 
 private:
@@ -149,14 +215,22 @@ void LibzipTests::test_read_archive_content(const std::string& afile)
     using namespace piel::lib;
 
     Sha256Context sha256_context;
-    ShaContext sha_context;
-    Md5Context md5_context;
+//    ShaContext sha_context;
+//    Md5Context md5_context;
 
     MultiChecksumsDigestBuilder digest_builder;
 
     ZipFile zip_file(afile);
     for (zip_int64_t i = 0; i < zip_file.num_entries(); i++) {
         boost::shared_ptr<ZipEntry> entry = zip_file.entry(i);
+
+        ZipEntryAttributes attrs = entry->attributes();
+
+        BOOST_LOG_TRIVIAL(trace) << "attrs: "
+                                 << boost::format("%1$08x") % (int)attrs.opsys
+                                 << " "
+                                 << boost::format("%1$08x") % (int)attrs.attributes;
+
         //BOOST_LOG_TRIVIAL(trace) << entry->name() << std::endl;
 
         namespace io = boost::iostreams;
