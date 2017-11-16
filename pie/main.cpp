@@ -29,6 +29,7 @@
 #include <iostream>
 #include <fsindexer.h>
 #include <baseindex.h>
+#include <libziptests.h>
 
 int main(int argc, char **argv) {
 
@@ -38,13 +39,17 @@ int main(int argc, char **argv) {
         return result;
     }
 
-    piel::lib::FsIndexer fs_indexer;
-    piel::lib::BaseIndex dir_index = fs_indexer.build_dir_index(argv[1]);
+    LibzipTests tests;
+    tests.test_read_archive_content(argv[1]);
 
-    if (!dir_index.empty())
-    {
-        result = 0;
-    }
+
+//    piel::lib::FsIndexer fs_indexer;
+//    piel::lib::BaseIndex dir_index = fs_indexer.build_dir_index(argv[1]);
+
+//    if (!dir_index.empty())
+//    {
+//        result = 0;
+//    }
 
     return result;
 }
