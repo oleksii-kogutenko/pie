@@ -1,18 +1,29 @@
-#include "libziptests.h"
+#include "zipindexer.h"
 
-#include <zip.h>
 #include <zipfile.h>
 #include <checksumdigestbuilder.hpp>
 #include <boost/log/trivial.hpp>
 
-LibzipTests::LibzipTests()
+namespace piel { namespace lib {
+
+ZipIndexer::ZipIndexer()
 {
 
 }
 
-void LibzipTests::test_read_archive_content(const std::string& afile)
+ZipIndexer::~ZipIndexer()
 {
-    using namespace piel::lib;
+
+}
+
+std::string ZipIndexer::zip_source(const fs::path& zip_file, const std::string& entry_name) const
+{
+    return std::string("zip://").append(zip_file.native()).append("#").append(entry_name);
+}
+
+BaseIndex ZipIndexer::build(const fs::path& zip_file) const
+{
+    BaseIndex result;
 
     Sha256Context sha256_context;
 //    ShaContext sha_context;
@@ -20,9 +31,9 @@ void LibzipTests::test_read_archive_content(const std::string& afile)
 
     MultiChecksumsDigestBuilder digest_builder;
 
-    ZipFile zip_file(afile);
-    for (zip_int64_t i = 0; i < zip_file.num_entries(); i++) {
-        boost::shared_ptr<ZipEntry> entry = zip_file.entry(i);
+    ZipFile zip(zip_file.native());
+    for (zip_int64_t i = 0; i < zip.num_entries(); i++) {
+        boost::shared_ptr<ZipEntry> entry = zip.entry(i);
 
         ZipEntryAttributes attrs = entry->attributes();
 
@@ -37,12 +48,18 @@ void LibzipTests::test_read_archive_content(const std::string& afile)
                                  << " attributes: "
                                  << boost::format("%1$08x") % (int)attrs.attributes
                                  << " mode: "
-                                 << boost::format("%1$08o") % (int)(attrs.mode() & 0777)
+                                 << boost::format("%1$04o") % (int)(attrs.mode() & 0777)
                                  << " sha256: "
                                  << sha256;
+
+        result.put(entry->name(), sha256, zip_source(zip_file, entry->name()));
 
 //        std::string sha = checksums[sha_context.name()];
 //        std::string md5 = checksums[md5_context.name()];
 //        BOOST_LOG_TRIVIAL(trace) << "sha: " << sha << " md5: " << md5;
     }
+
+    return result;
 }
+
+} } // namespace piel::lib

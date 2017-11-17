@@ -3,12 +3,12 @@
 
 #include <string>
 #include <map>
+#include <boost/filesystem.hpp>
 
 namespace piel { namespace lib {
 
 //! Base data index.
-class BaseIndex
-{
+class BaseIndex {
 public:
     //! Constructor.
     BaseIndex();
@@ -26,6 +26,9 @@ public:
     //! \return true if the index empty.
     bool empty() const;
 
+    //! Add index into this index.
+    BaseIndex& operator+(const BaseIndex& index);
+
 private:
 
     //! An index data element.
@@ -36,6 +39,13 @@ private:
     };
 
     std::map<std::string, IndexItem> _index; //!< An index data.
+};
+
+//! Indexers interface.
+struct IIndexer {
+    //! Build index.
+    //! \param whatToIndex Path to directory or archive for index.
+    BaseIndex build(const boost::filesystem::path& whatToIndex);
 };
 
 } } // namespace piel::lib

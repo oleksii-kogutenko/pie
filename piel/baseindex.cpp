@@ -27,6 +27,12 @@ void BaseIndex::put(const std::string &name, const std::string &hash, const std:
     _index.insert(std::make_pair<std::string, IndexItem>(name, item));
 }
 
+BaseIndex& BaseIndex::operator+(const BaseIndex& index)
+{
+    _index.insert(index._index.begin(), index._index.end());
+    return *this;
+}
+
 bool BaseIndex::empty() const
 {
     return _index.empty();

@@ -53,7 +53,7 @@ std::string FsIndexer::fs_source(const fs::path& item) const
     return std::string("file://").append(fs::absolute(item).native());
 }
 
-BaseIndex FsIndexer::build_dir_index(const fs::path& dir) const
+BaseIndex FsIndexer::build(const fs::path& dir) const
 {
     BaseIndex result;
 

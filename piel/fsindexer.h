@@ -29,28 +29,24 @@
 #ifndef FSINDEXER_H
 #define FSINDEXER_H
 
+#include <baseindex.h>
 #include <boost/filesystem.hpp>
 
 namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
 
-// Forward
-class BaseIndex;
-
 //! Filesystem indexer.
-class FsIndexer
+class FsIndexer : public IIndexer
 {
 public:
     FsIndexer();
     ~FsIndexer();
 
     //! Build filesystem index.
-    /*!
-     * \param dir indexed directory.
-     * \return an index.
-     */
-    BaseIndex build_dir_index(const fs::path& dir) const;
+    //! \param dir indexed directory.
+    //! \return an index.
+    BaseIndex build(const fs::path& dir) const;
 
 protected:
 
