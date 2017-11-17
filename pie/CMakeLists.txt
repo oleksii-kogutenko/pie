@@ -17,4 +17,7 @@ target_link_libraries(pie crypto)
 # libzip (libzip-dev)
 target_link_libraries(pie zip)
 
+# libzip (libcurl4-openssl-dev)
+target_link_libraries(pie curl)
+
 #install(TARGETS pie RUNTIME DESTINATION bin)
