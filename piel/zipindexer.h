@@ -36,10 +36,14 @@ namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
 
+//! Utility to build indexes for zip archives.
 class ZipIndexer : public IIndexer
 {
 public:
+    //! Constructor.
     ZipIndexer();
+
+    //! Destructor.
     ~ZipIndexer();
 
     //! Build zip file index.

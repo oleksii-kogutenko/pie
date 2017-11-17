@@ -36,11 +36,14 @@ namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
 
-//! Filesystem indexer.
+//! Utility to build indexes for directories content.
 class FsIndexer : public IIndexer
 {
 public:
+    //! Constructor.
     FsIndexer();
+
+    //! Destructor.
     ~FsIndexer();
 
     //! Build filesystem index.
