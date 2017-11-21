@@ -43,10 +43,50 @@
 namespace piel { namespace lib {
 
 ////////////////////////////////////////////////////////////////////////////////
-//! File constants.
+//! File constants and traits.
 struct DigestConstants {
     static const size_t _buf_size = 640*1024;   //!< Size of the internal IO buffers.
 };
+
+template<class Digest>
+struct DigestTraits {
+    typedef typename Digest::ctx ctx;
+    static std::string name() {
+        return _name;
+    }
+    static int len() {
+        return _len;
+    }
+private:
+    static char const* const _name;
+    static const int _len;
+};
+
+struct Sha256 {
+    typedef SHA256_CTX ctx;
+    typedef DigestTraits<Sha256> t;
+};
+struct Sha {
+    typedef SHA_CTX ctx;
+    typedef DigestTraits<Sha> t;
+};
+struct Md5 {
+    typedef MD5_CTX ctx;
+    typedef DigestTraits<Md5> t;
+};
+
+template<>
+char const* const DigestTraits<Sha256>::_name = "SHA-256";
+template<>
+const int DigestTraits<Sha256>::_len = SHA256_DIGEST_LENGTH;
+template<>
+char const* const DigestTraits<Sha>::_name = "SHA-1";
+template<>
+const int DigestTraits<Sha>::_len = SHA_DIGEST_LENGTH;
+template<>
+char const* const DigestTraits<Md5>::_name = "MD5";
+template<>
+const int DigestTraits<Md5>::_len = MD5_DIGEST_LENGTH;
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief Checksums formatter.
@@ -98,7 +138,7 @@ struct IDigestContext {
 
     //! Get checksum name.
     //! \return Checksum name.
-    virtual std::string name() = 0;
+    virtual std::string name() const = 0;
 
     //! Format digest string.
     //! \return Digest string representation.
@@ -115,14 +155,14 @@ struct IDigestContext {
 //! calculating checksums.
 //! \param CTX Type of the OpenSSL api context structure.
 //! \param digestSize the digest size in bytes.
-template<typename CTX, size_t digestSize> class DigestContext
+template<typename CTX> class DigestContext
         : public IDigestContext
 {
 public:
     //! Constructor.
     DigestContext()
         : _ctx()
-        , _digest(digestSize)
+        , _digest(CTX::t::len())
     {}
 
     //! Init internal data.
@@ -139,114 +179,95 @@ public:
 
     //! Get checksum name.
     //! \return Checksum name.
-    std::string name();
+    std::string name() const {
+        return CTX::t::name();
+    }
 
 private:
-    Digest _digest; //!< Digest data container.
-    CTX _ctx;       //!< OpenSSL api context structure.
+    Digest _digest;                 //!< Digest data container.
+    typename CTX::ctx _ctx;         //!< OpenSSL api context structure.
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 //! SHA-256 specialization.
 //! \sa void DigestContext::init()
-template<> void DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::init()
+template<> void DigestContext<Sha256>::init()
 {
     SHA256_Init(&_ctx);
 }
 
 //! SHA-256 specialization.
 //! \sa void DigestContext::update(const void *data, size_t size)
-template<> void DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::update(const void *data, size_t size)
+template<> void DigestContext<Sha256>::update(const void *data, size_t size)
 {
     SHA256_Update(&_ctx, data, size);
 }
 
 //! SHA-256 specialization.
 //! \sa DigestContext::Digest DigestContext::finalize()
-template<> DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::Digest& DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::finalize()
+template<> DigestContext<Sha256>::Digest& DigestContext<Sha256>::finalize()
 {
     SHA256_Final(_digest.data(), &_ctx);
     return _digest;
 }
 
-//! SHA-256 specialization.
-//! \sa std::string DigestContext::name() const
-template<> std::string DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH>::name()
-{
-    return "SHA-256";
-}
-
 //! Type of OpenSSL api wrapper for SHA-256 checksums calculation.
 //! \sa DigestContext
-typedef DigestContext<SHA256_CTX,SHA256_DIGEST_LENGTH> Sha256Context;
+typedef DigestContext<Sha256> Sha256Context;
 
 ////////////////////////////////////////////////////////////////////////////////
 //! SHA-1 specialization.
 //! \sa void DigestContext::init()
-template<> void DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::init()
+template<> void DigestContext<Sha>::init()
 {
     SHA1_Init(&_ctx);
 }
 
 //! SHA1 specialization.
 //! \sa void DigestContext::update(const void *data, size_t size)
-template<> void DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::update(const void *data, size_t size)
+template<> void DigestContext<Sha>::update(const void *data, size_t size)
 {
     SHA1_Update(&_ctx, data, size);
 }
 
 //! SHA1 specialization.
 //! \sa DigestContext::Digest DigestContext::finalize()
-template<> DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::Digest& DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::finalize()
+template<> DigestContext<Sha>::Digest& DigestContext<Sha>::finalize()
 {
     SHA1_Final(_digest.data(), &_ctx);
     return _digest;
 }
 
-//! SHA-1 specialization.
-//! \sa std::string DigestContext::name() const
-template<> std::string DigestContext<SHA_CTX,SHA_DIGEST_LENGTH>::name()
-{
-    return "SHA-1";
-}
-
 //! Type of OpenSSL api wrapper for SHA-1 checksums calculation.
 //! \sa DigestContext
-typedef DigestContext<SHA_CTX,SHA_DIGEST_LENGTH> ShaContext;
+typedef DigestContext<Sha> ShaContext;
 
 ////////////////////////////////////////////////////////////////////////////////
 //! MD5 specialization.
 //! \sa void DigestContext::init()
-template<> void DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::init()
+template<> void DigestContext<Md5>::init()
 {
     MD5_Init(&_ctx);
 }
 
 ////! MD5 specialization.
 ////! \sa void DigestContext::update(const void *data, size_t size)
-template<> void DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::update(const void *data, size_t size)
+template<> void DigestContext<Md5>::update(const void *data, size_t size)
 {
     MD5_Update(&_ctx, data, size);
 }
 
 ////! MD5 specialization.
 ////! \sa DigestContext::Digest DigestContext::finalize()
-template<> DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::Digest& DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::finalize()
+template<> DigestContext<Md5>::Digest& DigestContext<Md5>::finalize()
 {
     MD5_Final(_digest.data(), &_ctx);
     return _digest;
 }
 
-////! SHA-1 specialization.
-////! \sa std::string DigestContext::name() const
-template<> std::string DigestContext<MD5_CTX,MD5_DIGEST_LENGTH>::name()
-{
-    return "MD5";
-}
-
 ////! Type of OpenSSL api wrapper for MD5 checksums calculation.
 ////! \sa DigestContext
-typedef DigestContext<MD5_CTX,MD5_DIGEST_LENGTH> Md5Context;
+typedef DigestContext<Md5> Md5Context;
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Upper level template class for checksums calculations.
@@ -331,7 +352,6 @@ private:
         _bad = false;
     }
 
-    static const size_t _buf_size = 640*1024;   //!< Size of the internal IO buffer.
     std::vector<std::istream::char_type> _buf;  //!< Internal IO buffer.
     bool _bad;                                  //!< Field to store istream.bad() result after calculations based on istream data.
 };
