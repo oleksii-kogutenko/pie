@@ -64,6 +64,11 @@ public:
         _curl = ::curl_easy_init();
     }
 
+    ~HttpxClient()
+    {
+        ::curl_easy_cleanup(_curl);
+    }
+
     CURLcode perform() {
         ::curl_easy_setopt(_curl, CURLOPT_URL, _url.c_str());
         if (DataProviderTraits<DataProvider>::have_output) {
