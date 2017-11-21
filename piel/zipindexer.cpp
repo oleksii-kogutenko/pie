@@ -53,10 +53,6 @@ BaseIndex ZipIndexer::build(const fs::path& zip_file) const
 {
     BaseIndex result;
 
-    Sha256Context sha256_context;
-//    ShaContext sha_context;
-//    Md5Context md5_context;
-
     MultiChecksumsDigestBuilder digest_builder;
 
     ZipFile zip(zip_file.native());
@@ -67,7 +63,7 @@ BaseIndex ZipIndexer::build(const fs::path& zip_file) const
 
         MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(ZIP_ENTRY_ISTREAM(entry));
 
-        std::string sha256 = checksums[sha256_context.name()];
+        std::string hash = checksums[Sha256::t::name()];
 
         BOOST_LOG_TRIVIAL(trace) << std::string(entry->symlink() ? "s " +  entry->target() + " " : "f ")
                                  << entry->name()
@@ -78,13 +74,9 @@ BaseIndex ZipIndexer::build(const fs::path& zip_file) const
                                  << " mode: "
                                  << boost::format("%1$04o") % (int)(attrs.mode() & 0777)
                                  << " sha256: "
-                                 << sha256;
+                                 << hash;
 
-        result.put(entry->name(), sha256, zip_source(zip_file, entry->name()));
-
-//        std::string sha = checksums[sha_context.name()];
-//        std::string md5 = checksums[md5_context.name()];
-//        BOOST_LOG_TRIVIAL(trace) << "sha: " << sha << " md5: " << md5;
+        result.put(entry->name(), hash, zip_source(zip_file, entry->name()));
     }
 
     return result;

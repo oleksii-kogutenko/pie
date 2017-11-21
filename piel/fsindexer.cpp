@@ -62,10 +62,6 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
         return result;
     }
 
-    Sha256Context sha256_context;
-//    ShaContext sha_context;
-//    Md5Context md5_context;
-
     MultiChecksumsDigestBuilder digest_builder;
 
     std::queue<fs::path> directories;
@@ -89,13 +85,9 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
                 std::string target = fs::read_symlink(e.path()).generic_string();
 
                 MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
-                std::string hash = checksums[sha256_context.name()];
+                std::string hash = checksums[Sha256::t::name()];
 
                 BOOST_LOG_TRIVIAL(trace) << "s " << name << " " << hash;
-
-//                std::string sha = checksums[sha_context.name()];
-//                std::string md5 = checksums[md5_context.name()];
-//                BOOST_LOG_TRIVIAL(trace) << "sha: " << sha << " md5: " << md5;
 
                 result.put(name, hash, fs_source(e.path()));
             }
@@ -107,13 +99,9 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
                 std::ifstream target(e.path().c_str(), std::ifstream::in|std::ifstream::binary);
 
                 MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
-                std::string hash = checksums[sha256_context.name()];
+                std::string hash = checksums[Sha256::t::name()];
 
                 BOOST_LOG_TRIVIAL(trace) << "f " << name << " " << hash << std::endl;
-
-//                std::string sha = checksums[sha_context.name()];
-//                std::string md5 = checksums[md5_context.name()];
-//                BOOST_LOG_TRIVIAL(trace) << "sha: " << sha << " md5: " << md5;
 
                 result.put(name, hash, fs_source(e.path()));
             }

@@ -139,7 +139,6 @@ int main(int argc, char **argv) {
         return result;
     }
 
-
     //piel::lib::FsIndexer indexer;
     //piel::lib::ZipIndexer indexer;
     //piel::lib::BaseIndex index = indexer.build(argv[1]);
@@ -156,9 +155,9 @@ int main(int argc, char **argv) {
 
     piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests = ostream_provider.str_digests();
 
-    BOOST_LOG_TRIVIAL(trace) << "sha256: " << str_digests["SHA-256"];
-    BOOST_LOG_TRIVIAL(trace) << "sha1: " << str_digests["SHA-1"];
-    BOOST_LOG_TRIVIAL(trace) << "md5: " << str_digests["MD5"];
+    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha256::t::name() << ": " << str_digests[piel::lib::Sha256::t::name()];
+    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha::t::name()    << ": " << str_digests[piel::lib::Sha::t::name()];
+    BOOST_LOG_TRIVIAL(trace) << piel::lib::Md5::t::name()    << ": " << str_digests[piel::lib::Md5::t::name()];
 
     return result;
 }
