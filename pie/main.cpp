@@ -38,51 +38,98 @@
 #include <boost/format.hpp>
 #include <fstream>
 
-struct CurlDownloader {
+template<class DataProvider>
+struct DataProviderTraits {
+    static const bool have_input;
+    static const bool have_output;
+};
 
-    typedef char char_type;
+struct EmptyDataProvider {
+    size_t get_from(char *ptr, size_t size);
+    size_t put_into(char *ptr, size_t size);
+};
+template<> const bool DataProviderTraits<EmptyDataProvider>::have_input = false;
+template<> const bool DataProviderTraits<EmptyDataProvider>::have_output = false;
 
-    CurlDownloader(const std::string& url, std::ostream& dest)
+template<class DataProvider>
+class HttpxClient {
+public:
+    typedef HttpxClient* HttpxClientPtr;
+    typedef DataProvider* DataProviderPtr;
+
+    HttpxClient(const std::string& url, DataProviderPtr data_provider)
         : _url(url)
-        , _dest(dest)
-        , _curl(0)
+        , _data_provider(data_provider)
     {
         _curl = ::curl_easy_init();
     }
 
-    ~CurlDownloader()
-    {
-        ::curl_easy_cleanup(_curl);
-    }
-
-    CURLcode download() {
+    CURLcode perform() {
         ::curl_easy_setopt(_curl, CURLOPT_URL, _url.c_str());
-        ::curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this);
-        ::curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, handle_data);
+        if (DataProviderTraits<DataProvider>::have_output) {
+            ::curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this);
+            ::curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, handle_write);
+
+        }
+        if (DataProviderTraits<DataProvider>::have_input) {
+            ::curl_easy_setopt(_curl, CURLOPT_READDATA, this);
+            ::curl_easy_setopt(_curl, CURLOPT_READFUNCTION, handle_read);
+            ::curl_easy_setopt(_curl, CURLOPT_UPLOAD, 1L);
+        }
         return ::curl_easy_perform(_curl);
     }
 
-private:
-    static size_t handle_data(char *ptr, size_t size, size_t offset, void* ctx);
+protected:
+    static size_t handle_write(char *ptr, size_t size, size_t count, void* ctx);
+    static size_t handle_read(char *ptr, size_t size, size_t count, void* ctx);
 
 private:
-    std::string _url;       //!< href to download data.
-    std::ostream& _dest;    //!< destination stream.
-    ::CURL *_curl;          //!< libcurl handle.
+    std::string _url;                   //!< url.
+    ::CURL *_curl;                      //!< libcurl handle.
+    DataProviderPtr _data_provider;     //!< data provider.
 };
 
-size_t CurlDownloader::handle_data(char *ptr, size_t size, size_t count, void* ctx)
-{
-    CurlDownloader *thiz = static_cast<CurlDownloader*>(ctx);
-
-    BOOST_LOG_TRIVIAL(trace) << " handle new buffer"
-                             << boost::format(" ptr: %1$p") % (void*)ptr
-                             << " size: " << size
-                             << " count: " << count;
-
-    thiz->_dest.write(ptr, size*count);
-    return size*count;
+template<class DataProvider>
+size_t HttpxClient<DataProvider>::handle_write(char *ptr, size_t size, size_t count, void* ctx) {
+    HttpxClientPtr thiz = static_cast<HttpxClientPtr>(ctx);
+    return thiz->_data_provider->get_from(ptr, size*count);
 }
+
+template<class DataProvider>
+size_t HttpxClient<DataProvider>::handle_read(char *ptr, size_t size, size_t count, void* ctx) {
+    HttpxClientPtr thiz = static_cast<HttpxClientPtr>(ctx);
+    return thiz->_data_provider->put_into(ptr, size*count);
+}
+
+struct DownloadToOstream_DataProvider {
+
+    DownloadToOstream_DataProvider(std::ostream& dest)
+        : _dest(dest)
+        , _checksums_builder()
+    {
+        _checksums_builder.init();
+    }
+
+    size_t get_from(char *ptr, size_t size)
+    {
+        _dest.write(ptr, size);
+        _checksums_builder.update(ptr, size);
+        return size;
+    }
+
+    size_t put_into(char *ptr, size_t size) { return -1; }
+
+    piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests()
+    {
+        return _checksums_builder.finalize<piel::lib::MultiChecksumsDigestBuilder::StrDigests>();
+    }
+
+private:
+    std::ostream& _dest;    //!< destination stream.
+    piel::lib::MultiChecksumsDigestBuilder _checksums_builder;
+};
+template<> const bool DataProviderTraits<DownloadToOstream_DataProvider>::have_output = true;
+template<> const bool DataProviderTraits<DownloadToOstream_DataProvider>::have_input = false;
 
 int main(int argc, char **argv) {
 
@@ -102,21 +149,16 @@ int main(int argc, char **argv) {
     //    result = 0;
     //}
 
-    piel::lib::MultiChecksumsDigestBuilder digest_builder;
-    piel::lib::Sha256Context sha256_context;
-
     std::ofstream out(argv[2], std::ofstream::out);
-    CurlDownloader downloader(argv[1], out);
-    downloader.download();
+    DownloadToOstream_DataProvider ostream_provider(out);
+    HttpxClient<DownloadToOstream_DataProvider> client(argv[1], &ostream_provider);
+    client.perform();
 
-    //CurlDownloader::istream is(argv[1]);
+    piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests = ostream_provider.str_digests();
 
-    //piel::lib::MultiChecksumsDigestBuilder::StrDigests digests = digest_builder.str_digests_for(is);
-    //std::string sha256 = digests[sha256_context.name()];
-
-    //BOOST_LOG_TRIVIAL(trace) << "sha256: "
-                             //<< sha256;
-
+    BOOST_LOG_TRIVIAL(trace) << "sha256: " << str_digests["SHA-256"];
+    BOOST_LOG_TRIVIAL(trace) << "sha1: " << str_digests["SHA-1"];
+    BOOST_LOG_TRIVIAL(trace) << "md5: " << str_digests["MD5"];
 
     return result;
 }

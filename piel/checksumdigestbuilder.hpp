@@ -345,11 +345,16 @@ typedef ChecksumDigestBuilder<ShaContext> ShaDigestBuilder;
 //! MD-5 checksums builder.
 typedef ChecksumDigestBuilder<Md5Context> Md5DigestBuilder;
 
+////////////////////////////////////////////////////////////////////////////////
+//! Upper level class for checksums calculations.
+//!
+//! \sa DigestContext, Sha256Context, ShaContext, Md5Context.
 class MultiChecksumsDigestBuilder {
 public:
 
     typedef std::map<std::string, std::string> StrDigests;
     typedef std::map<std::string, IDigestContext::Digest> Digests;
+    typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
 
     //! Constructor
     MultiChecksumsDigestBuilder()
@@ -375,105 +380,118 @@ public:
     //! \param is Input stream to process.
     //! \return map of the digest containers.
     //! \sa bool bad() const
-    Digests digests_for(std::istream& is)
-    {
-        reset();
-        Digests digests;
-        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
-
-        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-            (*i)->init();
-        }
-        std::streamsize readed = 0;
-        do {
-            readed = is.read(_buf.data(), _buf.size()).gcount();
-            if (readed != 0) {
-                for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-                    (*i)->update(_buf.data(), readed);
-                }
-            }
-        } while(!is.eof() & !is.fail() & !is.bad());
-        _bad = is.bad();
-        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-            digests.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
-        }
-        return digests;
-    }
+    Digests digests_for(std::istream& is);
 
     //! Calculate checksums for input stream data.
     //! \param is Input stream to process.
     //! \return map of the digest containers.
     //! \sa bool bad() const
-    StrDigests str_digests_for(std::istream& is)
+    StrDigests str_digests_for(std::istream& is);
+
+    //! Calculate checksums for string data.
+    //! \param string String to process.
+    //! \return map of the digest containers.
+    Digests digests_for(const std::string& string);
+
+    //! Calculate checksums for string data.
+    //! \param string String to process.
+    //! \return map of the digest containers.
+    StrDigests str_digests_for(const std::string& string);
+
+    void init()
     {
         reset();
-        StrDigests digests;
-        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
-
         for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
             (*i)->init();
         }
+    }
+
+    void update(const void *data, size_t size)
+    {
+        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+            (*i)->update(data, size);
+        }
+    }
+
+    void update(const std::string& string)
+    {
+        update(string.c_str(), string.size());
+    }
+
+    template<class DigestsCollection> DigestsCollection finalize();
+
+protected:
+    void calculate_for_stream(std::istream& is) {
+        init();
         std::streamsize readed = 0;
         do {
             readed = is.read(_buf.data(), _buf.size()).gcount();
             if (readed != 0) {
-                for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-                    (*i)->update(_buf.data(), readed);
-                }
+                update(_buf.data(), readed);
             }
         } while(!is.eof() & !is.fail() & !is.bad());
         _bad = is.bad();
-        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-            digests.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
-        }
-        return digests;
     }
-
-    //! Calculate checksums for string data.
-    //! \param string String to process.
-    //! \return map of the digest containers.
-    Digests digests_for(const std::string& string)
-    {
-        reset();
-        Digests digests;
-        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
-
-        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-            (*i)->init();
-            (*i)->update(string.c_str(), string.size());
-            digests.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
-        }
-        return digests;
-    }
-
-    //! Calculate checksums for string data.
-    //! \param string String to process.
-    //! \return map of the digest containers.
-    StrDigests str_digests_for(const std::string& string)
-    {
-        reset();
-        StrDigests digests;
-        typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
-
-        for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
-            (*i)->init();
-            (*i)->update(string.c_str(), string.size());
-            digests.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
-        }
-        return digests;
-    }
-
-private:
-    std::vector<boost::shared_ptr<IDigestContext> > _contexts;
 
     //! Reset internal state.
     void reset() {
         _bad = false;
     }
 
-    std::vector<std::istream::char_type> _buf;  //!< Internal IO buffer.
-    bool _bad;                                  //!< Field to store istream.bad() result after calculations based on istream data.
+private:
+    std::vector<boost::shared_ptr<IDigestContext> > _contexts;  //!< Digests contexts.
+    std::vector<std::istream::char_type> _buf;                  //!< Internal IO buffer.
+    bool _bad;                                                  //!< Field to store istream.bad() result after calculations based on istream data.
+
 };
+
+template<>
+MultiChecksumsDigestBuilder::StrDigests
+MultiChecksumsDigestBuilder::finalize<MultiChecksumsDigestBuilder::StrDigests>()
+{
+    MultiChecksumsDigestBuilder::StrDigests result;
+    for(MultiChecksumsDigestBuilder::CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+        result.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
+    }
+    return result;
+}
+
+template<>
+MultiChecksumsDigestBuilder::Digests
+MultiChecksumsDigestBuilder::finalize<MultiChecksumsDigestBuilder::Digests>()
+{
+    MultiChecksumsDigestBuilder::Digests result;
+    for(MultiChecksumsDigestBuilder::CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+        result.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
+    }
+    return result;
+}
+
+MultiChecksumsDigestBuilder::Digests MultiChecksumsDigestBuilder::digests_for(std::istream& is)
+{
+    calculate_for_stream(is);
+    return finalize<Digests>();
+}
+
+MultiChecksumsDigestBuilder::StrDigests MultiChecksumsDigestBuilder::str_digests_for(std::istream& is)
+{
+    calculate_for_stream(is);
+    return finalize<StrDigests>();
+}
+
+MultiChecksumsDigestBuilder::Digests MultiChecksumsDigestBuilder::digests_for(const std::string& string)
+{
+    init();
+    update(string);
+    return finalize<Digests>();
+}
+
+MultiChecksumsDigestBuilder::StrDigests MultiChecksumsDigestBuilder::str_digests_for(const std::string& string)
+{
+    init();
+    update(string);
+    return finalize<StrDigests>();
+}
 
 } } // namespace piel::lib
 
