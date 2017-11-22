@@ -28,6 +28,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <boost/log/trivial.hpp>
 //#include <boost/format.hpp>
 
@@ -37,6 +38,9 @@
 
 #include <checksumdigestbuilder.hpp>
 #include <curleacyclient.hpp>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 struct DownloadFileHandlers {
     DownloadFileHandlers(std::ostream& dest)
@@ -83,13 +87,69 @@ template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::h
 template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
 template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
 
+struct ArtRestApiHandlers {
+
+    typedef char char_type;
+
+    piel::lib::CurlEasyHandlers::headers_type custom_header()
+    {
+        piel::lib::CurlEasyHandlers::headers_type result;
+        result.push_back("X-JFrog-Art-Api:<api_token>");
+        return result;
+    }
+
+    size_t handle_header(char *ptr, size_t size)
+    {
+        return -1;
+    }
+
+    size_t handle_output(char *ptr, size_t size)
+    {
+
+        BOOST_LOG_TRIVIAL(trace) << "buffer: " << std::string(ptr, size);
+
+        std::vector<char_type> buffer(size);
+        std::copy(ptr, ptr+size, buffer.begin());
+        _output_buffers.push_back(buffer);
+
+        return size;
+    }
+
+    size_t handle_input(char *ptr, size_t size)
+    {
+        // Prepare command parameters
+        return -1;
+    }
+
+    std::istringstream &responce_stream()
+    {
+        std::string data;
+        typedef std::list<std::vector<char_type> >::const_iterator Iter;
+        for(Iter i = _output_buffers.begin(); i != _output_buffers.end(); ++i)
+        {
+            data.append((*i).begin(), (*i).end());
+        }
+        _stream = boost::shared_ptr<std::istringstream>(new std::istringstream(data));
+        return *_stream.get();
+    }
+
+private:
+    std::list<std::vector<char_type> > _output_buffers;
+    boost::shared_ptr<std::istringstream> _stream;
+
+};
+template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_custom_header   = true;
+template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_handle_header   = false;
+template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_handle_output   = true;
+template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_handle_input    = false;
+
 int main(int argc, char **argv) {
 
     int result = -1;
 
-    if (argc < 2) {
-        return result;
-    }
+//    if (argc < 2) {
+//        return result;
+//    }
 
     //piel::lib::FsIndexer indexer;
     //piel::lib::ZipIndexer indexer;
@@ -100,16 +160,61 @@ int main(int argc, char **argv) {
     //    result = 0;
     //}
 
-    std::ofstream out(argv[2], std::ofstream::out);
-    DownloadFileHandlers ostream_provider(out);
-    piel::lib::CurlEasyClient<DownloadFileHandlers> client(argv[1], &ostream_provider);
+//    std::ofstream out(argv[2], std::ofstream::out);
+//    DownloadFileHandlers ostream_provider(out);
+//    piel::lib::CurlEasyClient<DownloadFileHandlers> client(argv[1], &ostream_provider);
+//    client.perform();
+
+//    piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests = ostream_provider.str_digests();
+
+//    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha256::t::name() << ": " << str_digests[piel::lib::Sha256::t::name()];
+//    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha::t::name()    << ": " << str_digests[piel::lib::Sha::t::name()];
+//    BOOST_LOG_TRIVIAL(trace) << piel::lib::Md5::t::name()    << ": " << str_digests[piel::lib::Md5::t::name()];
+
+    // /api/search/gavc?[g=groupId][&a=artifactId][&v=version][&c=classifier][&repos=x[,y]]
+
+    ArtRestApiHandlers apiHandlers;
+    std::string url = "https://art.server.url/artifactory";
+    url.append("/api/search/gavc");
+    url.append("?g=test.group");
+    url.append("&a=test");
+    //url.append("&v=+");
+    url.append("&c=classifier");
+    url.append("&r=repository");
+    piel::lib::CurlEasyClient<ArtRestApiHandlers> client(url, &apiHandlers);
     client.perform();
 
-    piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests = ostream_provider.str_digests();
+    // Short alias for this namespace
+    namespace pt = boost::property_tree;
 
-    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha256::t::name() << ": " << str_digests[piel::lib::Sha256::t::name()];
-    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha::t::name()    << ": " << str_digests[piel::lib::Sha::t::name()];
-    BOOST_LOG_TRIVIAL(trace) << piel::lib::Md5::t::name()    << ": " << str_digests[piel::lib::Md5::t::name()];
+    // Create a root
+    pt::ptree root;
+
+    // Load the json file in this ptree
+    pt::read_json(apiHandlers.responce_stream(), root);
+
+    typedef pt::ptree::const_iterator Iter;
+
+    //results = root.get_child("results");
+    pt::ptree results = root.get_child("results");
+    //root.get_value();
+
+    for(Iter i = results.begin(); i != results.end(); ++i) {
+
+        pt::ptree::value_type pair = (*i);
+
+        //BOOST_LOG_TRIVIAL(trace) << std::string(pair.first) << ": " << std::string(pair.second.data());
+
+        pt::ptree val = pair.second;
+
+        for(Iter v = val.begin(); v != val.end(); ++v) {
+
+            pt::ptree::value_type p = (*v);
+
+            BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+
+        }
+    }
 
     return result;
 }
