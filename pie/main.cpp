@@ -27,102 +27,46 @@
  */
 
 #include <iostream>
+#include <fstream>
+#include <boost/log/trivial.hpp>
+//#include <boost/format.hpp>
+
 #include <fsindexer.h>
 #include <zipindexer.h>
 #include <baseindex.h>
 
-//****
 #include <checksumdigestbuilder.hpp>
-#include <curl/curl.h>
-#include <boost/log/trivial.hpp>
-#include <boost/format.hpp>
-#include <fstream>
+#include <curleacyclient.hpp>
 
-template<class DataProvider>
-struct DataProviderTraits {
-    static const bool have_input;
-    static const bool have_output;
-};
-
-struct EmptyDataProvider {
-    size_t get_from(char *ptr, size_t size);
-    size_t put_into(char *ptr, size_t size);
-};
-template<> const bool DataProviderTraits<EmptyDataProvider>::have_input = false;
-template<> const bool DataProviderTraits<EmptyDataProvider>::have_output = false;
-
-template<class DataProvider>
-class HttpxClient {
-public:
-    typedef HttpxClient* HttpxClientPtr;
-    typedef DataProvider* DataProviderPtr;
-
-    HttpxClient(const std::string& url, DataProviderPtr data_provider)
-        : _url(url)
-        , _data_provider(data_provider)
-    {
-        _curl = ::curl_easy_init();
-    }
-
-    ~HttpxClient()
-    {
-        ::curl_easy_cleanup(_curl);
-    }
-
-    CURLcode perform() {
-        ::curl_easy_setopt(_curl, CURLOPT_URL, _url.c_str());
-        if (DataProviderTraits<DataProvider>::have_output) {
-            ::curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this);
-            ::curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, handle_write);
-
-        }
-        if (DataProviderTraits<DataProvider>::have_input) {
-            ::curl_easy_setopt(_curl, CURLOPT_READDATA, this);
-            ::curl_easy_setopt(_curl, CURLOPT_READFUNCTION, handle_read);
-            ::curl_easy_setopt(_curl, CURLOPT_UPLOAD, 1L);
-        }
-        return ::curl_easy_perform(_curl);
-    }
-
-protected:
-    static size_t handle_write(char *ptr, size_t size, size_t count, void* ctx);
-    static size_t handle_read(char *ptr, size_t size, size_t count, void* ctx);
-
-private:
-    std::string _url;                   //!< url.
-    ::CURL *_curl;                      //!< libcurl handle.
-    DataProviderPtr _data_provider;     //!< data provider.
-};
-
-template<class DataProvider>
-size_t HttpxClient<DataProvider>::handle_write(char *ptr, size_t size, size_t count, void* ctx) {
-    HttpxClientPtr thiz = static_cast<HttpxClientPtr>(ctx);
-    return thiz->_data_provider->get_from(ptr, size*count);
-}
-
-template<class DataProvider>
-size_t HttpxClient<DataProvider>::handle_read(char *ptr, size_t size, size_t count, void* ctx) {
-    HttpxClientPtr thiz = static_cast<HttpxClientPtr>(ctx);
-    return thiz->_data_provider->put_into(ptr, size*count);
-}
-
-struct DownloadToOstream_DataProvider {
-
-    DownloadToOstream_DataProvider(std::ostream& dest)
+struct DownloadFileHandlers {
+    DownloadFileHandlers(std::ostream& dest)
         : _dest(dest)
         , _checksums_builder()
     {
         _checksums_builder.init();
     }
 
-    size_t get_from(char *ptr, size_t size)
+    piel::lib::CurlEasyHandlers::headers_type custom_header()
+    {
+        return piel::lib::CurlEasyHandlers::headers_type();
+    }
+
+    size_t handle_header(char *ptr, size_t size)
+    {
+        return -1;
+    }
+
+    size_t handle_output(char *ptr, size_t size)
     {
         _dest.write(ptr, size);
         _checksums_builder.update(ptr, size);
         return size;
     }
 
-    size_t put_into(char *ptr, size_t size) { return -1; }
+    size_t handle_input(char *ptr, size_t size)
+    {
+        return -1;
+    }
 
     piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests()
     {
@@ -132,9 +76,12 @@ struct DownloadToOstream_DataProvider {
 private:
     std::ostream& _dest;    //!< destination stream.
     piel::lib::MultiChecksumsDigestBuilder _checksums_builder;
+
 };
-template<> const bool DataProviderTraits<DownloadToOstream_DataProvider>::have_output = true;
-template<> const bool DataProviderTraits<DownloadToOstream_DataProvider>::have_input = false;
+template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_custom_header   = false;
+template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_header   = false;
+template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
+template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
 
 int main(int argc, char **argv) {
 
@@ -154,8 +101,8 @@ int main(int argc, char **argv) {
     //}
 
     std::ofstream out(argv[2], std::ofstream::out);
-    DownloadToOstream_DataProvider ostream_provider(out);
-    HttpxClient<DownloadToOstream_DataProvider> client(argv[1], &ostream_provider);
+    DownloadFileHandlers ostream_provider(out);
+    piel::lib::CurlEasyClient<DownloadFileHandlers> client(argv[1], &ostream_provider);
     client.perform();
 
     piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests = ostream_provider.str_digests();
