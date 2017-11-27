@@ -35,8 +35,6 @@
 #include <map>
 #include <iostream>
 #include <vector>
-#include <memory>
-#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 

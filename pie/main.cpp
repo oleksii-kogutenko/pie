@@ -32,12 +32,12 @@
 #include <boost/log/trivial.hpp>
 //#include <boost/format.hpp>
 
-#include <fsindexer.h>
-#include <zipindexer.h>
-#include <baseindex.h>
+//#include <fsindexer.h>
+//#include <zipindexer.h>
+//#include <baseindex.h>
 
 #include <checksumsdigestbuilder.hpp>
-#include <curleacyclient.hpp>
+//#include <curleacyclient.hpp>
 #include <artbasehandlers.h>
 
 #include <boost/property_tree/ptree.hpp>
@@ -91,32 +91,6 @@ template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::h
 int main(int argc, char **argv) {
 
     int result = -1;
-
-//    if (argc < 2) {
-//        return result;
-//    }
-
-    //piel::lib::FsIndexer indexer;
-    //piel::lib::ZipIndexer indexer;
-    //piel::lib::BaseIndex index = indexer.build(argv[1]);
-
-    //if (!index.empty())
-    //{
-    //    result = 0;
-    //}
-
-//    std::ofstream out(argv[2], std::ofstream::out);
-//    DownloadFileHandlers ostream_provider(out);
-//    piel::lib::CurlEasyClient<DownloadFileHandlers> client(argv[1], &ostream_provider);
-//    client.perform();
-
-//    piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests = ostream_provider.str_digests();
-
-//    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha256::t::name() << ": " << str_digests[piel::lib::Sha256::t::name()];
-//    BOOST_LOG_TRIVIAL(trace) << piel::lib::Sha::t::name()    << ": " << str_digests[piel::lib::Sha::t::name()];
-//    BOOST_LOG_TRIVIAL(trace) << piel::lib::Md5::t::name()    << ": " << str_digests[piel::lib::Md5::t::name()];
-
-    // /api/search/gavc?[g=groupId][&a=artifactId][&v=version][&c=classifier][&repos=x[,y]]
 
     art::lib::ArtBaseHandlers apiHandlers(std::string("<api token>"));
 
