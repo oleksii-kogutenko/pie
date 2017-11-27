@@ -26,62 +26,47 @@
  *
  */
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <boost/log/trivial.hpp>
-#include <artbasehandlers.h>
+#include <downloadfilehandlers.h>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-
-int main(int argc, char **argv) {
-
-    int result = -1;
-
-    art::lib::ArtBaseHandlers apiHandlers(std::string("<api token>"));
-
-    std::string url = "https://art.server.url/artifactory";
-    url.append("/api/search/gavc");
-    url.append("?g=test.group");
-    url.append("&a=test");
-    //url.append("&v=+");
-    url.append("&c=classifier");
-    url.append("&r=repository");
-    piel::lib::CurlEasyClient<art::lib::ArtBaseHandlers> client(url, &apiHandlers);
-    client.perform();
-
-    // Short alias for this namespace
-    namespace pt = boost::property_tree;
-
-    // Create a root
-    pt::ptree root;
-
-    // Load the json file in this ptree
-    pt::read_json(apiHandlers.responce_stream(), root);
-
-    typedef pt::ptree::const_iterator Iter;
-
-    //results = root.get_child("results");
-    pt::ptree results = root.get_child("results");
-    //root.get_value();
-
-    for(Iter i = results.begin(); i != results.end(); ++i) {
-
-        pt::ptree::value_type pair = (*i);
-
-        //BOOST_LOG_TRIVIAL(trace) << std::string(pair.first) << ": " << std::string(pair.second.data());
-
-        pt::ptree val = pair.second;
-
-        for(Iter v = val.begin(); v != val.end(); ++v) {
-
-            pt::ptree::value_type p = (*v);
-
-            BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
-
-        }
-    }
-
-    return result;
+namespace piel { namespace lib {
+    
+template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_custom_header   = false;
+template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_header   = false;
+template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
+template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
+    
+DownloadFileHandlers::DownloadFileHandlers(std::ostream& dest)
+: _dest(dest)
+, _checksums_builder()
+{
+    _checksums_builder.init();
 }
+
+CurlEasyHandlers::headers_type DownloadFileHandlers::custom_header()
+{
+    return CurlEasyHandlers::headers_type();
+}
+
+size_t DownloadFileHandlers::handle_header(char *ptr, size_t size)
+{
+    return -1;
+}
+
+size_t DownloadFileHandlers::handle_output(char *ptr, size_t size)
+{
+    _dest.write(ptr, size);
+    _checksums_builder.update(ptr, size);
+    return size;
+}
+
+size_t DownloadFileHandlers::handle_input(char *ptr, size_t size)
+{
+    return -1;
+}
+
+ChecksumsDigestBuilder::StrDigests DownloadFileHandlers::str_digests()
+{
+    return _checksums_builder.finalize<ChecksumsDigestBuilder::StrDigests>();
+}
+
+} } // namespace piel::lib

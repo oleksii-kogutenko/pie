@@ -26,62 +26,34 @@
  *
  */
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <boost/log/trivial.hpp>
-#include <artbasehandlers.h>
+#ifndef DOWNLOADFILEHANDLERS_H
+#define DOWNLOADFILEHANDLERS_H
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include <checksumsdigestbuilder.hpp>
+#include <curleacyclient.hpp>
 
-int main(int argc, char **argv) {
+namespace piel { namespace lib {
+    
+class DownloadFileHandlers {
+public:    
+    DownloadFileHandlers(std::ostream& dest);
 
-    int result = -1;
+    CurlEasyHandlers::headers_type custom_header();
 
-    art::lib::ArtBaseHandlers apiHandlers(std::string("<api token>"));
+    size_t handle_header(char *ptr, size_t size);
 
-    std::string url = "https://art.server.url/artifactory";
-    url.append("/api/search/gavc");
-    url.append("?g=test.group");
-    url.append("&a=test");
-    //url.append("&v=+");
-    url.append("&c=classifier");
-    url.append("&r=repository");
-    piel::lib::CurlEasyClient<art::lib::ArtBaseHandlers> client(url, &apiHandlers);
-    client.perform();
+    size_t handle_output(char *ptr, size_t size);
 
-    // Short alias for this namespace
-    namespace pt = boost::property_tree;
+    size_t handle_input(char *ptr, size_t size);
 
-    // Create a root
-    pt::ptree root;
+    ChecksumsDigestBuilder::StrDigests str_digests();
 
-    // Load the json file in this ptree
-    pt::read_json(apiHandlers.responce_stream(), root);
+private:
+    std::ostream& _dest;    //!< destination stream.
+    ChecksumsDigestBuilder _checksums_builder;
 
-    typedef pt::ptree::const_iterator Iter;
+};
 
-    //results = root.get_child("results");
-    pt::ptree results = root.get_child("results");
-    //root.get_value();
+} } // namespace piel::lib
 
-    for(Iter i = results.begin(); i != results.end(); ++i) {
-
-        pt::ptree::value_type pair = (*i);
-
-        //BOOST_LOG_TRIVIAL(trace) << std::string(pair.first) << ": " << std::string(pair.second.data());
-
-        pt::ptree val = pair.second;
-
-        for(Iter v = val.begin(); v != val.end(); ++v) {
-
-            pt::ptree::value_type p = (*v);
-
-            BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
-
-        }
-    }
-
-    return result;
-}
+#endif // DOWNLOADFILEHANDLERS_H
