@@ -30,7 +30,7 @@
 #include <baseindex.h>
 
 #include <boost_filesystem_ext.hpp>
-#include <checksumdigestbuilder.hpp>
+#include <checksumsdigestbuilder.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -62,7 +62,7 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
         return result;
     }
 
-    MultiChecksumsDigestBuilder digest_builder;
+    ChecksumsDigestBuilder digest_builder;
 
     std::queue<fs::path> directories;
     directories.push(dir);
@@ -84,7 +84,7 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
                 std::string name = relative.generic_string();
                 std::string target = fs::read_symlink(e.path()).generic_string();
 
-                MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
+                ChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
                 std::string hash = checksums[Sha256::t::name()];
 
                 BOOST_LOG_TRIVIAL(trace) << "s " << name << " " << hash;
@@ -98,7 +98,7 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
                 std::string name = relative.generic_string();
                 std::ifstream target(e.path().c_str(), std::ifstream::in|std::ifstream::binary);
 
-                MultiChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
+                ChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
                 std::string hash = checksums[Sha256::t::name()];
 
                 BOOST_LOG_TRIVIAL(trace) << "f " << name << " " << hash << std::endl;

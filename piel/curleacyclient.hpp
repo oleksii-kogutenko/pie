@@ -50,10 +50,6 @@ struct CurlEasyHandlers {
     size_t handle_output(char *ptr, size_t size)    { return CURLE_WRITE_ERROR; }
     size_t handle_input(char *ptr, size_t size)     { return CURLE_READ_ERROR; }
 };
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_custom_header  = false;
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_handle_header  = false;
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_handle_input   = false;
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_handle_output  = false;
 
 template<class Handlers>
 class CurlEasyClient {

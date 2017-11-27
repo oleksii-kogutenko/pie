@@ -36,8 +36,9 @@
 #include <zipindexer.h>
 #include <baseindex.h>
 
-#include <checksumdigestbuilder.hpp>
+#include <checksumsdigestbuilder.hpp>
 #include <curleacyclient.hpp>
+#include <artbasehandlers.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -72,76 +73,20 @@ struct DownloadFileHandlers {
         return -1;
     }
 
-    piel::lib::MultiChecksumsDigestBuilder::StrDigests str_digests()
+    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests()
     {
-        return _checksums_builder.finalize<piel::lib::MultiChecksumsDigestBuilder::StrDigests>();
+        return _checksums_builder.finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
     }
 
 private:
     std::ostream& _dest;    //!< destination stream.
-    piel::lib::MultiChecksumsDigestBuilder _checksums_builder;
+    piel::lib::ChecksumsDigestBuilder _checksums_builder;
 
 };
 template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_custom_header   = false;
 template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_header   = false;
 template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
 template<> const bool piel::lib::CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
-
-struct ArtRestApiHandlers {
-
-    typedef char char_type;
-
-    piel::lib::CurlEasyHandlers::headers_type custom_header()
-    {
-        piel::lib::CurlEasyHandlers::headers_type result;
-        result.push_back("X-JFrog-Art-Api:<api_token>");
-        return result;
-    }
-
-    size_t handle_header(char *ptr, size_t size)
-    {
-        return -1;
-    }
-
-    size_t handle_output(char *ptr, size_t size)
-    {
-
-        BOOST_LOG_TRIVIAL(trace) << "buffer: " << std::string(ptr, size);
-
-        std::vector<char_type> buffer(size);
-        std::copy(ptr, ptr+size, buffer.begin());
-        _output_buffers.push_back(buffer);
-
-        return size;
-    }
-
-    size_t handle_input(char *ptr, size_t size)
-    {
-        // Prepare command parameters
-        return -1;
-    }
-
-    std::istringstream &responce_stream()
-    {
-        std::string data;
-        typedef std::list<std::vector<char_type> >::const_iterator Iter;
-        for(Iter i = _output_buffers.begin(); i != _output_buffers.end(); ++i)
-        {
-            data.append((*i).begin(), (*i).end());
-        }
-        _stream = boost::shared_ptr<std::istringstream>(new std::istringstream(data));
-        return *_stream.get();
-    }
-
-private:
-    std::list<std::vector<char_type> > _output_buffers;
-    boost::shared_ptr<std::istringstream> _stream;
-
-};
-template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_custom_header   = true;
-template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_handle_header   = false;
-template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_handle_output   = true;
-template<> const bool piel::lib::CurlEasyHandlersTraits<ArtRestApiHandlers>::have_handle_input    = false;
 
 int main(int argc, char **argv) {
 
@@ -173,7 +118,8 @@ int main(int argc, char **argv) {
 
     // /api/search/gavc?[g=groupId][&a=artifactId][&v=version][&c=classifier][&repos=x[,y]]
 
-    ArtRestApiHandlers apiHandlers;
+    art::lib::ArtBaseHandlers apiHandlers(std::string("<api token>"));
+
     std::string url = "https://art.server.url/artifactory";
     url.append("/api/search/gavc");
     url.append("?g=test.group");
@@ -181,7 +127,7 @@ int main(int argc, char **argv) {
     //url.append("&v=+");
     url.append("&c=classifier");
     url.append("&r=repository");
-    piel::lib::CurlEasyClient<ArtRestApiHandlers> client(url, &apiHandlers);
+    piel::lib::CurlEasyClient<art::lib::ArtBaseHandlers> client(url, &apiHandlers);
     client.perform();
 
     // Short alias for this namespace
