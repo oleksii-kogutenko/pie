@@ -26,7 +26,7 @@
  *
  */
 
-#include "baseindex.h"
+#include <baseindex.h>
 #include <boost/log/trivial.hpp>
 
 namespace piel { namespace lib {
@@ -52,7 +52,7 @@ void BaseIndex::put(const std::string &name, const std::string &hash, const std:
     item.hash = hash;
     item.source = source;
 
-    _index.insert(std::make_pair<std::string, IndexItem>(name, item));
+    _index.insert(std::make_pair(name, item));
 }
 
 BaseIndex& BaseIndex::operator+(const BaseIndex& index)

@@ -29,15 +29,15 @@
 #include <downloadfilehandlers.h>
 
 namespace piel { namespace lib {
-    
+
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_custom_header   = false;
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_header   = false;
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
-    
+
 DownloadFileHandlers::DownloadFileHandlers(std::ostream& dest)
-: _dest(dest)
-, _checksums_builder()
+    : _dest(dest)
+    , _checksums_builder()
 {
     _checksums_builder.init();
 }

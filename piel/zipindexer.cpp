@@ -26,7 +26,7 @@
  *
  */
 
-#include "zipindexer.h"
+#include <zipindexer.h>
 
 #include <zipfile.h>
 #include <checksumsdigestbuilder.hpp>

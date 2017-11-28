@@ -26,22 +26,22 @@
  *
  */
 
-#include <artbasehandlers.h>
+#include <artbaseapihandlers.h>
 
 #include <boost/log/trivial.hpp>
 
 namespace piel { namespace lib {
 
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseHandlers>::have_handle_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseHandlers>::have_custom_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseHandlers>::have_handle_header   = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseHandlers>::have_handle_output   = true;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_input    = false;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_custom_header   = true;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_header   = false;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_output   = true;
     
 } } // namespace piel::lib
 
 namespace art { namespace lib {
 
-ArtBaseHandlers::ArtBaseHandlers(const std::string& api_token)
+ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
     : _api_token(api_token)
     , _response_buffer()
     , _stream()
@@ -49,37 +49,37 @@ ArtBaseHandlers::ArtBaseHandlers(const std::string& api_token)
 
 }
 
-ArtBaseHandlers::~ArtBaseHandlers()
+ArtBaseApiHandlers::~ArtBaseApiHandlers()
 {
 
 }
 
-piel::lib::CurlEasyHandlers::headers_type ArtBaseHandlers::custom_header()
+piel::lib::CurlEasyHandlers::headers_type ArtBaseApiHandlers::custom_header()
 {
     piel::lib::CurlEasyHandlers::headers_type result;
     result.push_back(std::string("X-JFrog-Art-Api:").append(_api_token));
     return result;
 }
 
-size_t ArtBaseHandlers::handle_header(char *ptr, size_t size)
+size_t ArtBaseApiHandlers::handle_header(char *ptr, size_t size)
 {
     return -1;
 }
-    
-size_t ArtBaseHandlers::handle_output(char *ptr, size_t size)
+
+size_t ArtBaseApiHandlers::handle_output(char *ptr, size_t size)
 {
     _response_buffer.append(ptr, ptr + size);
-    BOOST_LOG_TRIVIAL(trace) << "response: " << _response_buffer;        
+    BOOST_LOG_TRIVIAL(trace) << "response: " << _response_buffer;
     return size;
 }
 
-size_t ArtBaseHandlers::handle_input(char *ptr, size_t size)
+size_t ArtBaseApiHandlers::handle_input(char *ptr, size_t size)
 {
     // Prepare command parameters
     return -1;
 }
 
-std::istringstream &ArtBaseHandlers::responce_stream()
+std::istringstream &ArtBaseApiHandlers::responce_stream()
 {
     _stream = boost::shared_ptr<std::istringstream>(new std::istringstream(_response_buffer));
     return *_stream.get();

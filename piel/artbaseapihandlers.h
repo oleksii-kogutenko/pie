@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef ARTBASEHANDLERS_H
-#define ARTBASEHANDLERS_H
+#ifndef ARTBASEAPIHANDLERS_H
+#define ARTBASEAPIHANDLERS_H
 
 #include <curleacyclient.hpp>
 
@@ -37,12 +37,12 @@
 
 namespace art { namespace lib {
 
-class ArtBaseHandlers
+class ArtBaseApiHandlers
 {
 public:
-    ArtBaseHandlers(const std::string& api_token);
-    ~ArtBaseHandlers();
-    
+    ArtBaseApiHandlers(const std::string& api_token);
+    ~ArtBaseApiHandlers();
+
     piel::lib::CurlEasyHandlers::headers_type custom_header();
 
     size_t handle_header(char *ptr, size_t size);
@@ -63,4 +63,4 @@ private:
 } } // namespace art::lib
 
 
-#endif // ARTBASEHANDLERS_H
+#endif // ARTBASEAPIHANDLERS_H

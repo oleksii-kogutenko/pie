@@ -33,9 +33,9 @@
 #include <curleacyclient.hpp>
 
 namespace piel { namespace lib {
-    
+
 class DownloadFileHandlers {
-public:    
+public:
     DownloadFileHandlers(std::ostream& dest);
 
     CurlEasyHandlers::headers_type custom_header();
