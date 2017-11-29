@@ -27,12 +27,13 @@
  */
 
 #include <application.h>
+#include <artgavchandlers.h>
+#include <artbasedownloadhandlers.h>
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <boost/log/trivial.hpp>
-#include <artbaseapihandlers.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -61,8 +62,8 @@ public:
 
         namespace pt = boost::property_tree;
 
-        art::lib::ArtBaseApiHandlers apiHandlers(_server_api_access_token);
-        piel::lib::CurlEasyClient<art::lib::ArtBaseApiHandlers> client(create_url(), &apiHandlers);
+        art::lib::ArtGavcHandlers apiHandlers(_server_api_access_token);
+        piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &apiHandlers);
         client.perform();
 
         // Create a root
@@ -89,8 +90,19 @@ public:
 
                 pt::ptree::value_type p = (*v);
 
-                BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+                std::string propName = std::string(p.first);
+                std::string downloadUri = std::string(p.second.data());
 
+                //if (propName == "uri") {
+                if (propName == "downloadUri") {
+                    BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+
+                    std::ofstream destination("out.bin");
+                    art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
+
+                    piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
+                    downloadClient.perform();
+                }
             }
         }
 

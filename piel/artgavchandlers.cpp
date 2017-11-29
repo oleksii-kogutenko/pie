@@ -27,63 +27,36 @@
  */
 
 #include <artconstants.h>
-#include <artbaseapihandlers.h>
-
-#include <boost/log/trivial.hpp>
+#include <artgavchandlers.h>
 
 namespace piel { namespace lib {
 
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_custom_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_header   = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_output   = true;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_handle_input    = false;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_custom_header   = true;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_handle_header   = false;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_handle_output   = true;
     
 } } // namespace piel::lib
 
 namespace art { namespace lib {
 
-ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
-    : _api_token(api_token)
-    , _response_buffer()
-    , _stream()
+ArtGavcHandlers::ArtGavcHandlers(const std::string& api_token)
+    : ArtBaseApiHandlers(api_token)
 {
 
 }
 
-/*virtual*/ ArtBaseApiHandlers::~ArtBaseApiHandlers()
+ArtGavcHandlers::~ArtGavcHandlers()
 {
 
 }
 
-/*virtual*/ piel::lib::CurlEasyHandlers::headers_type ArtBaseApiHandlers::custom_header()
+/*virtual*/ piel::lib::CurlEasyHandlers::headers_type ArtGavcHandlers::custom_header()
 {
-    piel::lib::CurlEasyHandlers::headers_type result;
-    result.push_back(std::string(ArtConstants::rest_api_header__access_key).append(_api_token));
+    piel::lib::CurlEasyHandlers::headers_type result = ArtBaseApiHandlers::custom_header();
+    result.push_back(std::string(ArtConstants::rest_api_header__gavc_details).append("info, properties"));
     return result;
 }
 
-/*virtual*/ size_t ArtBaseApiHandlers::handle_header(char *ptr, size_t size)
-{
-    return -1;
-}
-
-/*virtual*/ size_t ArtBaseApiHandlers::handle_output(char *ptr, size_t size)
-{
-    _response_buffer.append(ptr, ptr + size);
-    BOOST_LOG_TRIVIAL(trace) << "response: " << _response_buffer;
-    return size;
-}
-
-/*virtual*/ size_t ArtBaseApiHandlers::handle_input(char *ptr, size_t size)
-{
-    // Prepare command parameters
-    return -1;
-}
-
-/*virtual*/ std::istringstream &ArtBaseApiHandlers::responce_stream()
-{
-    _stream = boost::shared_ptr<std::istringstream>(new std::istringstream(_response_buffer));
-    return *_stream.get();
-}
 
 } } // namespace art::lib

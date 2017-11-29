@@ -26,40 +26,20 @@
  *
  */
 
-#ifndef ARTBASEAPIHANDLERS_H
-#define ARTBASEAPIHANDLERS_H
+#ifndef ARTCONSTANTS_H
+#define ARTCONSTANTS_H
 
 #include <string>
-#include <sstream>
-#include <boost/shared_ptr.hpp>
-#include <curleacyclient.hpp>
 
 namespace art { namespace lib {
 
-class ArtBaseApiHandlers
+struct ArtConstants
 {
-public:
-    ArtBaseApiHandlers(const std::string& api_token);
-    virtual ~ArtBaseApiHandlers();
-
-    virtual piel::lib::CurlEasyHandlers::headers_type custom_header();
-
-    virtual size_t handle_header(char *ptr, size_t size);
-
-    virtual size_t handle_output(char *ptr, size_t size);
-
-    virtual size_t handle_input(char *ptr, size_t size);
-
-    virtual std::istringstream &responce_stream();
-
-private:
-    std::string _api_token;
-    std::string _response_buffer;
-    boost::shared_ptr<std::istringstream> _stream;
-
+    static const std::string rest_api_header__access_key;
+    static const std::string rest_api_header__gavc_details;
 };
 
 } } // namespace art::lib
 
 
-#endif // ARTBASEAPIHANDLERS_H
+#endif // ARTCONSTANTS_H

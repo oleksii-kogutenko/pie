@@ -26,64 +26,35 @@
  *
  */
 
-#include <artconstants.h>
+#ifndef ARTBASEDOWNLOADHANDLERS_H
+#define ARTBASEDOWNLOADHANDLERS_H
+
 #include <artbaseapihandlers.h>
+#include <checksumsdigestbuilder.hpp>
 
-#include <boost/log/trivial.hpp>
-
-namespace piel { namespace lib {
-
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_custom_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_header   = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseApiHandlers>::have_handle_output   = true;
-    
-} } // namespace piel::lib
+#include <string>
+#include <ostream>
 
 namespace art { namespace lib {
 
-ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
-    : _api_token(api_token)
-    , _response_buffer()
-    , _stream()
+class ArtBaseDownloadHandlers: public ArtBaseApiHandlers
 {
+public:
+    ArtBaseDownloadHandlers(const std::string& api_token, std::ostream& dest);
+    virtual ~ArtBaseDownloadHandlers();
 
-}
+    virtual size_t handle_output(char *ptr, size_t size);
 
-/*virtual*/ ArtBaseApiHandlers::~ArtBaseApiHandlers()
-{
+    virtual piel::lib::ChecksumsDigestBuilder::StrDigests str_digests();
 
-}
+private:
+    std::string _api_token;
+    std::ostream& _dest;    //!< destination stream.
+    piel::lib::ChecksumsDigestBuilder _checksums_builder;
 
-/*virtual*/ piel::lib::CurlEasyHandlers::headers_type ArtBaseApiHandlers::custom_header()
-{
-    piel::lib::CurlEasyHandlers::headers_type result;
-    result.push_back(std::string(ArtConstants::rest_api_header__access_key).append(_api_token));
-    return result;
-}
-
-/*virtual*/ size_t ArtBaseApiHandlers::handle_header(char *ptr, size_t size)
-{
-    return -1;
-}
-
-/*virtual*/ size_t ArtBaseApiHandlers::handle_output(char *ptr, size_t size)
-{
-    _response_buffer.append(ptr, ptr + size);
-    BOOST_LOG_TRIVIAL(trace) << "response: " << _response_buffer;
-    return size;
-}
-
-/*virtual*/ size_t ArtBaseApiHandlers::handle_input(char *ptr, size_t size)
-{
-    // Prepare command parameters
-    return -1;
-}
-
-/*virtual*/ std::istringstream &ArtBaseApiHandlers::responce_stream()
-{
-    _stream = boost::shared_ptr<std::istringstream>(new std::istringstream(_response_buffer));
-    return *_stream.get();
-}
+};
 
 } } // namespace art::lib
+
+
+#endif // ARTBASEDOWNLOADHANDLERS_H
