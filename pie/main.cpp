@@ -48,7 +48,7 @@ namespace boost { namespace property_tree {
     // void callback(const ptree::value_type& obj)
     template<class Callback>
     void each(const ptree& obj, Callback callback) {
-        for(ptree::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+        for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             callback(*i);
         }
     }
@@ -57,7 +57,7 @@ namespace boost { namespace property_tree {
     // bool predicate(const ptree::value_type& obj)
     template<class Predicate>
     ptree::value_type find(const ptree& obj, Predicate predicate) {
-        for(ptree::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+        for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             if (predicate(*i)) {
                 return (*i);
             }
@@ -70,7 +70,7 @@ namespace boost { namespace property_tree {
     template<class Predicate>
     std::list<ptree::value_type> find_all(const ptree& obj, Predicate predicate) {
         std::list<ptree::value_type> result;
-        for(ptree::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+        for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             if (predicate(*i)) {
                 result.push_back(*i);
             }
@@ -79,6 +79,8 @@ namespace boost { namespace property_tree {
     }
 
 } } // namespace boost::property_tree
+
+namespace pt = boost::property_tree;
 
 class TestBaseGavc: public ICommand {
 public:
@@ -96,25 +98,23 @@ public:
         , _query_classifier()
     {}
 
-    void on_object_property(boost::property_tree::ptree obj, boost::property_tree::ptree::value_type p) {
-
-        std::string propName = std::string(p.first);
-        std::string downloadUri = std::string(p.second.data());
-
-        //if (propName == "uri") {
-        if (propName == "downloadUri") {
-            BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
-            std::ofstream destination("out.bin");
-            art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
-
-            piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
-            downloadClient.perform();
-        }
+    bool find_object_property(const std::string& prop_name, pt::ptree::value_type prop)
+    {
+        return prop.first == prop_name;
     }
 
-    void on_object(boost::property_tree::ptree::value_type obj)
+    void on_object(pt::ptree::value_type obj)
     {
-        boost::property_tree::each(obj.second, boost::bind(&TestBaseGavc::on_object_property, this, obj.second, _1));
+        pt::ptree::value_type p = pt::find(obj.second,
+            boost::bind(&TestBaseGavc::find_object_property, this, "downloadUri", _1));
+
+        BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+        std::ofstream destination("out.bin");
+        art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
+
+        std::string downloadUri = std::string(p.second.data());
+        piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
+        downloadClient.perform();
     }
 
     int perform()
@@ -124,8 +124,6 @@ public:
         if (!parse_arguments()) {
             return result;
         }
-
-        namespace pt = boost::property_tree;
 
         art::lib::ArtGavcHandlers apiHandlers(_server_api_access_token);
         piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &apiHandlers);
