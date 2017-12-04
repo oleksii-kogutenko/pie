@@ -33,12 +33,56 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <list>
 #include <boost/log/trivial.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+
+namespace boost { namespace property_tree {
+
+    // Several common algorithms.
+
+    // Emumerate sub objects.
+    // void callback(const ptree::value_type& obj)
+    template<class Callback>
+    void each(const ptree& obj, Callback callback) {
+        for(ptree::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+            callback(*i);
+        }
+    }
+
+    // Find sub object.
+    // bool predicate(const ptree::value_type& obj)
+    template<class Predicate>
+    ptree::value_type find(const ptree& obj, Predicate predicate) {
+        for(ptree::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+            if (predicate(*i)) {
+                return (*i);
+            }
+        }
+        return ptree::value_type();
+    }
+
+    // Find sub objects.
+    // bool predicate(const ptree::value_type& obj)
+    template<class Predicate>
+    std::list<ptree::value_type> find_all(const ptree& obj, Predicate predicate) {
+        std::list<ptree::value_type> result;
+        for(ptree::const_iterator i = obj.begin(); i != obj.end(); ++i) {
+            if (predicate(*i)) {
+                result.push_back(*i);
+            }
+        }
+        return result;
+    }
+
+} } // namespace boost::property_tree
 
 class TestBaseGavc: public ICommand {
 public:
+
     TestBaseGavc(Application *app, int argc, char **argv)
         : ICommand(app)
         , _argc(argc)
@@ -51,6 +95,27 @@ public:
         , _query_version()
         , _query_classifier()
     {}
+
+    void on_object_property(boost::property_tree::ptree obj, boost::property_tree::ptree::value_type p) {
+
+        std::string propName = std::string(p.first);
+        std::string downloadUri = std::string(p.second.data());
+
+        //if (propName == "uri") {
+        if (propName == "downloadUri") {
+            BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+            std::ofstream destination("out.bin");
+            art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
+
+            piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
+            downloadClient.perform();
+        }
+    }
+
+    void on_object(boost::property_tree::ptree::value_type obj)
+    {
+        boost::property_tree::each(obj.second, boost::bind(&TestBaseGavc::on_object_property, this, obj.second, _1));
+    }
 
     int perform()
     {
@@ -72,39 +137,7 @@ public:
         // Load the json file in this ptree
         pt::read_json(apiHandlers.responce_stream(), root);
 
-        typedef pt::ptree::const_iterator Iter;
-
-        //results = root.get_child("results");
-        pt::ptree results = root.get_child("results");
-        //root.get_value();
-
-        for(Iter i = results.begin(); i != results.end(); ++i) {
-
-            pt::ptree::value_type pair = (*i);
-
-            //BOOST_LOG_TRIVIAL(trace) << std::string(pair.first) << ": " << std::string(pair.second.data());
-
-            pt::ptree val = pair.second;
-
-            for(Iter v = val.begin(); v != val.end(); ++v) {
-
-                pt::ptree::value_type p = (*v);
-
-                std::string propName = std::string(p.first);
-                std::string downloadUri = std::string(p.second.data());
-
-                //if (propName == "uri") {
-                if (propName == "downloadUri") {
-                    BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
-
-                    std::ofstream destination("out.bin");
-                    art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
-
-                    piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
-                    downloadClient.perform();
-                }
-            }
-        }
+        pt::each(root.get_child("results"), boost::bind(&TestBaseGavc::on_object, this, _1));
 
         return result;
     }
