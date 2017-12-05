@@ -27,13 +27,13 @@
  */
 
 #include <iostream>
+#include <cstdlib>
 #include <gavccommand.h>
 #include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
 
 #include <boost/bind.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/program_options.hpp>
 #include <boost_property_tree_ext.hpp>
 
 namespace pt = boost::property_tree;
@@ -55,6 +55,28 @@ GavcCommand::~GavcCommand()
 {
 }
 
+bool GavcCommand::get_from_env(po::variables_map& vm,
+                               const std::string& opt_name,
+                               const std::string& env_var,
+                               std::string& var)
+{
+    if (!vm.count(opt_name)) {
+        // Attempt to get token from environment
+        const char *value = ::getenv(env_var.c_str());
+        if (value)
+        {
+            BOOST_LOG_TRIVIAL(trace) << "Got " << env_var << " environment variable. Value: " << value << ".";
+            var = std::string(value);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool GavcCommand::parse_arguments()
 {
     po::options_description desc("Query options");
@@ -62,11 +84,11 @@ bool GavcCommand::parse_arguments()
     std::string query_str;
     
     desc.add_options()
-        ("token,t",         po::value<std::string>(&_server_api_access_token)->required(),  "Token to access server remote api (required).")
-        ("server,s",        po::value<std::string>(&_server_url)->required(),               "Server url (required).")
-        ("repository,r",    po::value<std::string>(&_server_repository)->required(),        "Server repository (required).")
-        ("query,q",         po::value<std::string>(&query_str)->required(),                 "Query.")
-        ("download,d",                                                                      "Download query results.")
+        ("token,t",         po::value<std::string>(&_server_api_access_token),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
+        ("server,s",        po::value<std::string>(&_server_url),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
+        ("repository,r",    po::value<std::string>(&_server_repository),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
+        ("query,q",         po::value<std::string>(&query_str)->required(),     "Query.")
+        ("download,d",                                                          "Download query results.")
         ;
 
     if (show_help(desc, _argc, _argv)) {
@@ -79,11 +101,19 @@ bool GavcCommand::parse_arguments()
     po::notify(vm);
 
     // Check if all requared arguments are set
-    if (!( vm.count("token")
-        && vm.count("server")
-        && vm.count("repository")
-        && vm.count("query")
-    )) {
+    if (!vm.count("query"))
+    {
+        std::cerr << "Please specify all required arguments." << std::endl;
+        std::cout << desc;
+        return false;
+    }
+
+    bool get_env_flag = true;
+    get_env_flag &= get_from_env(vm, "token",       "GAVC_SERVER_API_ACCESS_TOKEN", _server_api_access_token);
+    get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              _server_url);
+    get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       _server_repository);
+
+    if (!get_env_flag) {
         std::cerr << "Please specify all required arguments." << std::endl;
         std::cout << desc;
         return false;

@@ -32,6 +32,7 @@
 #include <application.h>
 #include <gavcquery.h>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/program_options.hpp>
 
 class GavcCommand: public ICommand
 {
@@ -47,6 +48,10 @@ protected:
     bool parse_arguments();
     std::string create_url() const;
     void on_object(boost::property_tree::ptree::value_type obj);
+    bool get_from_env(boost::program_options::variables_map& vm,
+                      const std::string& opt_name,
+                      const std::string& env_var,
+                      std::string& var);
 
 private:
     int _argc;
