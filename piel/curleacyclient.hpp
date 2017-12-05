@@ -42,6 +42,8 @@ struct CurlEasyHandlersTraits {
     static const bool have_handle_header;
     static const bool have_handle_input;
     static const bool have_handle_output;
+    static const bool have_before_input;
+    static const bool have_before_output;
 };
 
 struct CurlEasyHandlers {
@@ -50,6 +52,8 @@ struct CurlEasyHandlers {
     size_t handle_header(char *ptr, size_t size)    { return CURLE_WRITE_ERROR; }
     size_t handle_output(char *ptr, size_t size)    { return CURLE_WRITE_ERROR; }
     size_t handle_input(char *ptr, size_t size)     { return CURLE_READ_ERROR; }
+    void before_input()                             { }
+    void before_output()                            { }
 };
 
 template<class Handlers>
@@ -94,6 +98,9 @@ template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_write(char *ptr, size_t size, size_t count, void* ctx)
 {
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
+    if (CurlEasyHandlersTraits<Handlers>::have_before_output) {
+        thiz->_handlers->before_output();
+    }
     return thiz->_handlers->handle_output(ptr, size*count);
 }
 
@@ -101,6 +108,9 @@ template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t count, void* ctx)
 {
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
+    if (CurlEasyHandlersTraits<Handlers>::have_before_input) {
+        thiz->_handlers->before_input();
+    }
     return thiz->_handlers->handle_input(ptr, size*count);
 }
 

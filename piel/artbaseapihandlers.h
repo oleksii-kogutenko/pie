@@ -31,6 +31,7 @@
 
 #include <string>
 #include <sstream>
+#include <map>
 #include <boost/shared_ptr.hpp>
 #include <curleacyclient.hpp>
 
@@ -39,6 +40,10 @@ namespace art { namespace lib {
 class ArtBaseApiHandlers
 {
 public:
+    struct IBeforeCallback {
+        virtual void callback(ArtBaseApiHandlers *handlers) = 0;
+    };
+
     ArtBaseApiHandlers(const std::string& api_token);
     virtual ~ArtBaseApiHandlers();
 
@@ -52,11 +57,24 @@ public:
 
     virtual std::istringstream &responce_stream();
 
+    virtual void before_input();
+
+    virtual void before_output();
+
+    void set_before_input_callback(IBeforeCallback *callback);
+
+    void set_before_output_callback(IBeforeCallback *callback);
+
+    std::map<std::string, std::string>& headers();
+
 private:
     std::string _api_token;
     std::string _response_buffer;
     boost::shared_ptr<std::istringstream> _stream;
+    std::map<std::string, std::string> _headers;
 
+    IBeforeCallback *_before_input_callback;
+    IBeforeCallback *_before_output_callback;
 };
 
 } } // namespace art::lib

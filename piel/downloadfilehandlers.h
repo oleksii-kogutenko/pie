@@ -48,6 +48,10 @@ public:
 
     ChecksumsDigestBuilder::StrDigests str_digests();
 
+    void before_input();
+
+    void before_output();
+
 private:
     std::ostream& _dest;    //!< destination stream.
     ChecksumsDigestBuilder _checksums_builder;

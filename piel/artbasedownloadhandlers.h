@@ -51,7 +51,6 @@ private:
     std::string _api_token;
     std::ostream& _dest;    //!< destination stream.
     piel::lib::ChecksumsDigestBuilder _checksums_builder;
-
 };
 
 } } // namespace art::lib

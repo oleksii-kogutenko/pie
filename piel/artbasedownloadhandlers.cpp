@@ -35,9 +35,11 @@ namespace piel { namespace lib {
 
 template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_input    = false;
 template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_custom_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_header   = false;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_header   = true;
 template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_output   = true;
-    
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_before_input    = false;
+template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_before_output   = true;
+
 } } // namespace piel::lib
 
 namespace art { namespace lib {

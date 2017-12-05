@@ -40,6 +40,8 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
+#include <boost/optional.hpp>
+
 namespace boost { namespace property_tree {
 
     // Several common algorithms.
@@ -55,20 +57,20 @@ namespace boost { namespace property_tree {
 
     // Find sub object.
     // bool predicate(const ptree::value_type& obj)
-    template<class Predicate>
-    ptree::value_type find(const ptree& obj, Predicate predicate) {
+    template<class UnaryPredicate>
+    boost::optional<ptree::value_type> find(const ptree& obj, UnaryPredicate predicate) {
         for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             if (predicate(*i)) {
                 return (*i);
             }
         }
-        return ptree::value_type();
+        return boost::none;
     }
 
     // Find sub objects.
     // bool predicate(const ptree::value_type& obj)
-    template<class Predicate>
-    std::list<ptree::value_type> find_all(const ptree& obj, Predicate predicate) {
+    template<class UnaryPredicate>
+    std::list<ptree::value_type> find_all(const ptree& obj, UnaryPredicate predicate) {
         std::list<ptree::value_type> result;
         for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             if (predicate(*i)) {
@@ -98,19 +100,37 @@ public:
         , _query_classifier()
     {}
 
-    bool find_object_property(const std::string& prop_name, pt::ptree::value_type prop)
-    {
-        return prop.first == prop_name;
-    }
-
     void on_object(pt::ptree::value_type obj)
     {
-        pt::ptree::value_type p = pt::find(obj.second,
-            boost::bind(&TestBaseGavc::find_object_property, this, "downloadUri", _1));
+        struct helper {
+            static bool find_object_property(const std::string& prop_name, pt::ptree::value_type prop)
+            {
+                return prop.first == prop_name;
+            }
+        };
+        struct before_output_callback: public art::lib::ArtBaseApiHandlers::IBeforeCallback {
+            virtual void callback(art::lib::ArtBaseApiHandlers *handlers)
+            {
+                BOOST_LOG_TRIVIAL(trace) << "Artifactory filename: " << handlers->headers()["X-Artifactory-Filename"];
+            }
+        };
+
+        boost::optional<pt::ptree::value_type> op = pt::find(obj.second,
+            boost::bind(&helper::find_object_property, "downloadUri", _1));
+
+        if (!op) {
+            return;
+        }
+
+        pt::ptree::value_type p = *op;
 
         BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+
         std::ofstream destination("out.bin");
         art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
+        
+        before_output_callback before_output;
+        downloadHandlers.set_before_output_callback(&before_output);
 
         std::string downloadUri = std::string(p.second.data());
         piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);

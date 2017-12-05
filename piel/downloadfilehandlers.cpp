@@ -34,6 +34,8 @@ template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_custom_
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_header   = false;
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
 template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
+template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_before_output   = false;
+template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_before_input    = false;
 
 DownloadFileHandlers::DownloadFileHandlers(std::ostream& dest)
     : _dest(dest)
@@ -67,6 +69,16 @@ size_t DownloadFileHandlers::handle_input(char *ptr, size_t size)
 ChecksumsDigestBuilder::StrDigests DownloadFileHandlers::str_digests()
 {
     return _checksums_builder.finalize<ChecksumsDigestBuilder::StrDigests>();
+}
+
+void DownloadFileHandlers::before_input()
+{
+
+}
+
+void DownloadFileHandlers::before_output()
+{
+
 }
 
 } } // namespace piel::lib
