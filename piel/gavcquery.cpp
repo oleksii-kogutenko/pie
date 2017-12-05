@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace art { namespace lib {
 
@@ -56,43 +57,50 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     std::string::const_iterator sepa_begin  = gavc_str.begin();
     std::string::const_iterator sepa_end    = end;
  
+    BOOST_LOG_TRIVIAL(trace) << "parce gavc query: " << gavc_str;
+    
     // Group
     sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::delimiter));
     if (sepa_end == end) {
         return boost::none;
     }
     result._group.append(sepa_begin, sepa_end);
+    BOOST_LOG_TRIVIAL(trace) << "group: " << result._group;
     sepa_begin = sepa_end;
-    if (++sepa_begin == end) {
+    if (sepa_begin++ == end) {
         return boost::none;
     }
 
     // Name
     sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::delimiter));
     result._name.append(sepa_begin, sepa_end);
+    BOOST_LOG_TRIVIAL(trace) << "name: " << result._name;
     sepa_begin = sepa_end;
-    if (++sepa_begin == end) {
+    if (sepa_begin++ == end) {
         return result;
     }
 
     // Version
     sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::delimiter));
     result._version.append(sepa_begin, sepa_end);
+    BOOST_LOG_TRIVIAL(trace) << "version: " << result._version;
     sepa_begin = sepa_end;
-    if (++sepa_begin == end) {
+    if (sepa_begin++ == end) {
         return result;
     }
 
     // Classifier
     sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::extension_prefix));
     result._classifier.append(sepa_begin, sepa_end);
+    BOOST_LOG_TRIVIAL(trace) << "classifier: " << result._classifier;
     sepa_begin = sepa_end;
-    if (++sepa_begin == end) {
+    if (sepa_begin++ == end) {
         return result;
     }
 
     // Extension
-    result._classifier.append(sepa_begin, end);
+    result._extension.append(sepa_begin, end);
+    BOOST_LOG_TRIVIAL(trace) << "extension: " << result._extension;
 
     return result;
 }

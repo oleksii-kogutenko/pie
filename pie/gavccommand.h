@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2017, Dmytro Iakovliev <email>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev <email> ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev <email> BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,14 +26,36 @@
  *
  */
 
+#ifndef GAVCCOMMAND_H
+#define GAVCCOMMAND_H
+
 #include <application.h>
-#include <gavccommand.h>
+#include <gavcquery.h>
+#include <boost/property_tree/ptree.hpp>
 
-int main(int argc, char **argv)
+class GavcCommand: public ICommand
 {
-    Application application(argc, argv);
+public:
+    GavcCommand(Application *app, int argc, char **argv);
+    ~GavcCommand();
 
-    application.register_command(new CommmandConstructor<GavcCommand>("gavc", "GAVC query implementation"));
+    virtual int perform();
 
-    return application.run();
-}
+protected:
+    bool parse_arguments();
+    std::string create_url() const;
+    void on_object(boost::property_tree::ptree::value_type obj);
+    
+private:
+    int _argc;
+    char **_argv;
+
+    std::string _server_url;
+    std::string _server_api_access_token;
+    std::string _server_repository;
+
+    art::lib::GavcQuery _query;
+
+};
+
+#endif // GAVCCOMMAND_H

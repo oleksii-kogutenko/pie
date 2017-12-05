@@ -26,14 +26,52 @@
  *
  */
 
-#include <application.h>
-#include <gavccommand.h>
+#ifndef BOOST_PROPERTY_TREE_EXT_HPP
+#define BOOST_PROPERTY_TREE_EXT_HPP
 
-int main(int argc, char **argv)
-{
-    Application application(argc, argv);
+#include <list>
+#include <boost/optional.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
-    application.register_command(new CommmandConstructor<GavcCommand>("gavc", "GAVC query implementation"));
+namespace boost { namespace property_tree {
 
-    return application.run();
-}
+    // Several common algorithms.
+
+    // Emumerate sub objects.
+    // void callback(const ptree::value_type& obj)
+    template<class Callback>
+    void each(const ptree& obj, Callback callback) {
+        for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
+            callback(*i);
+        }
+    }
+
+    // Find sub object.
+    // bool predicate(const ptree::value_type& obj)
+    template<class UnaryPredicate>
+    boost::optional<ptree::value_type> find(const ptree& obj, UnaryPredicate predicate) {
+        for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
+            if (predicate(*i)) {
+                return (*i);
+            }
+        }
+        return boost::none;
+    }
+
+    // Find sub objects.
+    // bool predicate(const ptree::value_type& obj)
+    template<class UnaryPredicate>
+    std::list<ptree::value_type> find_all(const ptree& obj, UnaryPredicate predicate) {
+        std::list<ptree::value_type> result;
+        for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
+            if (predicate(*i)) {
+                result.push_back(*i);
+            }
+        }
+        return result;
+    }
+
+} } // namespace boost::property_tree
+
+#endif //BOOST_PROPERTY_TREE_EXT_HPP
