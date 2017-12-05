@@ -149,31 +149,32 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     if (!op)
     {
+        BOOST_LOG_TRIVIAL(fatal) << "Can't find downloadUri property!";
         return;
     }
 
     pt::ptree::value_type p = *op;
 
-    BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
+    BOOST_LOG_TRIVIAL(trace) << p.first << ": " << p.second.data();
 
-    std::string downloadUri = std::string(p.second.data());
+    std::string download_uri = p.second.data();
 
     if (_download_results) {
 
-        art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token);
+        art::lib::ArtBaseDownloadHandlers download_handlers(_server_api_access_token);
 
         BeforeOutputCallback before_output;
-        downloadHandlers.set_before_output_callback(&before_output);
+        download_handlers.set_before_output_callback(&before_output);
 
-        piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
+        piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
 
-        std::cout << "Downloading file from: " << downloadUri << std::endl;
+        std::cout << "Downloading file from: " << download_uri << std::endl;
 
-        downloadClient.perform();
+        download_client.perform();
 
     } else {
 
-        std::cout << "Download url: " << downloadUri << std::endl;
+        std::cout << "Download url: " << download_uri << std::endl;
 
     }
 }
@@ -181,19 +182,20 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 /*virtual*/ int GavcCommand::perform()
 {
     int result = -1;
+
     if (!parse_arguments()) {
         return result;
     }
 
-    art::lib::ArtGavcHandlers apiHandlers(_server_api_access_token);
-    piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &apiHandlers);
+    art::lib::ArtGavcHandlers api_handlers(_server_api_access_token);
+    piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &api_handlers);
     client.perform();
 
     // Create a root
     pt::ptree root;
 
     // Load the json file in this ptree
-    pt::read_json(apiHandlers.responce_stream(), root);
+    pt::read_json(api_handlers.responce_stream(), root);
     pt::each(root.get_child("results"), boost::bind(&GavcCommand::on_object, this, _1));
     
     result = 0;
