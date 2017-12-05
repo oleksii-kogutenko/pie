@@ -41,11 +41,13 @@ public:
 
     virtual int perform();
 
+    bool download_results() const { return _download_results; }
+
 protected:
     bool parse_arguments();
     std::string create_url() const;
     void on_object(boost::property_tree::ptree::value_type obj);
-    
+
 private:
     int _argc;
     char **_argv;
@@ -55,6 +57,8 @@ private:
     std::string _server_repository;
 
     art::lib::GavcQuery _query;
+
+    bool _download_results;
 
 };
 

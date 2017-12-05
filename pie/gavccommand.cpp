@@ -47,6 +47,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , _server_api_access_token()
     , _server_repository()
     , _query()
+    , _download_results(false)
 {
 }
 
@@ -65,6 +66,7 @@ bool GavcCommand::parse_arguments()
         ("server,s",        po::value<std::string>(&_server_url)->required(),               "Server url (required).")
         ("repository,r",    po::value<std::string>(&_server_repository)->required(),        "Server repository (required).")
         ("query,q",         po::value<std::string>(&query_str)->required(),                 "Query.")
+        ("download,d",                                                                      "Download query results.")
         ;
 
     if (show_help(desc, _argc, _argv)) {
@@ -96,6 +98,7 @@ bool GavcCommand::parse_arguments()
     }
 
     _query = *parsed_query;
+    _download_results = vm.count("download");
 
     return true;
 }
@@ -153,14 +156,26 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
 
-    art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token);
-    
-    BeforeOutputCallback before_output;
-    downloadHandlers.set_before_output_callback(&before_output);
-
     std::string downloadUri = std::string(p.second.data());
-    piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
-    downloadClient.perform();
+
+    if (_download_results) {
+
+        art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token);
+
+        BeforeOutputCallback before_output;
+        downloadHandlers.set_before_output_callback(&before_output);
+
+        piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> downloadClient(downloadUri, &downloadHandlers);
+
+        std::cout << "Downloading file from: " << downloadUri << std::endl;
+
+        downloadClient.perform();
+
+    } else {
+
+        std::cout << "Download url: " << downloadUri << std::endl;
+
+    }
 }
 
 /*virtual*/ int GavcCommand::perform()
