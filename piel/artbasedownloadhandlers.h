@@ -40,16 +40,19 @@ namespace art { namespace lib {
 class ArtBaseDownloadHandlers: public ArtBaseApiHandlers
 {
 public:
-    ArtBaseDownloadHandlers(const std::string& api_token, std::ostream& dest);
+    ArtBaseDownloadHandlers(const std::string& api_token);
+    ArtBaseDownloadHandlers(const std::string& api_token, std::ostream* dest);
     virtual ~ArtBaseDownloadHandlers();
 
     virtual size_t handle_output(char *ptr, size_t size);
 
     virtual piel::lib::ChecksumsDigestBuilder::StrDigests str_digests();
 
+    void set_destination(std::ostream* dest);
+
 private:
     std::string _api_token;
-    std::ostream& _dest;    //!< destination stream.
+    std::ostream* _dest;    //!< destination stream.
     piel::lib::ChecksumsDigestBuilder _checksums_builder;
 };
 

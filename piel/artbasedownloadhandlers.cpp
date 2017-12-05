@@ -44,7 +44,15 @@ template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>:
 
 namespace art { namespace lib {
 
-ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, std::ostream& dest)
+ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token)
+    : ArtBaseApiHandlers(api_token)
+    , _dest(0)
+    , _checksums_builder()
+{
+    _checksums_builder.init();
+}
+
+ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, std::ostream *dest)
     : ArtBaseApiHandlers(api_token)
     , _dest(dest)
     , _checksums_builder()
@@ -57,9 +65,14 @@ ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, s
 
 }
 
+void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
+{
+    _dest = dest;
+}
+
 /*virtual*/ size_t ArtBaseDownloadHandlers::handle_output(char *ptr, size_t size)
 {
-    _dest.write(ptr, size);
+    if (_dest) _dest->write(ptr, size);
     _checksums_builder.update(ptr, size);
     return size;
 }

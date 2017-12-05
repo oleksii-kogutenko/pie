@@ -102,21 +102,31 @@ public:
 
     void on_object(pt::ptree::value_type obj)
     {
-        struct helper {
+        struct FindPropertyHelper {
             static bool find_object_property(const std::string& prop_name, pt::ptree::value_type prop)
             {
                 return prop.first == prop_name;
             }
         };
-        struct before_output_callback: public art::lib::ArtBaseApiHandlers::IBeforeCallback {
+        struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallback {
             virtual void callback(art::lib::ArtBaseApiHandlers *handlers)
             {
-                BOOST_LOG_TRIVIAL(trace) << "Artifactory filename: " << handlers->headers()["X-Artifactory-Filename"];
+                std::string output_filename = handlers->headers()["X-Artifactory-Filename"];
+
+                BOOST_LOG_TRIVIAL(trace) << "Artifactory filename: " << output_filename;
+
+                _dest = boost::shared_ptr<std::ofstream>(new std::ofstream(output_filename.c_str()));
+
+                dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(_dest.get());
             }
+
+        private:
+            boost::shared_ptr<std::ofstream> _dest;
+
         };
 
         boost::optional<pt::ptree::value_type> op = pt::find(obj.second,
-            boost::bind(&helper::find_object_property, "downloadUri", _1));
+            boost::bind(&FindPropertyHelper::find_object_property, "downloadUri", _1));
 
         if (!op) {
             return;
@@ -126,10 +136,9 @@ public:
 
         BOOST_LOG_TRIVIAL(trace) << std::string(p.first) << ": " << std::string(p.second.data());
 
-        std::ofstream destination("out.bin");
-        art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token, destination);
-        
-        before_output_callback before_output;
+        art::lib::ArtBaseDownloadHandlers downloadHandlers(_server_api_access_token);
+
+        BeforeOutputCallback before_output;
         downloadHandlers.set_before_output_callback(&before_output);
 
         std::string downloadUri = std::string(p.second.data());
