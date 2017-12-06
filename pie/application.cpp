@@ -45,11 +45,16 @@ bool ICommand::show_help(boost::program_options::options_description &desc, int 
 
     if (vm.count("help")) {
         std::cout << help_desc;
-        std::cout << desc;
+        show_command_help_message(desc);
         return true;
     }
 
     return false;
+}
+
+/*virtual*/ void ICommand::show_command_help_message(const boost::program_options::options_description& desc)
+{
+    std::cout << desc;
 }
 
 UnknownCommand::UnknownCommand(Application *app, int argc, char **argv)
@@ -101,8 +106,8 @@ boost::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
 void CommandsFactory::show_registered_commands() const
 {
     std::cout << "Commands:" << std::endl;
-    Constructors::const_iterator cmd_iter = _constructors.begin();
-    Constructors::const_iterator end      = _constructors.end();
+    Constructors::const_iterator cmd_iter = _constructors.begin(), 
+                                 end      = _constructors.end();
     for (;cmd_iter != end; ++cmd_iter) {
         std::cout << "\t" << cmd_iter->second->name()
                   << ":\t" << cmd_iter->second->description()

@@ -62,7 +62,7 @@ public:
     //! Handler is used to process HTTP headers returned by server during REST api call.
     //! \param ptr Pointer to libcurl internal buffer with header data.
     //! \param size Size of data block passed in libcurl internal buffer with header data.
-    //! \return Size of data processed bu handler.
+    //! \return Size of data processed by handler.
     virtual size_t handle_header(char *ptr, size_t size);
 
     //! Handler is used to collect server response data returned by server during REST api call.

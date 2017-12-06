@@ -46,6 +46,7 @@ public:
 
 protected:
     bool parse_arguments();
+    void show_command_help_message(const boost::program_options::options_description& desc);
     std::string create_url() const;
     void on_object(boost::property_tree::ptree::value_type obj);
     bool get_from_env(boost::program_options::variables_map& vm,

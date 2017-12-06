@@ -46,7 +46,8 @@ struct ICommand {
     }
 
 protected:
-    bool show_help(boost::program_options::options_description &desc, int argc, char **argv);
+    bool show_help(boost::program_options::options_description& desc, int argc, char **argv);
+    virtual void show_command_help_message(const boost::program_options::options_description& desc);
 
 private:
     Application *_app;

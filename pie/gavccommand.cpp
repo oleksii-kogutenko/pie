@@ -77,17 +77,19 @@ bool GavcCommand::get_from_env(po::variables_map& vm,
     return true;
 }
 
+void GavcCommand::show_command_help_message(const po::options_description& desc)
+{
+    std::cerr << "Usage: gavc <gavc query> [options]" << std::endl;
+    std::cout << desc;
+}
+
 bool GavcCommand::parse_arguments()
 {
     po::options_description desc("Query options");
-
-    std::string query_str;
-    
     desc.add_options()
         ("token,t",         po::value<std::string>(&_server_api_access_token),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
         ("server,s",        po::value<std::string>(&_server_url),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&_server_repository),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
-        ("query,q",         po::value<std::string>(&query_str)->required(),     "Query (required).")
         ("download,d",                                                          "Download query results.")
         ;
 
@@ -95,22 +97,34 @@ bool GavcCommand::parse_arguments()
         return false;
     }
 
+    // second argument is query
+    if (_argc < 2) {
+        show_command_help_message(desc);
+        return false;
+    }
+
+    std::string query_str(_argv[1]);
+
+    // Parce query
+    BOOST_LOG_TRIVIAL(trace) << "query to perform: " << query_str;
+
+    boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
+    if (!parsed_query)
+    {
+        std::cout << "Wrong gavc query: " << query_str << "!" << std::endl;
+        show_command_help_message(desc);
+        return false;
+    }
+
+    _query = *parsed_query;
+
     po::variables_map vm;
     po::parsed_options parsed = po::command_line_parser(_argc, _argv).options(desc).allow_unregistered().run();
     po::store(parsed, vm);
     try {
         po::notify(vm);
     } catch (...) {
-        std::cerr << "Please specify all required arguments." << std::endl;
-        std::cout << desc;
-        return false;
-    }
-
-    // Check if all requared arguments are set
-    if (!vm.count("query"))
-    {
-        std::cerr << "Please specify all required arguments." << std::endl;
-        std::cout << desc;
+        show_command_help_message(desc);
         return false;
     }
 
@@ -120,20 +134,10 @@ bool GavcCommand::parse_arguments()
     get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       _server_repository);
 
     if (!get_env_flag) {
-        std::cerr << "Please specify all required arguments." << std::endl;
-        std::cout << desc;
+        show_command_help_message(desc);
         return false;
     }
 
-    // Parce query
-    boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
-    if (!parsed_query)
-    {
-        std::cerr << "Wrong GAVC query specified: " << query_str << "!" << std::endl;
-        return false;
-    }
-
-    _query = *parsed_query;
     _download_results = vm.count("download");
 
     return true;
