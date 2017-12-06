@@ -48,7 +48,7 @@ public:
     std::string version() const         { return _version; }
     std::string classifier() const      { return _classifier; }
     std::string extension() const       { return _extension; }
-    
+
 private:
     std::string _group;
     std::string _name;

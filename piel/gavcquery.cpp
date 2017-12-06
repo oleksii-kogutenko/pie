@@ -33,7 +33,94 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 
+#include <boost/config/warning_disable.hpp>
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/spirit/include/phoenix_stl.hpp>
+#include <boost/spirit/include/qi.hpp>
+
 namespace art { namespace lib {
+
+//! Versions based queries
+//
+//  '*' - all
+//  '+' - latest
+//  '-' - oldest
+// 
+// prefix(+|-|*\.)+suffix
+//  - calculation from left to right
+//    (+|-|*\.)(+|-) == (+|-) (single element)
+//    (+|-|*\.)* == * (set)
+//
+// Pairs conversion matrix:
+//     -------------
+//     | + | - | * |
+// -----------------
+// | + | + | - | + |
+// -----------------
+// | - | - | - | - |
+// -----------------
+// | * | + | - | * |
+// -----------------
+namespace gavc {
+
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+
+    template<typename Iterator>
+    struct parser {
+
+        std::string _group;
+        std::string _name;
+        std::string _version;       // all by default
+        std::string _classifier;    // empty by default
+        std::string _extension;     // empty by default
+
+        bool parse(Iterator begin, Iterator end)
+        {
+            using qi::char_;
+            using qi::skip;
+            using qi::lexeme;
+            using qi::_1;
+            using qi::phrase_parse;
+            using boost::phoenix::ref;
+            using boost::spirit::as_string;
+
+            qi::rule<Iterator, std::string()> group, name, version, version_body, classifier, extension, gavc;
+
+            version_body = +(char_-':');
+
+            group       = as_string[lexeme[+(char_-':')]]               [ref(_group) = _1];
+            name        = as_string[lexeme[skip[':'] >> +(char_-':')]]  [ref(_name) = _1];
+            version     = as_string[lexeme[skip[':'] >> version_body]]  [ref(_version) = _1];
+            classifier  = as_string[lexeme[skip[':'] >> +(char_-'@')]]  [ref(_classifier) = _1];
+            extension   = as_string[lexeme[skip['@'] >> +(char_)]]      [ref(_extension) = _1];
+
+            gavc =
+                group
+                    > name
+                        > *(version
+                            > *(classifier
+                                > *extension) );
+
+            bool result = true;
+            try {
+                phrase_parse(begin, end, gavc, ascii::space);
+            } catch (...) {
+                result = false;
+            }
+
+            BOOST_LOG_TRIVIAL(trace) << "* group: "      << _group;
+            BOOST_LOG_TRIVIAL(trace) << "* name: "       << _name;
+            BOOST_LOG_TRIVIAL(trace) << "version: "    << _version;
+            BOOST_LOG_TRIVIAL(trace) << "classifier: " << _classifier;
+            BOOST_LOG_TRIVIAL(trace) << "extension: "  << _extension;
+
+            return result;
+        }
+
+    };
+}
 
 GavcQuery::GavcQuery()
     : _group()
@@ -52,55 +139,16 @@ GavcQuery::~GavcQuery()
 // <group.spec>:<name-spec>[:][<version.spec>[:{[classifier][@][extension]}]]
 boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
 {
+    gavc::parser<std::string::const_iterator> parser;
+    if (!parser.parse(gavc_str.begin(), gavc_str.end()))
+        return boost::none;
+
     GavcQuery result;
-    std::string::const_iterator end         = gavc_str.end();
-    std::string::const_iterator sepa_begin  = gavc_str.begin();
-    std::string::const_iterator sepa_end    = end;
- 
-    BOOST_LOG_TRIVIAL(trace) << "parce gavc query: " << gavc_str;
-    
-    // Group
-    sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::delimiter));
-    if (sepa_end == end) {
-        return boost::none;
-    }
-    result._group.append(sepa_begin, sepa_end);
-    BOOST_LOG_TRIVIAL(trace) << "group: " << result._group;
-    sepa_begin = sepa_end;
-    if (sepa_begin++ == end) {
-        return boost::none;
-    }
-
-    // Name
-    sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::delimiter));
-    result._name.append(sepa_begin, sepa_end);
-    BOOST_LOG_TRIVIAL(trace) << "name: " << result._name;
-    sepa_begin = sepa_end;
-    if (sepa_begin++ == end) {
-        return result;
-    }
-
-    // Version
-    sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::delimiter));
-    result._version.append(sepa_begin, sepa_end);
-    BOOST_LOG_TRIVIAL(trace) << "version: " << result._version;
-    sepa_begin = sepa_end;
-    if (sepa_begin++ == end) {
-        return result;
-    }
-
-    // Classifier
-    sepa_end = std::find_if(sepa_begin, end, boost::is_any_of(GavcConstants::extension_prefix));
-    result._classifier.append(sepa_begin, sepa_end);
-    BOOST_LOG_TRIVIAL(trace) << "classifier: " << result._classifier;
-    sepa_begin = sepa_end;
-    if (sepa_begin++ == end) {
-        return result;
-    }
-
-    // Extension
-    result._extension.append(sepa_begin, end);
-    BOOST_LOG_TRIVIAL(trace) << "extension: " << result._extension;
+    result._group       = parser._group;
+    result._name        = parser._name;
+    result._version     = parser._version;
+    result._classifier  = parser._classifier;
+    result._extension   = parser._extension;
 
     return result;
 }
