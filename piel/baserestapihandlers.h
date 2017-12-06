@@ -29,7 +29,7 @@
 #ifndef BASERESTAPIHANDLERS_H
 #define BASERESTAPIHANDLERS_H
 
-#include <curleacyclient.hpp>
+#include <curleasyclient.hpp>
 
 namespace piel { namespace lib {
 

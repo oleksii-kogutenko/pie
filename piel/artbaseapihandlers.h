@@ -33,48 +33,81 @@
 #include <sstream>
 #include <map>
 #include <boost/shared_ptr.hpp>
-#include <curleacyclient.hpp>
+#include <curleasyclient.hpp>
 
 namespace art { namespace lib {
 
+//! Base artifactory REST api handlers for the CurlEasyClient.
+//! \sa CurlEasyHandlers
 class ArtBaseApiHandlers
 {
 public:
+    //! Interface for the callbacks. Callbacks can be set up by and will be called before IO operations.
+    //! \sa set_before_input_callback, set_before_output_callback
     struct IBeforeCallback {
         virtual void callback(ArtBaseApiHandlers *handlers) = 0;
     };
 
+    //! Constructor.
+    //! \param api_token Artifactory server REST api access token.
     ArtBaseApiHandlers(const std::string& api_token);
+
+    //! Destructor.
     virtual ~ArtBaseApiHandlers();
 
+    //! Handler is used to create HTTP header what used during performing REST api call.
+    //! \return Set of HTTP headers.
     virtual piel::lib::CurlEasyHandlers::headers_type custom_header();
 
+    //! Handler is used to process HTTP headers returned by server during REST api call.
+    //! \param ptr Pointer to libcurl internal buffer with header data.
+    //! \param size Size of data block passed in libcurl internal buffer with header data.
+    //! \return Size of data processed bu handler.
     virtual size_t handle_header(char *ptr, size_t size);
 
+    //! Handler is used to collect server response data returned by server during REST api call.
+    //! \param ptr Pointer to libcurl internal buffer with data.
+    //! \param size Size of data block.
+    //! \return Size of data processed by handler.
     virtual size_t handle_output(char *ptr, size_t size);
 
+    //! Handler is used to pass data into server during REST api call.
+    //! \param ptr Pointer to libcurl internal buffer for data what must be passed to server.
+    //! \param size Maximum size of data block what can be written in libcurl internal buffer.
+    //! \return Size of the data block written in libcurl internal buffer. If the returned value
+    //! is equal to size parameter, handle_input will be called again to collect next pease of data.
     virtual size_t handle_input(char *ptr, size_t size);
 
+    //! Get input stream for reading server response data.
+    //! \return Reference to stream what can be used for read data returned by server.
     virtual std::istringstream &responce_stream();
 
+    //! Handler what will be called before after custom_header and before handle_input.
     virtual void before_input();
 
+    //! Handler what will be called before after handle_header and handle_output.
     virtual void before_output();
 
+    //! Set callback what will be called during before_input.
+    //! \param callback Pointer to IBeforeCallback implementation instance.
     void set_before_input_callback(IBeforeCallback *callback);
 
+    //! Set callback what will be called during before_output.
+    //! \param callback Pointer to IBeforeCallback implementation instance.
     void set_before_output_callback(IBeforeCallback *callback);
 
+    //! Get server returned HTTP headers.
+    //! \return Map with server returned headers.
     std::map<std::string, std::string>& headers();
 
 private:
-    std::string _api_token;
-    std::string _response_buffer;
-    boost::shared_ptr<std::istringstream> _stream;
-    std::map<std::string, std::string> _headers;
+    std::string _api_token;                         //!< Artifactory server REST api access token.
+    std::string _response_buffer;                   //!< Buffer to collect server responce data.
+    boost::shared_ptr<std::istringstream> _stream;  //!< Input stream to read server responce data.
+    std::map<std::string, std::string> _headers;    //!< Map with server responce HTTP headers.
 
-    IBeforeCallback *_before_input_callback;
-    IBeforeCallback *_before_output_callback;
+    IBeforeCallback *_before_input_callback;        //!< Pointer to the callback instance.
+    IBeforeCallback *_before_output_callback;       //!< Pointer to the callback instance.
 };
 
 } } // namespace art::lib

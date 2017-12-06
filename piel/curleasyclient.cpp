@@ -26,7 +26,7 @@
  *
  */
 
-#include <curleacyclient.hpp>
+#include <curleasyclient.hpp>
 
 namespace piel { namespace lib {
 

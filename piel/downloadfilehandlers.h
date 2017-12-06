@@ -30,7 +30,7 @@
 #define DOWNLOADFILEHANDLERS_H
 
 #include <checksumsdigestbuilder.hpp>
-#include <curleacyclient.hpp>
+#include <curleasyclient.hpp>
 
 namespace piel { namespace lib {
 

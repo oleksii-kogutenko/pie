@@ -26,42 +26,78 @@
  *
  */
 
-#ifndef CURLEACYCLIENT_H
-#define CURLEACYCLIENT_H
+#ifndef CURLEASYCLIENT_H
+#define CURLEASYCLIENT_H
 
 #include <curl/curl.h>
 
 #include <vector>
 #include <string>
 
+//! File contains implementation of libcurl curl_easy_* api wrapper. Wrapper is designed
+//! for hiding C style api usage.
+
 namespace piel { namespace lib {
 
+//! Traits what are used to check what exact handlers are implemented in *Handlers class
+//! implementation.
+//! \param CurlEasyHandlers *Handlers implementation.
 template<class CurlEasyHandlers>
 struct CurlEasyHandlersTraits {
-    static const bool have_custom_header;
-    static const bool have_handle_header;
-    static const bool have_handle_input;
-    static const bool have_handle_output;
-    static const bool have_before_input;
-    static const bool have_before_output;
+    static const bool have_custom_header;   //!< Implemantation has custom_header handler.
+    static const bool have_handle_header;   //!< Implemantation has handle_header handler.
+    static const bool have_handle_input;    //!< Implemantation has handle_input handler.
+    static const bool have_handle_output;   //!< Implemantation has handle_output handler.
+    static const bool have_before_input;    //!< Implemantation has before_input handler.
+    static const bool have_before_output;   //!< Implemantation has before_output handler.
 };
 
+//! Propotype for *Handlers classes.
 struct CurlEasyHandlers {
-    typedef std::vector<std::string> headers_type;
+    typedef std::vector<std::string> headers_type;  //!< Type used for HTTP headers storages.
+
+    //! Handler to create custom HTTP header for query.
     headers_type custom_header()                    { return headers_type(); }
+
+    //! Handler to get HTTP header returned by server.
+    //! \param ptr Pointer to libcurl internal buffer with header data.
+    //! \param size Size of data block passed in libcurl internal buffer with header data.
+    //! \return Size of data processed bu handler.
     size_t handle_header(char *ptr, size_t size)    { return CURLE_WRITE_ERROR; }
+
+    //! Handler to retieve data returned by server (responce body).
+    //! \param ptr Pointer to libcurl internal buffer with data block retrieved from server.
+    //! \param size Size of data block.
+    //! \return Size of data processed by handler.
     size_t handle_output(char *ptr, size_t size)    { return CURLE_WRITE_ERROR; }
+
+    //! Handler to send data to server (request body).
+    //! \param ptr Pointer to libcurl internal buffer for data what must be send to server.
+    //! \param size Maximum size of data block what can be written in libcurl internal buffer.
+    //! \return Size of the data block written in libcurl internal buffer. If the returned value
+    //! is equal to size parameter, handle_input will be called again to collect next pease of data.
     size_t handle_input(char *ptr, size_t size)     { return CURLE_READ_ERROR; }
+
+    //! Handler what will be called before after custom_header and before handle_input.
     void before_input()                             { }
+
+    //! Handler what will be called before after handle_header and handle_output.
     void before_output()                            { }
+
 };
 
+//! libcurl curl_easy_* api wrapper.
+//! \param Handlers Type of the implementation of *Handlers.
 template<class Handlers>
 class CurlEasyClient {
 public:
-    typedef CurlEasyClient* CurlEasyClientPtr;
-    typedef Handlers* HandlersPtr;
+    typedef CurlEasyClient* CurlEasyClientPtr;  //!< Type of the pointer to template instantiation type.
+    typedef Handlers* HandlersPtr;              //!< Type of the pointer to implementation of *Handlers.
 
+    //! Constructor. Will init internal libcurl handle.
+    //! \param url Working url.
+    //! \param handlers Pointer to implementation instance of *Handlers.
+    //! \sa curl_easy_init
     CurlEasyClient(const std::string& url, HandlersPtr handlers)
         : _url(url)
         , _handlers(handlers)
@@ -69,11 +105,16 @@ public:
         _curl = ::curl_easy_init();
     }
 
+    //! Destructor. Will release internal libcurl handle.
+    //! \sa curl_easy_cleanup
     ~CurlEasyClient()
     {
         ::curl_easy_cleanup(_curl);
     }
 
+    //! Perform request.
+    //! \return libcurl error code.
+    //! \sa curl_easy_perform
     CURLcode perform();
 
 protected:
@@ -82,9 +123,9 @@ protected:
     static size_t handle_read(char *ptr, size_t size, size_t count, void* ctx);
 
 private:
-    std::string _url;       //!< url.
+    std::string _url;       //!< Working url.
     ::CURL *_curl;          //!< libcurl handle.
-    HandlersPtr _handlers;  //!< data provider.
+    HandlersPtr _handlers;  //!< Pointer to implementation instance of *Handlers.
 };
 
 template<class Handlers>
@@ -148,4 +189,4 @@ CURLcode CurlEasyClient<Handlers>::perform()
 
 } } // namespace piel::lib
 
-#endif // CURLEACYCLIENT_H
+#endif // CURLEASYCLIENT_H

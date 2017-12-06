@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev <email>
+ * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev <email> ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev <email> BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -87,7 +87,7 @@ bool GavcCommand::parse_arguments()
         ("token,t",         po::value<std::string>(&_server_api_access_token),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
         ("server,s",        po::value<std::string>(&_server_url),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&_server_repository),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
-        ("query,q",         po::value<std::string>(&query_str)->required(),     "Query.")
+        ("query,q",         po::value<std::string>(&query_str)->required(),     "Query (required).")
         ("download,d",                                                          "Download query results.")
         ;
 
@@ -98,7 +98,13 @@ bool GavcCommand::parse_arguments()
     po::variables_map vm;
     po::parsed_options parsed = po::command_line_parser(_argc, _argv).options(desc).allow_unregistered().run();
     po::store(parsed, vm);
-    po::notify(vm);
+    try {
+        po::notify(vm);
+    } catch (...) {
+        std::cerr << "Please specify all required arguments." << std::endl;
+        std::cout << desc;
+        return false;
+    }
 
     // Check if all requared arguments are set
     if (!vm.count("query"))
