@@ -34,6 +34,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 
+#include <boost/format.hpp>
+
 #include <boost/config/warning_disable.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
@@ -111,8 +113,8 @@ namespace gavc {
                 result = false;
             }
 
-            LOG_T << "* group: "      << _group;
-            LOG_T << "* name: "       << _name;
+            LOG_T << "* group: "    << _group;
+            LOG_T << "* name: "     << _name;
             LOG_T << "version: "    << _version;
             LOG_T << "classifier: " << _classifier;
             LOG_T << "extension: "  << _extension;
@@ -158,6 +160,19 @@ std::string GavcQuery::to_string() const
 {
     // TODO: implement
     return "";
+}
+
+std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, const std::string& repository) const
+{
+    LOG_T << "Build url for maven metadata. server_url: " << server_url << " repository: " << repository;
+
+    std::string group_path = _group;
+    std::replace(group_path.begin(), group_path.end(), GavcConstants::group_delimiter, GavcConstants::path_delimiter);
+    std::string result = boost::str(boost::format( "%2$s%1$c%3$s%1$c%4$s%1$c%5$s%1$c%6$s" )
+        % GavcConstants::path_delimiter % server_url % repository % group_path % _name % GavcConstants::maven_metadata_filename);
+
+    LOG_T << "Maven metadata url: " << result;
+    return result;
 }
 
 } } // namespace art::lib

@@ -49,6 +49,8 @@ public:
     std::string classifier() const      { return _classifier; }
     std::string extension() const       { return _extension; }
 
+    std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
+
 private:
     std::string _group;
     std::string _name;

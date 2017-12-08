@@ -39,6 +39,10 @@ struct GavcConstants {
     static const std::string extension_prefix;
     static const std::string latest_version;
     static const std::string all_versions;
+
+    static const char group_delimiter;
+    static const char path_delimiter;
+    static const std::string maven_metadata_filename;
 };
 
 } } // namespace art::lib

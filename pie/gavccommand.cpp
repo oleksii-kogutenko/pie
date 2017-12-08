@@ -160,9 +160,16 @@ std::string GavcCommand::create_url() const
 
 struct FindPropertyHelper
 {
-    static bool find_object_property(const std::string& prop_name, pt::ptree::value_type prop)
+    std::string _prop_name;
+
+    FindPropertyHelper(const std::string& prop_name)
+        : _prop_name(prop_name)
     {
-        return prop.first == prop_name;
+    }
+
+    bool operator()(pt::ptree::value_type prop)
+    {
+        return prop.first == _prop_name;
     }
 };
 
@@ -171,7 +178,7 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
     virtual void callback(art::lib::ArtBaseApiHandlers *handlers)
     {
         std::string output_filename = handlers->headers()["X-Artifactory-Filename"];
-        BOOST_LOG_TRIVIAL(trace) << "Artifactory filename: " << output_filename;
+        LOG_T << "Artifactory filename: " << output_filename;
 
         _dest = boost::shared_ptr<std::ofstream>(new std::ofstream(output_filename.c_str()));
 
@@ -183,20 +190,15 @@ private:
 
 void GavcCommand::on_object(pt::ptree::value_type obj)
 {
-    boost::optional<pt::ptree::value_type> op = pt::find(obj.second,
-        boost::bind(&FindPropertyHelper::find_object_property, "downloadUri", _1));
-
+    boost::optional<std::string> op = pt::find_value(obj.second, FindPropertyHelper("downloadUri"));
     if (!op)
     {
         LOG_F << "Can't find downloadUri property!";
         return;
     }
 
-    pt::ptree::value_type p = *op;
-
-    BOOST_LOG_TRIVIAL(trace) << p.first << ": " << p.second.data();
-
-    std::string download_uri = p.second.data();
+    std::string download_uri = *op;
+    LOG_T << "download_uri: " << download_uri;
 
     if (_download_results) {
 
@@ -226,6 +228,46 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         return result;
     }
 
+    //////////////////////////////////////////////////////////
+    // Proptotyping code
+
+    // Get maven metadata
+    art::lib::ArtGavcHandlers download_metadata_handlers(_server_api_access_token);
+    piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> get_metadata_client(
+        _query.format_maven_metadata_url(_server_url, _server_repository), &download_metadata_handlers);
+    get_metadata_client.perform();
+
+    pt::ptree metadata_root;
+    // Load the xml content into this ptree
+    pt::read_xml(download_metadata_handlers.responce_stream(), metadata_root);
+
+    pt::ptree metadata = metadata_root.get_child("metadata");
+    boost::optional<std::string> op_group = pt::find_value(metadata, FindPropertyHelper("groupId"));
+    boost::optional<std::string> op_name = pt::find_value(metadata, FindPropertyHelper("artifactId"));
+    boost::optional<std::string> op_version = pt::find_value(metadata, FindPropertyHelper("version"));
+
+    LOG_T << "metadata group: " << *op_group;
+    LOG_T << "metadata name: " << *op_name;
+    LOG_T << "metadata version: " << *op_version;
+
+    pt::ptree versioning = metadata.get_child("versioning");
+    boost::optional<std::string> op_latest = pt::find_value(versioning, FindPropertyHelper("latest"));
+    boost::optional<std::string> op_release = pt::find_value(versioning, FindPropertyHelper("release"));
+    boost::optional<std::string> op_last_updated = pt::find_value(versioning, FindPropertyHelper("lastUpdated"));
+
+    LOG_T << "metadata versioning latest: " << *op_latest;
+    LOG_T << "metadata versioning release: " << *op_release;
+    LOG_T << "metadata versioning last updated: " << *op_last_updated;
+
+    pt::ptree versions = versioning.get_child("versions");
+    std::list<std::string> versions_list = pt::find_all_values(versions, FindPropertyHelper("version"));
+    typedef std::list<std::string>::const_iterator Iter;
+    for (Iter i = versions_list.begin(), end = versions_list.end(); i != end; ++i)
+    {
+        LOG_T << "metadata versioning versions version: " << *i;
+    }
+    //////////////////////////////////////////////////////////
+
     art::lib::ArtGavcHandlers api_handlers(_server_api_access_token);
     piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &api_handlers);
     client.perform();
@@ -233,7 +275,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     // Create a root
     pt::ptree root;
 
-    // Load the json file in this ptree
+    // Load the json file into this ptree
     pt::read_json(api_handlers.responce_stream(), root);
     pt::each(root.get_child("results"), boost::bind(&GavcCommand::on_object, this, _1));
     
