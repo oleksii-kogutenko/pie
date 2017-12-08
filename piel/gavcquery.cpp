@@ -27,6 +27,7 @@
  */
 
 #include <gavcquery.h>
+#include <logging.h>
 #include <gavcconstants.h>
 
 #include <algorithm>
@@ -110,11 +111,11 @@ namespace gavc {
                 result = false;
             }
 
-            BOOST_LOG_TRIVIAL(trace) << "* group: "      << _group;
-            BOOST_LOG_TRIVIAL(trace) << "* name: "       << _name;
-            BOOST_LOG_TRIVIAL(trace) << "version: "    << _version;
-            BOOST_LOG_TRIVIAL(trace) << "classifier: " << _classifier;
-            BOOST_LOG_TRIVIAL(trace) << "extension: "  << _extension;
+            LOG_T << "* group: "      << _group;
+            LOG_T << "* name: "       << _name;
+            LOG_T << "version: "    << _version;
+            LOG_T << "classifier: " << _classifier;
+            LOG_T << "extension: "  << _extension;
 
             return result;
         }

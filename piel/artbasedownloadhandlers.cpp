@@ -29,8 +29,6 @@
 #include <artconstants.h>
 #include <artbasedownloadhandlers.h>
 
-#include <boost/log/trivial.hpp>
-
 namespace piel { namespace lib {
 
 template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_input    = false;

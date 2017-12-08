@@ -31,9 +31,9 @@
 #include <gavccommand.h>
 #include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
+#include <logging.h>
 
 #include <boost/bind.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost_property_tree_ext.hpp>
 
 namespace pt = boost::property_tree;
@@ -61,11 +61,10 @@ bool GavcCommand::get_from_env(po::variables_map& vm,
                                std::string& var)
 {
     if (!vm.count(opt_name)) {
-        // Attempt to get token from environment
         const char *value = ::getenv(env_var.c_str());
         if (value)
         {
-            BOOST_LOG_TRIVIAL(trace) << "Got " << env_var << " environment variable. Value: " << value << ".";
+            LOG_T << "Got " << env_var << " environment variable. Value: " << value << ".";
             var = std::string(value);
             return true;
         }
@@ -106,7 +105,7 @@ bool GavcCommand::parse_arguments()
     std::string query_str(_argv[1]);
 
     // Parce query
-    BOOST_LOG_TRIVIAL(trace) << "query to perform: " << query_str;
+    LOG_T << "query to perform: " << query_str;
 
     boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
@@ -189,7 +188,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     if (!op)
     {
-        BOOST_LOG_TRIVIAL(fatal) << "Can't find downloadUri property!";
+        LOG_F << "Can't find downloadUri property!";
         return;
     }
 

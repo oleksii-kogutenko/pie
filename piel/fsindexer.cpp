@@ -27,6 +27,7 @@
  */
 
 #include <fsindexer.h>
+#include <logging.h>
 #include <baseindex.h>
 
 #include <boost_filesystem_ext.hpp>
@@ -34,9 +35,8 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
-#include <boost/log/trivial.hpp>
 #include <queue>
+#include <boost/filesystem.hpp>
 
 namespace piel { namespace lib {
 
@@ -50,67 +50,63 @@ FsIndexer::~FsIndexer()
 
 std::string FsIndexer::fs_source(const fs::path& item) const
 {
-    return std::string("file://").append(fs::absolute(item).native());
+    return std::string( "file://" ).append( fs::absolute( item ).native() );
 }
 
 BaseIndex FsIndexer::build(const fs::path& dir) const
 {
-    BaseIndex result;
-
     if (!is_directory(dir)) {
-        BOOST_LOG_TRIVIAL(debug) << dir << " is not a directory!";
-        return result;
+        LOG_F << dir << " is not a directory!";
+        return BaseIndex();
     }
 
-    ChecksumsDigestBuilder digest_builder;
+    BaseIndex               result;
+    ChecksumsDigestBuilder  digest_builder;
+    std::queue<fs::path>    directories;
 
-    std::queue<fs::path> directories;
-    directories.push(dir);
+    directories.push( dir );
 
-    while(!directories.empty()) {
+    while( !directories.empty() ) {
+
         fs::path p = directories.front();
         directories.pop();
 
-        BOOST_LOG_TRIVIAL(trace) << "d " << p.generic_string();
+        LOG_T << "d " << p.generic_string();
 
-        for (fs::directory_iterator i = fs::directory_iterator(p); i != fs::end(i); i++)
+        for (fs::directory_iterator i = fs::directory_iterator(p), end = fs::directory_iterator(); i != end; i++)
         {
-            fs::directory_entry e = *i;
+            fs::directory_entry                 e           = *i;
+            fs::path                            relative    = fs::make_relative( dir, e.path() );
+            std::string                         name        = relative.generic_string();
 
-            if (fs::is_symlink(e.path()))
+            if ( fs::is_symlink( e.path() ) )
             {
-                fs::path relative = fs::make_relative(dir, e.path());
+                std::string                         target      = fs::read_symlink( e.path() ).generic_string();
+                ChecksumsDigestBuilder::StrDigests  checksums   = digest_builder.str_digests_for(target);
+                std::string                         hash        = checksums[ Sha256::t::name() ];
 
-                std::string name = relative.generic_string();
-                std::string target = fs::read_symlink(e.path()).generic_string();
+                LOG_T << "s " << name << " " << hash;
 
-                ChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
-                std::string hash = checksums[Sha256::t::name()];
-
-                BOOST_LOG_TRIVIAL(trace) << "s " << name << " " << hash;
-
-                result.put(name, hash, fs_source(e.path()));
+                result.put( name, hash, fs_source( e.path() ) );
             }
-            else if (fs::is_regular_file(e.path()))
+            else if ( fs::is_regular_file( e.path() ) )
             {
-                fs::path relative = fs::make_relative(dir, e.path());
+                std::ifstream                       target( e.path().c_str(), std::ifstream::in|std::ifstream::binary );
+                ChecksumsDigestBuilder::StrDigests  checksums   = digest_builder.str_digests_for( target );
+                std::string                         hash        = checksums[ Sha256::t::name() ];
 
-                std::string name = relative.generic_string();
-                std::ifstream target(e.path().c_str(), std::ifstream::in|std::ifstream::binary);
+                LOG_T << "f " << name << " " << hash << std::endl;
 
-                ChecksumsDigestBuilder::StrDigests checksums = digest_builder.str_digests_for(target);
-                std::string hash = checksums[Sha256::t::name()];
-
-                BOOST_LOG_TRIVIAL(trace) << "f " << name << " " << hash << std::endl;
-
-                result.put(name, hash, fs_source(e.path()));
+                result.put( name, hash, fs_source( e.path() ) );
             }
-            else if (fs::is_directory(e.path()))
+            else if ( fs::is_directory(e.path()) )
             {
-                directories.push(e.path());
+                directories.push( e.path() );
             }
         }
     }
+
+    return result;
 }
 
 } } // namespace piel::lib

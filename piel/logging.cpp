@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2017, Dmytro Iakovliev <email>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev <email> ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev <email> BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,44 +26,4 @@
  *
  */
 
-#include <baseindex.h>
 #include <logging.h>
-
-namespace piel { namespace lib {
-
-BaseIndex::BaseIndex()
-    : _index()
-{
-
-}
-
-BaseIndex::BaseIndex(const BaseIndex& src)
-    : _index(src._index)
-{
-
-}
-
-void BaseIndex::put(const std::string &name, const std::string &hash, const std::string &source)
-{
-    LOG_T << "name: " << name << " hash: " << hash << " source: " << source;
-
-    IndexItem item;
-    item.name = name;
-    item.hash = hash;
-    item.source = source;
-
-    _index.insert(std::make_pair(name, item));
-}
-
-BaseIndex& BaseIndex::operator+(const BaseIndex& index)
-{
-    _index.insert(index._index.begin(), index._index.end());
-    return *this;
-}
-
-bool BaseIndex::empty() const
-{
-    return _index.empty();
-}
-
-} } // namespace piel::lib

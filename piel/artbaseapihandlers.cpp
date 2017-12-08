@@ -28,10 +28,10 @@
 
 #include <artconstants.h>
 #include <artbaseapihandlers.h>
+#include <logging.h>
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 
 namespace piel { namespace lib {
 
@@ -71,7 +71,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
 /*virtual*/ size_t ArtBaseApiHandlers::handle_header(char *ptr, size_t size)
 {
     std::string headers(ptr, size);
-    BOOST_LOG_TRIVIAL(trace) << "headers: " << headers;
+    LOG_T << "headers: " << headers;
 
     std::string::iterator sepa = std::find_if(headers.begin(), headers.end(), boost::is_any_of(":"));
     if (sepa == headers.end()) {
@@ -81,7 +81,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
     std::string name;
     name.append(headers.begin(), sepa);
     boost::trim(name);
-    
+
     std::string value;
     ++sepa;
     if (sepa != headers.end()) {
@@ -89,7 +89,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
         boost::trim(value);
     }
 
-    BOOST_LOG_TRIVIAL(trace) << name << "= " << value;
+    LOG_T << name << "= " << value;
     _headers.insert(std::make_pair(name,value));
 
     return size;
@@ -131,7 +131,7 @@ std::map<std::string, std::string>& ArtBaseApiHandlers::headers()
 /*virtual*/ size_t ArtBaseApiHandlers::handle_output(char *ptr, size_t size)
 {
     _response_buffer.append(ptr, ptr + size);
-    BOOST_LOG_TRIVIAL(trace) << "response: " << _response_buffer;
+    LOG_T << "response: " << _response_buffer;
     return size;
 }
 
