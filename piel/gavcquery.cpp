@@ -71,13 +71,13 @@ namespace gavc {
     namespace ascii = boost::spirit::ascii;
 
     template<typename Iterator>
-    struct parser {
+    struct Parser {
 
         std::string _group;
         std::string _name;
-        std::string _version;       // all by default
-        std::string _classifier;    // empty by default
-        std::string _extension;     // empty by default
+        std::vector<std::string> _version;      // empty == all by default
+        std::string _classifier;                // empty by default
+        std::string _extension;                 // empty by default
 
         bool parse(Iterator begin, Iterator end)
         {
@@ -87,37 +87,45 @@ namespace gavc {
             using qi::_1;
             using qi::phrase_parse;
             using boost::phoenix::ref;
+            using boost::phoenix::push_back;
             using boost::spirit::as_string;
 
-            qi::rule<Iterator, std::string()> group, name, version, version_body, classifier, extension, gavc;
+            qi::rule<Iterator, std::string()> group, name, version, version_body, 
+                classifier, extension, version_ops, version_op, version_const, gavc;
 
-            version_body = +(char_-':');
+            version_body = +( char_-':' );
 
-            group       = as_string[lexeme[+(char_-':')]]               [ref(_group) = _1];
-            name        = as_string[lexeme[skip[':'] >> +(char_-':')]]  [ref(_name) = _1];
-            version     = as_string[lexeme[skip[':'] >> version_body]]  [ref(_version) = _1];
-            classifier  = as_string[lexeme[skip[':'] >> +(char_-'@')]]  [ref(_classifier) = _1];
-            extension   = as_string[lexeme[skip['@'] >> +(char_)]]      [ref(_extension) = _1];
+            group           = as_string[ lexeme[ +( char_ - ':' ) ] ]               [ ref(_group) = _1 ];
+            name            = as_string[ lexeme[ skip[ ':' ] >> +( char_-':' ) ] ]  [ ref(_name) = _1 ];
+            classifier      = as_string[ lexeme[ skip[ ':' ] >> +( char_-'@' ) ] ]  [ ref(_classifier) = _1 ];
+            extension       = as_string[ lexeme[ skip[ '@' ] >> +( char_ ) ] ]      [ ref(_extension) = _1 ];
+            version_ops     = char_('*')|char_('+')|char_('-');
+            version_op      = as_string[ lexeme[ version_ops ] ]                    [ push_back( ref(_version), _1 ) ];
+            version_const   = as_string[ lexeme[ +( char_-version_ops ) ] ]         [ push_back( ref(_version), _1 ) ];
 
             gavc =
                 group
                     > name
-                        > *(version
+                        > *( (version_op | version_const)
                             > *(classifier
                                 > *extension) );
 
             bool result = true;
             try {
-                phrase_parse(begin, end, gavc, ascii::space);
+                phrase_parse( begin, end, gavc, ascii::space );
             } catch (...) {
                 result = false;
             }
 
             LOG_T << "* group: "    << _group;
             LOG_T << "* name: "     << _name;
-            LOG_T << "version: "    << _version;
             LOG_T << "classifier: " << _classifier;
             LOG_T << "extension: "  << _extension;
+
+            for (std::vector<std::string>::const_iterator i = _version.begin(), end = _version.end(); i != end; ++i)
+            {
+                LOG_T << "version op: " << *i;
+            }
 
             return result;
         }
@@ -142,16 +150,20 @@ GavcQuery::~GavcQuery()
 // <group.spec>:<name-spec>[:][<version.spec>[:{[classifier][@][extension]}]]
 boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
 {
-    gavc::parser<std::string::const_iterator> parser;
+    gavc::Parser<std::string::const_iterator> parser;
     if (!parser.parse(gavc_str.begin(), gavc_str.end()))
         return boost::none;
 
     GavcQuery result;
     result._group       = parser._group;
     result._name        = parser._name;
-    result._version     = parser._version;
     result._classifier  = parser._classifier;
     result._extension   = parser._extension;
+
+    if (!parser._version.empty()) {
+        // TODO: Implement metadata query execution plan.
+        result._version     = parser._version[0];
+    }
 
     return result;
 }
