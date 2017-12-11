@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev <email>
+ * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev <email> ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev <email> BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,21 +26,48 @@
  *
  */
 
-#ifndef LOGGING_H
-#define LOGGING_H
+#ifndef PROPERTIES_H
+#define PROPERTIES_H
 
-#include <boost/log/trivial.hpp>
+#include <iostream>
+#include <string>
+#include <map>
 
-#define LOG_(x) BOOST_LOG_TRIVIAL(x) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
-#define LOG_T   LOG_(trace)
-#define LOG_D   LOG_(debug)
-#define LOG_I   LOG_(info)
-#define LOG_W   LOG_(warning)
-#define LOG_E   LOG_(error)
-#define LOG_F   LOG_(fatal)
+namespace piel { namespace lib {
 
-class Logging
+class Properties
 {
+public:
+    typedef std::map<std::string, std::string> MapType;
+
+    Properties();
+    ~Properties();
+
+    static Properties load(std::istream &is);
+    void store(std::ostream &os) const;
+
+    MapType& data()
+    {
+        return _data;
+    }
+
+    MapType::mapped_type& operator[](const MapType::key_type& key)
+    {
+        return _data[key];
+    }
+
+    void clear()
+    {
+        _data.clear();
+    }
+
+    static void test_properties();
+
+private:
+    MapType _data;
+
 };
 
-#endif // LOGGING_H
+} } //namespace piel::lib
+
+#endif // PROPERTIES_H
