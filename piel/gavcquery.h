@@ -29,10 +29,29 @@
 #ifndef GAVCQUERY_H
 #define GAVCQUERY_H
 
+#include <vector>
 #include <string>
 #include <boost/optional.hpp>
 
 namespace art { namespace lib {
+
+namespace gavc {
+
+    enum Ops {
+        Op_const,
+        Op_all,
+        Op_latest,
+        Op_oldest,
+    };
+
+    struct OpType: public std::pair<Ops,std::string>
+    {
+        OpType()                                : std::pair<Ops,std::string>(Op_const, "")      {}
+        OpType(const std::string& val)          : std::pair<Ops,std::string>(Op_const, val)     {}
+        OpType(Ops op, const std::string& val)  : std::pair<Ops,std::string>(op, val)           {}
+    };
+
+} // namespace gavc
 
 class GavcQuery
 {
@@ -49,6 +68,7 @@ public:
     std::string classifier() const      { return _classifier; }
     std::string extension() const       { return _extension; }
 
+    boost::optional<std::vector<gavc::OpType> > query_version_ops() const;
     std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
 
 private:
