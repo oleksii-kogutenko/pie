@@ -62,22 +62,6 @@
 // | * | + | - | * |
 // -----------------
 
-namespace art { namespace lib {
-
-namespace gavc {
-
-    struct gavc_data {
-        std::string group;
-        std::string name;
-        std::string version;        // empty == all by default
-        std::string classifier;     // empty by default
-        std::string extension;      // empty by default
-    };
-
-} // namespace gavc
-
-} } // namespace art::lib
-
 BOOST_FUSION_ADAPT_STRUCT(
     art::lib::gavc::gavc_data,
     (std::string, group)
@@ -166,11 +150,7 @@ namespace gavc {
 } // namespace gavc
 
 GavcQuery::GavcQuery()
-    : _group()
-    , _name()
-    , _version()
-    , _classifier()
-    , _extension()
+    : _data()
 {
 }
 
@@ -183,27 +163,20 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
 
-    gavc::gavc_data                                     data;
-    gavc::gavc_grammar<std::string::const_iterator>     grammar;
+    GavcQuery                                       result;
+    gavc::gavc_grammar<std::string::const_iterator> grammar;
 
     try {
-        qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, data );
+        qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, result._data );
     } catch (...) {
         return boost::none;
     }
 
-    GavcQuery result;
-    result._group       = data.group;
-    result._name        = data.name;
-    result._version     = data.version;
-    result._classifier  = data.classifier;
-    result._extension   = data.extension;
-
-    LOG_T << "group: "      << result._group;
-    LOG_T << "name: "       << result._name;
-    LOG_T << "version: "    << result._version;
-    LOG_T << "classifier: " << result._classifier;
-    LOG_T << "extension: "  << result._extension;
+    LOG_T << "group: "      << result.group();
+    LOG_T << "name: "       << result.name();
+    LOG_T << "version: "    << result.version();
+    LOG_T << "classifier: " << result.classifier();
+    LOG_T << "extension: "  << result.extension();
 
     //result.query_version_ops();
 
@@ -215,21 +188,21 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
 
-    std::vector<gavc::OpType>                                   query_ops;
+    std::vector<gavc::OpType>                                   result;
     gavc::gavc_version_ops_grammar<std::string::const_iterator> version_ops_grammar;
 
     try {
-        qi::phrase_parse( _version.begin(), _version.end(), version_ops_grammar, ascii::space, query_ops );
+        qi::phrase_parse( _data.version.begin(), _data.version.end(), version_ops_grammar, ascii::space, result );
     } catch (...) {
         return boost::none;
     }
 
-    for (std::vector<gavc::OpType>::const_iterator i = query_ops.begin(), end = query_ops.end(); i != end; ++i)
+    for (std::vector<gavc::OpType>::const_iterator i = result.begin(), end = result.end(); i != end; ++i)
     {
         LOG_T << "version query op: " << i->second;
     }
 
-    return query_ops;
+    return result;
 }
 
 std::string GavcQuery::to_string() const 
@@ -242,10 +215,10 @@ std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, 
 {
     LOG_T << "Build url for maven metadata. server_url: " << server_url << " repository: " << repository;
 
-    std::string group_path = _group;
+    std::string group_path = group();
     std::replace(group_path.begin(), group_path.end(), GavcConstants::group_delimiter, GavcConstants::path_delimiter);
     std::string result = boost::str(boost::format( "%2$s%1$c%3$s%1$c%4$s%1$c%5$s%1$c%6$s" )
-        % GavcConstants::path_delimiter % server_url % repository % group_path % _name % GavcConstants::maven_metadata_filename);
+        % GavcConstants::path_delimiter % server_url % repository % group_path % name() % GavcConstants::maven_metadata_filename);
 
     LOG_T << "Maven metadata url: " << result;
     return result;
