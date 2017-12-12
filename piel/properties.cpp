@@ -126,27 +126,4 @@ void Properties::store(std::ostream &os) const
     }
 }
 
-void Properties::test_properties()
-{
-    std::string test_properties = "test prop1=test val1\n"
-"test_prop1=test_val1   \n"
-"test_prop2    =    test_val2\n"
-"#test_prop3  =test_val3\n"
-"\n"
-"\t\n"
-"\n\n\n"
-"  # comment\n"
-"                 test_prop4=test_val4#Comment here\n"
-"test_prop5=test_val5\n";
-
-    std::istringstream iss(test_properties);
-    piel::lib::Properties p = piel::lib::Properties::load(iss);
-
-    LOG_T << "test prop1: "<< p["test prop1"];
-    LOG_T << "test_prop2: "<< p["test_prop2"];
-    LOG_T << "test_prop3: "<< p["test_prop3"];
-    LOG_T << "test_prop4: "<< p["test_prop4"];
-    LOG_T << "test_prop5: "<< p["test_prop5"];
-}
-
 } } //namespace piel::lib
