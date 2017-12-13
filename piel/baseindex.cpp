@@ -31,30 +31,31 @@
 namespace piel { namespace lib {
 
 BaseIndex::BaseIndex()
-    : _index()
+        : _index()
 {
 
 }
 
 BaseIndex::BaseIndex(const BaseIndex& src)
-    : _index(src._index)
+        : _index( src._index )
 {
 
 }
 
-void BaseIndex::put(const std::string &name, const std::string &hash, const std::string &source)
+void BaseIndex::put(const std::string &name, const std::string &hash,
+        const std::string &source)
 {
     IndexItem item;
     item.name = name;
     item.hash = hash;
     item.source = source;
 
-    _index.insert(std::make_pair(name, item));
+    _index.insert( std::make_pair( name, item ) );
 }
 
 BaseIndex& BaseIndex::operator+(const BaseIndex& index)
 {
-    _index.insert(index._index.begin(), index._index.end());
+    _index.insert( index._index.begin(), index._index.end() );
     return *this;
 }
 

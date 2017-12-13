@@ -122,7 +122,10 @@ void Properties::store(std::ostream &os) const
 {
     for(MapType::const_iterator i = _data.begin(), end = _data.end(); i != end; ++i)
     {
-        os << i->first << "=" << i->second << std::endl;
+        if (!i->first.empty() && !i->second.empty())
+        {
+            os << i->first << "=" << i->second << '\n';
+        }
     }
 }
 
