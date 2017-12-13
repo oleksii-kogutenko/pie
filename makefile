@@ -13,3 +13,5 @@ prepare:
 	mkdir -p ${build_tree}
 	cd ${build_tree} && cmake -G"Unix Makefiles" $(src_tree)
 
+clean:
+	rm -rf ${build_tree}

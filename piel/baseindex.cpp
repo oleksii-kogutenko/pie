@@ -27,7 +27,6 @@
  */
 
 #include <baseindex.h>
-#include <logging.h>
 
 namespace piel { namespace lib {
 
@@ -45,8 +44,6 @@ BaseIndex::BaseIndex(const BaseIndex& src)
 
 void BaseIndex::put(const std::string &name, const std::string &hash, const std::string &source)
 {
-    LOG_T << "name: " << name << " hash: " << hash << " source: " << source;
-
     IndexItem item;
     item.name = name;
     item.hash = hash;

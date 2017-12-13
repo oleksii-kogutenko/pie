@@ -38,7 +38,7 @@ class GavcCommand: public ICommand
 {
 public:
     GavcCommand(Application *app, int argc, char **argv);
-    ~GavcCommand();
+    virtual ~GavcCommand();
 
     virtual int perform();
 

@@ -27,5 +27,8 @@ BOOST_AUTO_TEST_CASE(Properties)
 
     BOOST_CHECK_EQUAL("", p["test_prop3"]);
     BOOST_CHECK_EQUAL("", p["    test_prop5"]);
+
+    BOOST_CHECK_NE("123", p["    test_prop5  "]);
+
 }
 
