@@ -155,6 +155,9 @@ GavcQuery::~GavcQuery()
 
 boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
 {
+    if (gavc_str.empty())
+        return boost::none;
+
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
 
@@ -173,8 +176,6 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     LOG_T << "classifier: " << result.classifier();
     LOG_T << "extension: "  << result.extension();
 
-    //result.query_version_ops();
-
     return result;
 }
 
@@ -184,6 +185,11 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
     namespace ascii = boost::spirit::ascii;
 
     std::vector<gavc::OpType>                                   result;
+    if (_data.version.empty()) {
+        result.push_back(gavc::OpType(gavc::Op_all, "*"));
+        return result;
+    }
+
     gavc::gavc_version_ops_grammar<std::string::const_iterator> version_ops_grammar;
 
     try {
@@ -202,8 +208,13 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
 
 std::string GavcQuery::to_string() const 
 {
-    // TODO: implement
-    return "";
+	std::string result;
+	if (!group().empty())       result.append(group());
+	if (!name().empty())        result.append(":").append(name());
+	if (!version().empty())     result.append(":").append(version());
+	if (!classifier().empty())  result.append(":").append(classifier());
+	if (!extension().empty())   result.append("@").append(extension());
+    return result;
 }
 
 std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, const std::string& repository) const
