@@ -49,6 +49,11 @@ namespace gavc {
         OpType()                                : std::pair<Ops,std::string>(Op_const, "")      {}
         OpType(const std::string& val)          : std::pair<Ops,std::string>(Op_const, val)     {}
         OpType(Ops op, const std::string& val)  : std::pair<Ops,std::string>(op, val)           {}
+        OpType(Ops op, char val)                : std::pair<Ops,std::string>()
+        {
+            first = op;
+            second.push_back(val);
+        }
     };
 
     struct gavc_data {
@@ -70,17 +75,17 @@ public:
     static boost::optional<GavcQuery> parse(const std::string& gavc_str);
     std::string to_string() const;
 
-    std::string group() const           { return _data.group; }
-    std::string name() const            { return _data.name; }
-    std::string version() const         { return _data.version; }
-    std::string classifier() const      { return _data.classifier; }
-    std::string extension() const       { return _data.extension; }
+    std::string group() const           { return data_.group; }
+    std::string name() const            { return data_.name; }
+    std::string version() const         { return data_.version; }
+    std::string classifier() const      { return data_.classifier; }
+    std::string extension() const       { return data_.extension; }
 
     boost::optional<std::vector<gavc::OpType> > query_version_ops() const;
     std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
 
 private:
-    gavc::gavc_data _data;
+    gavc::gavc_data data_;
 
 };
 

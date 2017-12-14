@@ -44,6 +44,16 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace piel { namespace lib {
 
+struct JavaPropertiesConstants {
+    static const char comment;
+    static const char assign;
+    static const char endl;
+};
+
+const char JavaPropertiesConstants::comment = '#';
+const char JavaPropertiesConstants::assign = '=';
+const char JavaPropertiesConstants::endl = '\n';
+
 namespace java_properties {
 
     namespace qi = boost::spirit::qi;
@@ -67,10 +77,10 @@ namespace java_properties {
             using qi::as_string;
             using boost::phoenix::ref;
 
-            _syms       = (char_('=')|char_('#'));
-            _comment    = skip['#' > -( +( char_ ) ) ];
-            _first      = as_string[ +( char_ - _syms ) > skip[ '=' ] ] [ _val = trim_str_(_1) ];
-            _second     = as_string[ +( char_ - '#' ) ]                 [ _val = trim_str_(_1) ];
+            _syms       = (char_(JavaPropertiesConstants::assign)|char_(JavaPropertiesConstants::comment));
+            _comment    = skip[JavaPropertiesConstants::comment > -( +( char_ ) ) ];
+            _first      = as_string[ +( char_ - _syms ) > skip[ JavaPropertiesConstants::assign ] ]         [ _val = trim_str_(_1) ];
+            _second     = as_string[ +( char_ - JavaPropertiesConstants::comment ) ]                        [ _val = trim_str_(_1) ];
             _data       = -( _first > -_second ) | -_comment;
         }
 
@@ -86,7 +96,7 @@ namespace java_properties {
 } // namespace java_properties
 
 Properties::Properties()
-    : _data()
+    : data_()
 {
 
 }
@@ -111,7 +121,7 @@ Properties Properties::load(std::istream &is)
         std::getline(is, buffer);
         LOG_T << "buffer: " << buffer;
         qi::phrase_parse( buffer.begin(), buffer.end(), java_properties_grammar, ascii::space, pair );
-        result._data.insert(pair);
+        result.data_.insert(pair);
         LOG_T << "'"<< pair.first << "' = '" << pair.second << "'";
     }
 
@@ -120,11 +130,11 @@ Properties Properties::load(std::istream &is)
 
 void Properties::store(std::ostream &os) const
 {
-    for(MapType::const_iterator i = _data.begin(), end = _data.end(); i != end; ++i)
+    for(MapType::const_iterator i = data_.begin(), end = data_.end(); i != end; ++i)
     {
         if (!i->first.empty() && !i->second.empty())
         {
-            os << i->first << "=" << i->second << '\n';
+            os << i->first << JavaPropertiesConstants::assign << i->second << JavaPropertiesConstants::endl;
         }
     }
 }

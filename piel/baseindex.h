@@ -66,7 +66,7 @@ private:
         std::string source; //!< An index item source specification.
     };
 
-    std::map<std::string, IndexItem> _index; //!< An index data.
+    std::map<std::string, IndexItem> index_; //!< An index data.
 };
 
 //! Indexers interface.

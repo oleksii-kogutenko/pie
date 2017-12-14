@@ -43,21 +43,21 @@ namespace piel { namespace lib {
 ////////////////////////////////////////////////////////////////////////////////
 //! File constants and traits.
 struct DigestConstants {
-    static const size_t _buf_size;   //!< Size of the internal IO buffers.
+    static const size_t buf_size;   //!< Size of the internal IO buffers.
 };
 
 template<class Digest>
 struct DigestTraits {
     typedef typename Digest::ctx ctx;
     static std::string name() {
-        return _name;
+        return name_;
     }
     static int len() {
-        return _len;
+        return len_;
     }
 private:
-    static char const* const _name;
-    static const int _len;
+    static char const* const name_;
+    static const int len_;
 };
 
 struct Sha256 {
@@ -87,18 +87,18 @@ public:
     //! Constructor.
     //! \param str reference to string what will be used to store format result.
     DigestFormatter(std::string& str)    
-        : _str(str)
+        : str_(str)
     {}
 
     //! Functor called to collect checksum bytes.
     //! \param v checksum data byte.
     void operator()(const value_type& v)
     {
-        _str.append((boost::format("%1$02x") % (int)v).str());
+        str_.append((boost::format("%1$02x") % (int)v).str());
     }
 
 private:
-    std::string& _str; //!< Reference to format result.
+    std::string& str_; //!< Reference to format result.
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,8 +141,8 @@ template<typename CTX> class DigestContext
 public:
     //! Constructor.
     DigestContext()
-        : _ctx()
-        , _digest(CTX::t::len())
+        : ctx_()
+        , digest_(CTX::t::len())
     {}
 
     //! Init internal data.
@@ -164,8 +164,8 @@ public:
     }
 
 private:
-    Digest _digest;                 //!< Digest data container.
-    typename CTX::ctx _ctx;         //!< OpenSSL api context structure.
+    Digest digest_;                 //!< Digest data container.
+    typename CTX::ctx ctx_;         //!< OpenSSL api context structure.
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,9 +237,9 @@ protected:
     void reset();
 
 private:
-    std::vector<boost::shared_ptr<IDigestContext> > _contexts;  //!< Digests contexts.
-    std::vector<std::istream::char_type> _buf;                  //!< Internal IO buffer.
-    bool _bad;                                                  //!< Field to store istream.bad() result after calculations based on istream data.
+    std::vector<boost::shared_ptr<IDigestContext> > contexts_;  //!< Digests contexts.
+    std::vector<std::istream::char_type> buf_;                  //!< Internal IO buffer.
+    bool bad_;                                                  //!< Field to store istream.bad() result after calculations based on istream data.
 
 };
 

@@ -41,13 +41,13 @@ namespace po = boost::program_options;
 
 GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     : ICommand(app)
-    , _argc(argc)
-    , _argv(argv)
-    , _server_url()
-    , _server_api_access_token()
-    , _server_repository()
-    , _query()
-    , _download_results(false)
+    , argc_(argc)
+    , argv_(argv)
+    , server_url_()
+    , server_api_access_token_()
+    , server_repository_()
+    , query_()
+    , have_to_download_results_(false)
 {
 }
 
@@ -86,23 +86,23 @@ bool GavcCommand::parse_arguments()
 {
     po::options_description desc("Query options");
     desc.add_options()
-        ("token,t",         po::value<std::string>(&_server_api_access_token),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
-        ("server,s",        po::value<std::string>(&_server_url),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
-        ("repository,r",    po::value<std::string>(&_server_repository),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
+        ("token,t",         po::value<std::string>(&server_api_access_token_),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
+        ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
+        ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
         ;
 
-    if (show_help(desc, _argc, _argv)) {
+    if (show_help(desc, argc_, argv_)) {
         return false;
     }
 
     // second argument is query
-    if (_argc < 2) {
+    if (argc_ < 2) {
         show_command_help_message(desc);
         return false;
     }
 
-    std::string query_str(_argv[1]);
+    std::string query_str(argv_[1]);
 
     // Parce query
     LOG_T << "query to perform: " << query_str;
@@ -115,10 +115,10 @@ bool GavcCommand::parse_arguments()
         return false;
     }
 
-    _query = *parsed_query;
+    query_ = *parsed_query;
 
     po::variables_map vm;
-    po::parsed_options parsed = po::command_line_parser(_argc, _argv).options(desc).allow_unregistered().run();
+    po::parsed_options parsed = po::command_line_parser(argc_, argv_).options(desc).allow_unregistered().run();
     po::store(parsed, vm);
     try {
         po::notify(vm);
@@ -128,32 +128,32 @@ bool GavcCommand::parse_arguments()
     }
 
     bool get_env_flag = true;
-    get_env_flag &= get_from_env(vm, "token",       "GAVC_SERVER_API_ACCESS_TOKEN", _server_api_access_token);
-    get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              _server_url);
-    get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       _server_repository);
+    get_env_flag &= get_from_env(vm, "token",       "GAVC_SERVER_API_ACCESS_TOKEN", server_api_access_token_);
+    get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              server_url_);
+    get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       server_repository_);
 
     if (!get_env_flag) {
         show_command_help_message(desc);
         return false;
     }
 
-    _download_results = vm.count("download");
+    have_to_download_results_ = vm.count("download");
 
     return true;
 }
 
 std::string GavcCommand::create_url() const
 {
-    std::string url = _server_url;
+    std::string url = server_url_;
     url.append("/api/search/gavc");
-    url.append("?r=").append(_server_repository);
-    url.append("&g=").append(_query.group());
-    url.append("&a=").append(_query.name());
-    if (!_query.version().empty()) {
-        url.append("&v=").append(_query.version());
+    url.append("?r=").append(server_repository_);
+    url.append("&g=").append(query_.group());
+    url.append("&a=").append(query_.name());
+    if (!query_.version().empty()) {
+        url.append("&v=").append(query_.version());
     }
-    if (!_query.classifier().empty()) {
-        url.append("&c=").append(_query.classifier());
+    if (!query_.classifier().empty()) {
+        url.append("&c=").append(query_.classifier());
     }
     return url;
 }
@@ -200,9 +200,9 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     std::string download_uri = *op;
     LOG_T << "download_uri: " << download_uri;
 
-    if (_download_results) {
+    if (have_to_download_results_) {
 
-        art::lib::ArtBaseDownloadHandlers download_handlers(_server_api_access_token);
+        art::lib::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
 
         BeforeOutputCallback before_output;
         download_handlers.set_before_output_callback(&before_output);
@@ -232,9 +232,9 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     // Proptotyping code
 
     // Get maven metadata
-    art::lib::ArtGavcHandlers download_metadata_handlers(_server_api_access_token);
+    art::lib::ArtGavcHandlers download_metadata_handlers(server_api_access_token_);
     piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> get_metadata_client(
-        _query.format_maven_metadata_url(_server_url, _server_repository), &download_metadata_handlers);
+        query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
     get_metadata_client.perform();
 
     pt::ptree metadata_root;
@@ -268,7 +268,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     }
     //////////////////////////////////////////////////////////
 
-    art::lib::ArtGavcHandlers api_handlers(_server_api_access_token);
+    art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
     piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &api_handlers);
     client.perform();
 

@@ -101,13 +101,13 @@ public:
     std::map<std::string, std::string>& headers();
 
 private:
-    std::string _api_token;                         //!< Artifactory server REST api access token.
-    std::string _response_buffer;                   //!< Buffer to collect server responce data.
-    boost::shared_ptr<std::istringstream> _stream;  //!< Input stream to read server responce data.
-    std::map<std::string, std::string> _headers;    //!< Map with server responce HTTP headers.
+    std::string api_token_;                         //!< Artifactory server REST api access token.
+    std::string response_buffer_;                   //!< Buffer to collect server responce data.
+    boost::shared_ptr<std::istringstream> stream_;  //!< Input stream to read server responce data.
+    std::map<std::string, std::string> headers_;    //!< Map with server responce HTTP headers.
 
-    IBeforeCallback *_before_input_callback;        //!< Pointer to the callback instance.
-    IBeforeCallback *_before_output_callback;       //!< Pointer to the callback instance.
+    IBeforeCallback *before_input_callback_;        //!< Pointer to the callback instance.
+    IBeforeCallback *before_output_callback_;       //!< Pointer to the callback instance.
 };
 
 } } // namespace art::lib

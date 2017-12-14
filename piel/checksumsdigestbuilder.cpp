@@ -30,14 +30,14 @@
 
 namespace piel { namespace lib {
 
-const size_t DigestConstants::_buf_size = 640*1024;   //!< Size of the internal IO buffers.
+const size_t DigestConstants::buf_size = 640*1024;   //!< Size of the internal IO buffers.
 
-template<> char const* const DigestTraits<Sha256>::_name    = "SHA-256";
-template<> const int DigestTraits<Sha256>::_len             = SHA256_DIGEST_LENGTH;
-template<> char const* const DigestTraits<Sha>::_name       = "SHA-1";
-template<> const int DigestTraits<Sha>::_len                = SHA_DIGEST_LENGTH;
-template<> char const* const DigestTraits<Md5>::_name       = "MD5";
-template<> const int DigestTraits<Md5>::_len                = MD5_DIGEST_LENGTH;            
+template<> char const* const DigestTraits<Sha256>::name_    = "SHA-256";
+template<> const int DigestTraits<Sha256>::len_             = SHA256_DIGEST_LENGTH;
+template<> char const* const DigestTraits<Sha>::name_       = "SHA-1";
+template<> const int DigestTraits<Sha>::len_                = SHA_DIGEST_LENGTH;
+template<> char const* const DigestTraits<Md5>::name_       = "MD5";
+template<> const int DigestTraits<Md5>::len_                = MD5_DIGEST_LENGTH;
 
 //! Format digest string.
 //! \return Digest string representation.
@@ -50,83 +50,83 @@ std::string IDigestContext::format(const Digest& digest) {
 
 template<> void DigestContext<Sha256>::init()
 {
-    SHA256_Init(&_ctx);
+    SHA256_Init(&ctx_);
 }
 
 template<> void DigestContext<Sha256>::update(const void *data, size_t size)
 {
-    SHA256_Update(&_ctx, data, size);
+    SHA256_Update(&ctx_, data, size);
 }
 
 template<> DigestContext<Sha256>::Digest& DigestContext<Sha256>::finalize()
 {
-    SHA256_Final(_digest.data(), &_ctx);
-    return _digest;
+    SHA256_Final(digest_.data(), &ctx_);
+    return digest_;
 }
 
 typedef DigestContext<Sha256> Sha256Context;
 
 template<> void DigestContext<Sha>::init()
 {
-    SHA1_Init(&_ctx);
+    SHA1_Init(&ctx_);
 }
 
 template<> void DigestContext<Sha>::update(const void *data, size_t size)
 {
-    SHA1_Update(&_ctx, data, size);
+    SHA1_Update(&ctx_, data, size);
 }
 
 template<> DigestContext<Sha>::Digest& DigestContext<Sha>::finalize()
 {
-    SHA1_Final(_digest.data(), &_ctx);
-    return _digest;
+    SHA1_Final(digest_.data(), &ctx_);
+    return digest_;
 }
 
 typedef DigestContext<Sha> ShaContext;
 
 template<> void DigestContext<Md5>::init()
 {
-    MD5_Init(&_ctx);
+    MD5_Init(&ctx_);
 }
 
 template<> void DigestContext<Md5>::update(const void *data, size_t size)
 {
-    MD5_Update(&_ctx, data, size);
+    MD5_Update(&ctx_, data, size);
 }
 
 template<> DigestContext<Md5>::Digest& DigestContext<Md5>::finalize()
 {
-    MD5_Final(_digest.data(), &_ctx);
-    return _digest;
+    MD5_Final(digest_.data(), &ctx_);
+    return digest_;
 }
 
 //! Constructor
 ChecksumsDigestBuilder::ChecksumsDigestBuilder()
-    : _contexts()
-    , _buf(DigestConstants::_buf_size)
-    , _bad(false)
+    : contexts_()
+    , buf_(DigestConstants::buf_size)
+    , bad_(false)
 {
-    _contexts.push_back(boost::shared_ptr<IDigestContext>(new Sha256Context()));
-    _contexts.push_back(boost::shared_ptr<IDigestContext>(new ShaContext()));
-    _contexts.push_back(boost::shared_ptr<IDigestContext>(new Md5Context()));
+    contexts_.push_back(boost::shared_ptr<IDigestContext>(new Sha256Context()));
+    contexts_.push_back(boost::shared_ptr<IDigestContext>(new ShaContext()));
+    contexts_.push_back(boost::shared_ptr<IDigestContext>(new Md5Context()));
 }
 
 bool ChecksumsDigestBuilder::bad() const
 {
-    return _bad;
+    return bad_;
 }
 
 void ChecksumsDigestBuilder::init()
 {
     reset();
-    for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+    for(CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
         (*i)->init();
     }
 }
 
 void ChecksumsDigestBuilder::update(const void *data, size_t size)
 {
-    for(CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+    for(CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
         (*i)->update(data, size);
     }
 }
@@ -140,17 +140,17 @@ void ChecksumsDigestBuilder::calculate_for_stream(std::istream& is) {
     init();
     std::streamsize readed = 0;
     do {
-        readed = is.read(_buf.data(), _buf.size()).gcount();
+        readed = is.read(buf_.data(), buf_.size()).gcount();
         if (readed != 0) {
-            update(_buf.data(), readed);
+            update(buf_.data(), readed);
         }
     } while(!is.eof() & !is.fail() & !is.bad());
-    _bad = is.bad();
+    bad_ = is.bad();
 }
 
 //! Reset internal state.
 void ChecksumsDigestBuilder::reset() {
-    _bad = false;
+    bad_ = false;
 }
 
 template<>
@@ -158,7 +158,7 @@ ChecksumsDigestBuilder::StrDigests
 ChecksumsDigestBuilder::finalize<ChecksumsDigestBuilder::StrDigests>()
 {
     ChecksumsDigestBuilder::StrDigests result;
-    for(ChecksumsDigestBuilder::CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+    for(ChecksumsDigestBuilder::CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
         result.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
     }
     return result;
@@ -169,7 +169,7 @@ ChecksumsDigestBuilder::Digests
 ChecksumsDigestBuilder::finalize<ChecksumsDigestBuilder::Digests>()
 {
     ChecksumsDigestBuilder::Digests result;
-    for(ChecksumsDigestBuilder::CtxIter i = _contexts.begin(); i != _contexts.end(); i++) {
+    for(ChecksumsDigestBuilder::CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
         result.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
     }
     return result;

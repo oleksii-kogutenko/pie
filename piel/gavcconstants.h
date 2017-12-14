@@ -34,12 +34,15 @@
 namespace art { namespace lib {
 
 struct GavcConstants {
-    static const std::string delimiter;
-    static const std::string version_delimiter;
-    static const std::string extension_prefix;
-    static const std::string latest_version;
-    static const std::string all_versions;
 
+    // GAVC query syntax constants.
+    static const char delimiter;
+    static const char extension_prefix;
+    static const char oldest_version;
+    static const char latest_version;
+    static const char all_versions;
+
+    // Format url to maven metadata.
     static const char group_delimiter;
     static const char path_delimiter;
     static const std::string maven_metadata_filename;

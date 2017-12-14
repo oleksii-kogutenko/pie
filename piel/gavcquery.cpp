@@ -42,7 +42,7 @@
 //  '*' - all
 //  '+' - latest
 //  '-' - oldest
-// 
+//
 // prefix(+|-|*\.)+suffix
 //  - calculation from left to right
 //    (+|-|*\.)(+|-) == (+|-) (single element)
@@ -91,15 +91,23 @@ namespace gavc {
         struct ops_: qi::symbols<char,OpType> {
             ops_()
             {
-                add_sym("*", Op_all);
-                add_sym("+", Op_latest);
-                add_sym("-", Op_oldest);
+                add_sym(GavcConstants::all_versions, Op_all);
+                add_sym(GavcConstants::latest_version, Op_latest);
+                add_sym(GavcConstants::oldest_version, Op_oldest);
             }
 
             void add_sym(const std::string& sym, Ops op)
             {
                 add(sym, OpType(op, sym));
             }
+
+            void add_sym(char ch, Ops op)
+            {
+                std::string sym;
+                sym.push_back(ch);
+                add(sym, OpType(op, sym));
+            }
+
         } ops;
 
         qi::rule<Iterator, OpType()>                                    _op;        //!< Operation.
@@ -117,11 +125,11 @@ namespace gavc {
             using qi::char_;
             using qi::skip;
 
-            _body            = +( char_ - ":" );
-            _group           = _body > skip[ ":" ];
-            _name            = _body > -( skip[ ":" ] );
-            _version         = _body > -( skip[ ":" ] );
-            _classifier      = +( char_ - "@" ) > -( skip[ "@" ] );
+            _body            = +( char_ - GavcConstants::delimiter );
+            _group           = _body > skip[ GavcConstants::delimiter ];
+            _name            = _body > -( skip[ GavcConstants::delimiter ] );
+            _version         = _body > -( skip[ GavcConstants::delimiter ] );
+            _classifier      = +( char_ - GavcConstants::extension_prefix ) > -( skip[ GavcConstants::extension_prefix ] );
             _extension       = +( char_ );
 
             _gavc   =  _group
@@ -145,7 +153,7 @@ namespace gavc {
 } // namespace gavc
 
 GavcQuery::GavcQuery()
-    : _data()
+    : data_()
 {
 }
 
@@ -165,7 +173,7 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     gavc::gavc_grammar<std::string::const_iterator> grammar;
 
     try {
-        qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, result._data );
+        qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, result.data_ );
     } catch (...) {
         return boost::none;
     }
@@ -184,16 +192,16 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
 
-    std::vector<gavc::OpType>                                   result;
-    if (_data.version.empty()) {
-        result.push_back(gavc::OpType(gavc::Op_all, "*"));
+    std::vector<gavc::OpType> result;
+    if (data_.version.empty()) {
+        result.push_back(gavc::OpType(gavc::Op_all, GavcConstants::all_versions));
         return result;
     }
 
     gavc::gavc_version_ops_grammar<std::string::const_iterator> version_ops_grammar;
 
     try {
-        qi::phrase_parse( _data.version.begin(), _data.version.end(), version_ops_grammar, ascii::space, result );
+        qi::phrase_parse( data_.version.begin(), data_.version.end(), version_ops_grammar, ascii::space, result );
     } catch (...) {
         return boost::none;
     }
@@ -206,15 +214,38 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
     return result;
 }
 
-std::string GavcQuery::to_string() const 
+std::string GavcQuery::to_string() const
 {
-	std::string result;
-	if (!group().empty())       result.append(group());
-	if (!name().empty())        result.append(":").append(name());
-	if (!version().empty())     result.append(":").append(version());
-	if (!classifier().empty())  result.append(":").append(classifier());
-	if (!extension().empty())   result.append("@").append(extension());
-    return result;
+	std::ostringstream result;
+
+	if (!group().empty())
+	{
+        result << group();
+	}
+	if (!name().empty())
+	{
+        result << GavcConstants::delimiter;
+        result << name();
+	}
+	if (!version().empty())
+	{
+        result << GavcConstants::delimiter;
+        result << version();
+	}
+	if (!classifier().empty())
+	{
+        result << GavcConstants::delimiter;
+        result << classifier();
+	}
+	if (!extension().empty())
+	{
+        result << GavcConstants::extension_prefix;
+        result << extension();
+	}
+
+	LOG_T << result.str();
+
+    return result.str();
 }
 
 std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, const std::string& repository) const

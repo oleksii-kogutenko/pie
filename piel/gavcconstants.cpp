@@ -30,11 +30,11 @@
 
 namespace art { namespace lib {
 
-const std::string   GavcConstants::delimiter                    = ":";
-const std::string   GavcConstants::version_delimiter            = ".";
-const std::string   GavcConstants::extension_prefix             = "@";
-const std::string   GavcConstants::latest_version               = "+";
-const std::string   GavcConstants::all_versions                 = "*";
+const char          GavcConstants::delimiter                    = ':';
+const char          GavcConstants::extension_prefix             = '@';
+const char          GavcConstants::latest_version               = '+';
+const char          GavcConstants::oldest_version               = '-';
+const char          GavcConstants::all_versions                 = '*';
 
 const char          GavcConstants::group_delimiter              = '.';
 const char          GavcConstants::path_delimiter               = '/';

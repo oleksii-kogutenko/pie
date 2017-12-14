@@ -31,13 +31,13 @@
 namespace piel { namespace lib {
 
 BaseIndex::BaseIndex()
-        : _index()
+        : index_()
 {
 
 }
 
 BaseIndex::BaseIndex(const BaseIndex& src)
-        : _index( src._index )
+        : index_( src.index_ )
 {
 
 }
@@ -50,18 +50,18 @@ void BaseIndex::put(const std::string &name, const std::string &hash,
     item.hash = hash;
     item.source = source;
 
-    _index.insert( std::make_pair( name, item ) );
+    index_.insert( std::make_pair( name, item ) );
 }
 
 BaseIndex& BaseIndex::operator+(const BaseIndex& index)
 {
-    _index.insert( index._index.begin(), index._index.end() );
+    index_.insert( index.index_.begin(), index.index_.end() );
     return *this;
 }
 
 bool BaseIndex::empty() const
 {
-    return _index.empty();
+    return index_.empty();
 }
 
 } } // namespace piel::lib

@@ -40,11 +40,11 @@ CURLH_T_(art::lib::ArtBaseApiHandlers,\
 namespace art { namespace lib {
 
 ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
-    : _api_token(api_token)
-    , _response_buffer()
-    , _stream()
-    , _before_input_callback(0)
-    , _before_output_callback(0)
+    : api_token_(api_token)
+    , response_buffer_()
+    , stream_()
+    , before_input_callback_(0)
+    , before_output_callback_(0)
 {
 
 }
@@ -57,7 +57,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
 /*virtual*/ piel::lib::CurlEasyHandlers::headers_type ArtBaseApiHandlers::custom_header()
 {
     piel::lib::CurlEasyHandlers::headers_type result;
-    result.push_back(std::string(ArtConstants::rest_api_header__access_key).append(_api_token));
+    result.push_back(std::string(ArtConstants::rest_api_header__access_key).append(api_token_));
     return result;
 }
 
@@ -83,7 +83,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
     }
 
     LOG_T << name << "= " << value;
-    _headers.insert(std::make_pair(name,value));
+    headers_.insert(std::make_pair(name,value));
 
     return size;
 }
@@ -91,40 +91,40 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
 /*virtual*/ void ArtBaseApiHandlers::before_input()
 {
     // Call & reset callback pointer
-    if (_before_input_callback) {
-        _before_input_callback->callback(this);
-        _before_input_callback = 0;
+    if (before_input_callback_) {
+        before_input_callback_->callback(this);
+        before_input_callback_ = 0;
     }
 }
 
 /*virtual*/ void ArtBaseApiHandlers::before_output()
 {
     // Call & reset callback pointer
-    if (_before_output_callback) {
-        _before_output_callback->callback(this);
-        _before_output_callback = 0;
+    if (before_output_callback_) {
+        before_output_callback_->callback(this);
+        before_output_callback_ = 0;
     }
 }
 
 void ArtBaseApiHandlers::set_before_input_callback(ArtBaseApiHandlers::IBeforeCallback *callback)
 {
-    _before_input_callback = callback;
+    before_input_callback_ = callback;
 }
 
 void ArtBaseApiHandlers::set_before_output_callback(ArtBaseApiHandlers::IBeforeCallback *callback)
 {
-    _before_output_callback = callback;
+    before_output_callback_ = callback;
 }
 
 std::map<std::string, std::string>& ArtBaseApiHandlers::headers()
 {
-    return _headers;
+    return headers_;
 }
 
 /*virtual*/ size_t ArtBaseApiHandlers::handle_output(char *ptr, size_t size)
 {
-    _response_buffer.append(ptr, ptr + size);
-    LOG_T << "response: " << _response_buffer;
+    response_buffer_.append(ptr, ptr + size);
+    LOG_T << "response: " << response_buffer_;
     return size;
 }
 
@@ -136,8 +136,8 @@ std::map<std::string, std::string>& ArtBaseApiHandlers::headers()
 
 /*virtual*/ std::istringstream &ArtBaseApiHandlers::responce_stream()
 {
-    _stream = boost::shared_ptr<std::istringstream>(new std::istringstream(_response_buffer));
-    return *_stream.get();
+    stream_ = boost::shared_ptr<std::istringstream>(new std::istringstream(response_buffer_));
+    return *stream_.get();
 }
 
 } } // namespace art::lib

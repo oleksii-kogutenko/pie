@@ -78,7 +78,7 @@ public:
     //! Constructor.
     //! \param entry ZipEntry for reading data.
     ZipEntrySource(const ZipEntry* entry)
-        : _entry(entry)
+        : entry_(entry)
     {}
 
     //! Read entry data.
@@ -88,7 +88,7 @@ public:
     std::streamsize read(char* buffer, std::streamsize n);
 
 private:
-    const ZipEntry* _entry;
+    const ZipEntry* entry_;
 };
 
 //! libzip C api wrapper. Encapsulated api to work with whole archive.
@@ -103,10 +103,10 @@ public:
     //! \sa libzip zip_open docs.
     //! \param filename Path to archive.
     ZipFile(const std::string& filename)
-        : _libzip_error(0)
-        , _zip()
+        : libzip_error_(0)
+        , zip_()
     {
-        _zip = ::zip_open(filename.c_str(), ZIP_RDONLY, &_libzip_error);
+        zip_ = ::zip_open(filename.c_str(), ZIP_RDONLY, &libzip_error_);
     }
 
     //! Destructor.
@@ -114,19 +114,19 @@ public:
     //! \sa libzip zip_close docs.
     ~ZipFile()
     {
-        ::zip_close(_zip);
+        ::zip_close(zip_);
     }
 
     //! Retrieve number of archive entries.
     //! \return Number of archive entries.
     zip_int64_t num_entries() const {
-        return ::zip_get_num_entries(_zip, ZIP_FL_UNCHANGED);
+        return ::zip_get_num_entries(zip_, ZIP_FL_UNCHANGED);
     }
 
     //! Get archive entry name by entry index.
     //! \return archive entry name.
     std::string entry_name(zip_int64_t entryIndex) const {
-        return ::zip_get_name(_zip, entryIndex, ZIP_FL_ENC_GUESS);
+        return ::zip_get_name(zip_, entryIndex, ZIP_FL_ENC_GUESS);
     }
 
     //! Construct ZipEntry using entry name.
@@ -148,7 +148,7 @@ protected:
     //! \return libzip zip_file_t handle.
     //! \sa libzip zip_fopen docs.
     zip_file_t* fopen(const std::string& entry_name) const {
-        return ::zip_fopen(_zip, entry_name.c_str(), ZIP_FL_UNCHANGED);
+        return ::zip_fopen(zip_, entry_name.c_str(), ZIP_FL_UNCHANGED);
     }
 
     //! Low level api. Open libzip zip_file_t handle by entry index.
@@ -156,7 +156,7 @@ protected:
     //! \return libzip zip_file_t handle.
     //! \sa libzip zip_fopen docs.
     zip_file_t* fopen(zip_int64_t entry_index) const {
-        return ::zip_fopen_index(_zip, entry_index, ZIP_FL_UNCHANGED);
+        return ::zip_fopen_index(zip_, entry_index, ZIP_FL_UNCHANGED);
     }
 
     //! Low level api. Close libzip zip_file_t.
@@ -207,8 +207,8 @@ protected:
     ZipEntryAttributes file_get_external_attributes(const std::string& entry_name) const;
 
 private:
-    int _libzip_error;  //!< libzip last error code.
-    zip_t *_zip;        //!< libzip archive handle.
+    int libzip_error_;  //!< libzip last error code.
+    zip_t *zip_;        //!< libzip archive handle.
 };
 
 //! libzip C api wrapper. Encapsulated api to work with archive entry.
@@ -216,7 +216,7 @@ struct ZipEntry {
 
     //! Destructor.
     ~ZipEntry() {
-        _owner->fclose(_zip_file);
+        owner_->fclose(zip_file_);
     }
 
     //! Read entry data.
@@ -224,35 +224,35 @@ struct ZipEntry {
     //! \param size Data buffer size.
     //! \return number of readed bytes.
     zip_int64_t read(void *buf, zip_int64_t size) const {
-        return _owner->fread(_zip_file, buf, size);
+        return owner_->fread(zip_file_, buf, size);
     }
 
 #ifdef ZIP_ENABLE_SEEK_TELL
     zip_int8_t seek(zip_int64_t offset, int whence) const {
-        return _owner->fseek(_zip_file, offset, whence);
+        return owner_->fseek(zip_file_, offset, whence);
     }
 
     zip_int64_t tell() const {
-        return _owner->ftell(_zip_file);
+        return owner_->ftell(zip_file_);
     }
 #endif//ZIP_ENABLE_SEEK_TELL
 
     //! Get entry name.
     //! \return Archive entry name.
     std::string name() const {
-        return _name;
+        return name_;
     }
 
     //! Zip entry stat.
     //! \return libzip zip_stat_t
     zip_stat_t stat() const {
-        return _owner->stat(_name);
+        return owner_->stat(name_);
     }
 
     //! Get entry extended attributes.
     //! \return ZipEntryAttribute struct with extenden attributes.
     ZipEntryAttributes attributes() const {
-        return _owner->file_get_external_attributes(_name);
+        return owner_->file_get_external_attributes(name_);
     }
 
     //! Get unix mode.
@@ -286,8 +286,8 @@ protected:
 
     //! Reopen file.
     void reopen() {
-        _owner->fclose(_zip_file);
-        _zip_file = _owner->fopen(_name);
+        owner_->fclose(zip_file_);
+        zip_file_ = owner_->fopen(name_);
     }
 
     //! Constructor.
@@ -295,15 +295,15 @@ protected:
     //! \param name zip archive entry name.
     //! \param zip_file zip_file_t libzip handle.
     ZipEntry(ZipFile *owner, const std::string& name, zip_file_t* zip_file)
-        : _owner(owner)
-        , _name(name)
-        , _zip_file(zip_file)
+        : owner_(owner)
+        , name_(name)
+        , zip_file_(zip_file)
     {}
 
 private:
-    ZipFile* _owner;        //!< Reference to zip file.
-    std::string _name;      //!< Entry name.
-    zip_file_t* _zip_file;  //!< Internal libzip handle.
+    ZipFile* owner_;        //!< Reference to zip file.
+    std::string name_;      //!< Entry name.
+    zip_file_t* zip_file_;  //!< Internal libzip handle.
 };
 
 } } // namespace piel::lib

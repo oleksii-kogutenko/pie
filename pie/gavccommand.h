@@ -42,7 +42,7 @@ public:
 
     virtual int perform();
 
-    bool download_results() const { return _download_results; }
+    bool have_to_download_results() const { return have_to_download_results_; }
 
 protected:
     bool parse_arguments();
@@ -55,16 +55,16 @@ protected:
                       std::string& var);
 
 private:
-    int _argc;
-    char **_argv;
+    int argc_;
+    char **argv_;
 
-    std::string _server_url;
-    std::string _server_api_access_token;
-    std::string _server_repository;
+    std::string server_url_;
+    std::string server_api_access_token_;
+    std::string server_repository_;
 
-    art::lib::GavcQuery _query;
+    art::lib::GavcQuery query_;
 
-    bool _download_results;
+    bool have_to_download_results_;
 
 };
 

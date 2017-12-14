@@ -37,12 +37,12 @@
 class Application;
 
 struct ICommand {
-    ICommand(Application *app) : _app(app) {}
+    ICommand(Application *app) : app_(app) {}
 
     virtual int perform() = 0;
 
     Application *app() {
-        return _app;
+        return app_;
     }
 
 protected:
@@ -50,15 +50,15 @@ protected:
     virtual void show_command_help_message(const boost::program_options::options_description& desc);
 
 private:
-    Application *_app;
+    Application *app_;
 };
 
 struct UnknownCommand: public ICommand {
     UnknownCommand(Application *app, int argc, char **argv);
     int perform();
 private:
-    int _argc;
-    char **_argv;
+    int argc_;
+    char **argv_;
 };
 
 struct ICommmandConstructor {
@@ -71,20 +71,20 @@ template<class Command>
 class CommmandConstructor: public ICommmandConstructor {
 public:
     CommmandConstructor(const std::string& name, const std::string& description)
-        : _name(name)
-        , _description(description)
+        : name_(name)
+        , description_(description)
     {}
 
     boost::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const {
         return boost::shared_ptr<ICommand>(new Command(app, argc, argv));
     }    
 
-    std::string name() const        { return _name;         }
-    std::string description() const { return _description;  }
+    std::string name() const        { return name_;         }
+    std::string description() const { return description_;  }
 
 private:
-    std::string _name;
-    std::string _description;
+    std::string name_;
+    std::string description_;
 };
 
 class CommandsFactory {
@@ -99,8 +99,8 @@ public:
     boost::shared_ptr<ICommand> create(int argc, char **argv);
 
 private:
-    Application *_app;
-    Constructors _constructors;
+    Application *app_;
+    Constructors constructors_;
 };
 
 class Application
@@ -114,9 +114,9 @@ public:
     void show_registered_commands() const;
 
 private:
-    int _argc;
-    char **_argv;
-    CommandsFactory _commands_factory;
+    int argc_;
+    char **argv_;
+    CommandsFactory commands_factory_;
 };
 
 #endif // APPLICATION_H

@@ -51,9 +51,9 @@ public:
     void set_destination(std::ostream* dest);
 
 private:
-    std::string _api_token;
-    std::ostream* _dest;    //!< destination stream.
-    piel::lib::ChecksumsDigestBuilder _checksums_builder;
+    std::string api_token_;                                 //!< Artifactory server REST api access token.
+    std::ostream* dest_;                                    //!< Destination stream.
+    piel::lib::ChecksumsDigestBuilder checksums_builder_;   //!< Checksums digest builder for the content.
 };
 
 } } // namespace art::lib

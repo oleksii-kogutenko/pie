@@ -48,23 +48,23 @@ public:
 
     MapType& data()
     {
-        return _data;
+        return data_;
     }
 
     MapType::mapped_type& operator[](const MapType::key_type& key)
     {
-        return _data[key];
+        return data_[key];
     }
 
     void clear()
     {
-        _data.clear();
+        data_.clear();
     }
 
     static void test_properties();
 
 private:
-    MapType _data;
+    MapType data_;
 
 };
 

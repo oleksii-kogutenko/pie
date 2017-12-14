@@ -34,11 +34,11 @@ CURLH_T_(piel::lib::DownloadFileHandlers,\
 
 namespace piel { namespace lib {
 
-DownloadFileHandlers::DownloadFileHandlers(std::ostream& dest)
-    : _dest(dest)
-    , _checksums_builder()
+DownloadFileHandlers::DownloadFileHandlers(std::ostream* dest)
+    : dest_(dest)
+    , checksums_builder_()
 {
-    _checksums_builder.init();
+    checksums_builder_.init();
 }
 
 CurlEasyHandlers::headers_type DownloadFileHandlers::custom_header()
@@ -53,8 +53,8 @@ size_t DownloadFileHandlers::handle_header(char *ptr, size_t size)
 
 size_t DownloadFileHandlers::handle_output(char *ptr, size_t size)
 {
-    _dest.write(ptr, size);
-    _checksums_builder.update(ptr, size);
+    if (dest_) dest_->write(ptr, size);
+    checksums_builder_.update(ptr, size);
     return size;
 }
 
@@ -65,7 +65,7 @@ size_t DownloadFileHandlers::handle_input(char *ptr, size_t size)
 
 ChecksumsDigestBuilder::StrDigests DownloadFileHandlers::str_digests()
 {
-    return _checksums_builder.finalize<ChecksumsDigestBuilder::StrDigests>();
+    return checksums_builder_.finalize<ChecksumsDigestBuilder::StrDigests>();
 }
 
 void DownloadFileHandlers::before_input()

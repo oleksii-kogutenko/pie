@@ -11,7 +11,7 @@ build: prepare
 
 prepare: 
 	mkdir -p ${build_tree}
-	cd ${build_tree} && cmake -G"Unix Makefiles" $(src_tree)
+	cd ${build_tree} && cmake -G"Eclipse CDT4 - Unix Makefiles" $(src_tree)
 
 clean:
 	rm -rf ${build_tree}

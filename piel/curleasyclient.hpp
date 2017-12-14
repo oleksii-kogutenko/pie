@@ -111,17 +111,17 @@ public:
     //! \param handlers Pointer to implementation instance of *Handlers.
     //! \sa curl_easy_init
     CurlEasyClient(const std::string& url, HandlersPtr handlers)
-        : _url(url)
-        , _handlers(handlers)
+        : url_(url)
+        , handlers_(handlers)
     {
-        _curl = ::curl_easy_init();
+        curl_ = ::curl_easy_init();
     }
 
     //! Destructor. Will release internal libcurl handle.
     //! \sa curl_easy_cleanup
     ~CurlEasyClient()
     {
-        ::curl_easy_cleanup(_curl);
+        ::curl_easy_cleanup(curl_);
     }
 
     //! Perform request.
@@ -135,16 +135,16 @@ protected:
     static size_t handle_read(char *ptr, size_t size, size_t count, void* ctx);
 
 private:
-    std::string _url;       //!< Working url.
-    ::CURL *_curl;          //!< libcurl handle.
-    HandlersPtr _handlers;  //!< Pointer to implementation instance of *Handlers.
+    std::string url_;       //!< Working url.
+    ::CURL *curl_;          //!< libcurl handle.
+    HandlersPtr handlers_;  //!< Pointer to implementation instance of *Handlers.
 };
 
 template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_header(char *ptr, size_t size, size_t count, void* ctx)
 {
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
-    return thiz->_handlers->handle_header(ptr, size*count);
+    return thiz->handlers_->handle_header(ptr, size*count);
 }
 
 template<class Handlers>
@@ -152,9 +152,9 @@ size_t CurlEasyClient<Handlers>::handle_write(char *ptr, size_t size, size_t cou
 {
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
     if (CurlEasyHandlersTraits<Handlers>::have_before_output) {
-        thiz->_handlers->before_output();
+        thiz->handlers_->before_output();
     }
-    return thiz->_handlers->handle_output(ptr, size*count);
+    return thiz->handlers_->handle_output(ptr, size*count);
 }
 
 template<class Handlers>
@@ -162,41 +162,41 @@ size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t coun
 {
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
     if (CurlEasyHandlersTraits<Handlers>::have_before_input) {
-        thiz->_handlers->before_input();
+        thiz->handlers_->before_input();
     }
-    return thiz->_handlers->handle_input(ptr, size*count);
+    return thiz->handlers_->handle_input(ptr, size*count);
 }
 
 template<class Handlers>
 CURLcode CurlEasyClient<Handlers>::perform()
 {
-    ::curl_easy_setopt(_curl, CURLOPT_URL, _url.c_str());
+    ::curl_easy_setopt(curl_, CURLOPT_URL, url_.c_str());
     if (CurlEasyHandlersTraits<Handlers>::have_custom_header) {
         ::curl_slist *chunk = 0;
-        CurlEasyHandlers::headers_type headers = _handlers->custom_header();
+        CurlEasyHandlers::headers_type headers = handlers_->custom_header();
         typedef CurlEasyHandlers::headers_type::const_iterator Iter;
         for (Iter i = headers.begin(); i != headers.end(); ++i)
         {
             chunk = ::curl_slist_append(chunk, (*i).c_str());
         }
         // TODO: process errors
-        ::curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, chunk);
+        ::curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, chunk);
     }
     if (CurlEasyHandlersTraits<Handlers>::have_handle_header) {
-        ::curl_easy_setopt(_curl, CURLOPT_HEADERDATA, this);
-        ::curl_easy_setopt(_curl, CURLOPT_HEADERFUNCTION, handle_header);
+        ::curl_easy_setopt(curl_, CURLOPT_HEADERDATA, this);
+        ::curl_easy_setopt(curl_, CURLOPT_HEADERFUNCTION, handle_header);
     }
     if (CurlEasyHandlersTraits<Handlers>::have_handle_output) {
-        ::curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this);
-        ::curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, handle_write);
+        ::curl_easy_setopt(curl_, CURLOPT_WRITEDATA, this);
+        ::curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, handle_write);
     }
     if (CurlEasyHandlersTraits<Handlers>::have_handle_input) {
-        ::curl_easy_setopt(_curl, CURLOPT_READDATA, this);
-        ::curl_easy_setopt(_curl, CURLOPT_READFUNCTION, handle_read);
-        ::curl_easy_setopt(_curl, CURLOPT_UPLOAD, 1L);
+        ::curl_easy_setopt(curl_, CURLOPT_READDATA, this);
+        ::curl_easy_setopt(curl_, CURLOPT_READFUNCTION, handle_read);
+        ::curl_easy_setopt(curl_, CURLOPT_UPLOAD, 1L);
     }
-    curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1L);
-    return ::curl_easy_perform(_curl);
+    curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
+    return ::curl_easy_perform(curl_);
 }
 
 } } // namespace piel::lib

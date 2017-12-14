@@ -59,8 +59,8 @@ bool ICommand::show_help(boost::program_options::options_description &desc, int 
 
 UnknownCommand::UnknownCommand(Application *app, int argc, char **argv)
     : ICommand(app)
-    , _argc(argc)
-    , _argv(argv)
+    , argc_(argc)
+    , argv_(argv)
 {
 }
 
@@ -69,45 +69,45 @@ int UnknownCommand::perform()
     std::cerr << "Incorrect command line or unknown command."               << std::endl;
 
     std::cout << "Usage:"                                                   << std::endl;
-    std::cout << "\t" << _argv[0] << " <command name> [command args]"       << std::endl;
+    std::cout << "\t" << argv_[0] << " <command name> [command args]"       << std::endl;
     std::cout << "Help:"                                                    << std::endl;
-    std::cout << "\t" << _argv[0] << " <command name> --help|-h"            << std::endl;
+    std::cout << "\t" << argv_[0] << " <command name> --help|-h"            << std::endl;
     std::cout << "\t\t- Will out detailed list of the command arguments."   << std::endl;
     app()->show_registered_commands();
     return -1;
 }
 
 CommandsFactory::CommandsFactory(Application *app)
-    : _app(app)
-    , _constructors()
+    : app_(app)
+    , constructors_()
 {
 }
 
 void CommandsFactory::register_command(ICommmandConstructor *constructor)
 {
-    _constructors.insert(std::make_pair(constructor->name(), boost::shared_ptr<ICommmandConstructor>(constructor)));
+    constructors_.insert(std::make_pair(constructor->name(), boost::shared_ptr<ICommmandConstructor>(constructor)));
 }
 
 boost::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
 {
     // second argument is command name
     if (argc < 2) {
-        return boost::shared_ptr<ICommand>(new UnknownCommand(_app, argc, argv));
+        return boost::shared_ptr<ICommand>(new UnknownCommand(app_, argc, argv));
     }
 
-    Constructors::iterator cmd_iter = _constructors.find(std::string(argv[1]));
-    if (cmd_iter == _constructors.end()) {
-        return boost::shared_ptr<ICommand>(new UnknownCommand(_app, argc, argv));
+    Constructors::iterator cmd_iter = constructors_.find(std::string(argv[1]));
+    if (cmd_iter == constructors_.end()) {
+        return boost::shared_ptr<ICommand>(new UnknownCommand(app_, argc, argv));
     }
 
-    return cmd_iter->second->create(_app, argc - 1, argv + 1);
+    return cmd_iter->second->create(app_, argc - 1, argv + 1);
 }
 
 void CommandsFactory::show_registered_commands() const
 {
     std::cout << "Commands:" << std::endl;
-    Constructors::const_iterator cmd_iter = _constructors.begin(), 
-                                 end      = _constructors.end();
+    Constructors::const_iterator cmd_iter = constructors_.begin(), 
+                                 end      = constructors_.end();
     for (;cmd_iter != end; ++cmd_iter) {
         std::cout << "\t" << cmd_iter->second->name()
                   << ":\t" << cmd_iter->second->description()
@@ -116,9 +116,9 @@ void CommandsFactory::show_registered_commands() const
 }
 
 Application::Application(int argc, char **argv)
-    : _argc(argc)
-    , _argv(argv)
-    , _commands_factory(this)
+    : argc_(argc)
+    , argv_(argv)
+    , commands_factory_(this)
 {
 }
 
@@ -128,16 +128,16 @@ Application::~Application()
 
 int Application::run()
 {
-    boost::shared_ptr<ICommand> command = _commands_factory.create(_argc, _argv);
+    boost::shared_ptr<ICommand> command = commands_factory_.create(argc_, argv_);
     return command->perform();
 }
 
 void Application::register_command(ICommmandConstructor *constructor)
 {
-    _commands_factory.register_command(constructor);
+    commands_factory_.register_command(constructor);
 }
 
 void Application::show_registered_commands() const
 {
-    _commands_factory.show_registered_commands();
+    commands_factory_.show_registered_commands();
 }

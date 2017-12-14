@@ -37,18 +37,18 @@ namespace art { namespace lib {
 
 ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
-    , _dest(0)
-    , _checksums_builder()
+    , dest_(0)
+    , checksums_builder_()
 {
-    _checksums_builder.init();
+    checksums_builder_.init();
 }
 
 ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, std::ostream *dest)
     : ArtBaseApiHandlers(api_token)
-    , _dest(dest)
-    , _checksums_builder()
+    , dest_(dest)
+    , checksums_builder_()
 {
-    _checksums_builder.init();
+    checksums_builder_.init();
 }
 
 /*virtual*/ ArtBaseDownloadHandlers::~ArtBaseDownloadHandlers()
@@ -58,19 +58,19 @@ ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, s
 
 void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
 {
-    _dest = dest;
+    dest_ = dest;
 }
 
 /*virtual*/ size_t ArtBaseDownloadHandlers::handle_output(char *ptr, size_t size)
 {
-    if (_dest) _dest->write(ptr, size);
-    _checksums_builder.update(ptr, size);
+    if (dest_) dest_->write(ptr, size);
+    checksums_builder_.update(ptr, size);
     return size;
 }
 
 /*virtual*/ piel::lib::ChecksumsDigestBuilder::StrDigests ArtBaseDownloadHandlers::str_digests()
 {
-    return _checksums_builder.finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
+    return checksums_builder_.finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
 }
 
 } } // namespace art::lib
