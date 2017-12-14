@@ -37,6 +37,21 @@
 
 namespace boost { namespace property_tree {
 
+    struct FindPropertyHelper
+    {
+        std::string _prop_name;
+
+        FindPropertyHelper(const std::string& prop_name)
+            : _prop_name(prop_name)
+        {
+        }
+
+        bool operator()(ptree::value_type prop)
+        {
+            return prop.first == _prop_name;
+        }
+    };
+
     // Several common algorithms.
 
     // Emumerate sub objects.

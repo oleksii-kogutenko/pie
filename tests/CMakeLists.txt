@@ -14,3 +14,8 @@ add_test (NAME Properties COMMAND properties)
 add_executable(gavc_query_parsing gavc_query_parsing.cpp)
 target_link_libraries(gavc_query_parsing piel ${Boost_LIBRARIES} crypto zip curl)
 add_test (NAME GacvQueryParsing COMMAND gavc_query_parsing)
+
+#############################################################
+add_executable(maven_metadata_test maven_metadata_test.cpp)
+target_link_libraries(maven_metadata_test piel ${Boost_LIBRARIES} crypto zip curl)
+add_test (NAME MavenMetadataTest COMMAND maven_metadata_test)
