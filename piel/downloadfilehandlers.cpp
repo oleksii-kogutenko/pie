@@ -28,14 +28,11 @@
 
 #include <downloadfilehandlers.h>
 
-namespace piel { namespace lib {
+//      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
+CURLH_T_(piel::lib::DownloadFileHandlers,\
+        true,             false,          false,          true,           false,          false);
 
-template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_custom_header   = false;
-template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_header   = false;
-template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_output   = true;
-template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_handle_input    = false;
-template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_before_output   = false;
-template<> const bool CurlEasyHandlersTraits<DownloadFileHandlers>::have_before_input    = false;
+namespace piel { namespace lib {
 
 DownloadFileHandlers::DownloadFileHandlers(std::ostream& dest)
     : _dest(dest)

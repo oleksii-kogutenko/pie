@@ -52,6 +52,18 @@ struct CurlEasyHandlersTraits {
     static const bool have_before_output;   //!< Implemantation has before_output handler.
 };
 
+// Macroses to define handlers traits.
+#define CURLH_T_ITEM_(CLASS,TRAIT,VALUE) \
+    template<> const bool piel::lib::CurlEasyHandlersTraits< CLASS > :: TRAIT = VALUE
+
+#define CURLH_T_(CLASS,custom_header,handle_header,handle_input,handle_output,before_input,before_output) \
+    CURLH_T_ITEM_(CLASS,have_custom_header, custom_header);  \
+    CURLH_T_ITEM_(CLASS,have_handle_header, handle_header);  \
+    CURLH_T_ITEM_(CLASS,have_handle_input,  handle_input);   \
+    CURLH_T_ITEM_(CLASS,have_handle_output, handle_output);  \
+    CURLH_T_ITEM_(CLASS,have_before_input,  before_input);   \
+    CURLH_T_ITEM_(CLASS,have_before_output, before_output)
+
 //! Propotype for *Handlers classes.
 struct CurlEasyHandlers {
     typedef std::vector<std::string> headers_type;  //!< Type used for HTTP headers storages.

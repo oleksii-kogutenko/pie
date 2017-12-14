@@ -29,16 +29,9 @@
 #include <artconstants.h>
 #include <artbasedownloadhandlers.h>
 
-namespace piel { namespace lib {
-
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_custom_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_handle_output   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_before_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtBaseDownloadHandlers>::have_before_output   = true;
-
-} } // namespace piel::lib
+//      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
+CURLH_T_(art::lib::ArtBaseDownloadHandlers,\
+        true,             true,           false,          true,           false,          true);
 
 namespace art { namespace lib {
 

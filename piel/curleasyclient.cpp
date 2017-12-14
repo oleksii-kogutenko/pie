@@ -28,12 +28,7 @@
 
 #include <curleasyclient.hpp>
 
-namespace piel { namespace lib {
-
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_custom_header  = false;
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_handle_header  = false;
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_handle_input   = false;
-template<> const bool CurlEasyHandlersTraits<CurlEasyHandlers>::have_handle_output  = false;
-
-} } // namespace piel::lib
+//      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
+CURLH_T_(piel::lib::CurlEasyHandlers,\
+        false,            false,          false,          false,          false,          false);
 

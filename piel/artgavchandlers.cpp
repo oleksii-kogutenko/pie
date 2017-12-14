@@ -29,16 +29,9 @@
 #include <artconstants.h>
 #include <artgavchandlers.h>
 
-namespace piel { namespace lib {
-
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_handle_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_custom_header   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_handle_header   = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_handle_output   = true;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_before_input    = false;
-template<> const bool CurlEasyHandlersTraits<art::lib::ArtGavcHandlers>::have_before_output   = false;
-    
-} } // namespace piel::lib
+//      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
+CURLH_T_(art::lib::ArtGavcHandlers,\
+        true,             false,          false,          true,           false,          true);
 
 namespace art { namespace lib {
 
