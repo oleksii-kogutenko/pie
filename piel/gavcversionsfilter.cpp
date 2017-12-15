@@ -26,13 +26,13 @@
  *
  */
 
-#include "gavcversionsfilter.h"
+#include <gavcversionsfilter.h>
+#include <gavcversionsmatcher.h>
 
 #include <logging.h>
 
 #include <algorithm>
 #include <sstream>
-#include <boost/regex.hpp>
 
 namespace art { namespace lib {
 
@@ -62,61 +62,21 @@ struct Match {
     typedef Not<Match, const std::string& > not_;
 
     Match(const std::vector<gavc::OpType>& query_ops)
-        : regex_(create_regex(query_ops))
+        : matcher_(query_ops)
     {
     }
 
     bool operator()(const std::string& val)
     {
-        bool result = boost::regex_match(val, regex_);
+        bool result = matcher_.match(val);
 
-        LOG_T << "match value: " << val << " regex: " << regex_ << " result: " << result;
+        LOG_T << "match value: " << val << " result: " << result;
 
         return result;
     }
 
-protected:
-    std::string escape_string(const std::string& str_to_escape)
-    {
-        const boost::regex esc("[.^$|()\\[\\]{}*+?\\\\]");
-        const std::string rep("\\\\&");
-        return boost::regex_replace(str_to_escape, esc, rep,
-                boost::match_default | boost::format_sed);
-    }
-
-    boost::regex create_regex(const std::vector<gavc::OpType>& query_ops)
-    {
-        std::ostringstream regex_content;
-
-        regex_content << "^";
-
-        for(std::vector<gavc::OpType>::const_iterator i = query_ops.begin(), end = query_ops.end(); i != end; ++i)
-        {
-            switch (i->first) {
-            case gavc::Op_const:
-            {
-                regex_content << escape_string(i->second);
-                break;
-            }
-            case gavc::Op_all:
-            case gavc::Op_latest:
-            case gavc::Op_oldest:
-            {
-                // Lazy all
-                regex_content << ".+";
-            }
-            }
-        }
-
-        regex_content << "$";
-
-        LOG_T << "created regex: " << regex_content.str();
-
-        return boost::regex(regex_content.str());
-    }
-
 private:
-    boost::regex regex_;
+    GavcVersionsMatcher matcher_;
 
 };
 
