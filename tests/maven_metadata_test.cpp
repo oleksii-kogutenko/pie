@@ -113,24 +113,27 @@ BOOST_AUTO_TEST_CASE(ParseMavenMetadata)
 
     BOOST_CHECK_EQUAL("20171211011023", m.versioning().last_updated());
 
-    BOOST_CHECK_EQUAL(17,               m.versioning().versions().size());
-    BOOST_CHECK_EQUAL("45",             m.versioning().versions()[0]);
-    BOOST_CHECK_EQUAL("46",             m.versioning().versions()[1]);
-    BOOST_CHECK_EQUAL("47",             m.versioning().versions()[2]);
-    BOOST_CHECK_EQUAL("48",             m.versioning().versions()[3]);
-    BOOST_CHECK_EQUAL("49",             m.versioning().versions()[4]);
-    BOOST_CHECK_EQUAL("50",             m.versioning().versions()[5]);
-    BOOST_CHECK_EQUAL("51",             m.versioning().versions()[6]);
-    BOOST_CHECK_EQUAL("52",             m.versioning().versions()[7]);
-    BOOST_CHECK_EQUAL("53",             m.versioning().versions()[8]);
-    BOOST_CHECK_EQUAL("56",             m.versioning().versions()[9]);
-    BOOST_CHECK_EQUAL("57",             m.versioning().versions()[10]);
-    BOOST_CHECK_EQUAL("58",             m.versioning().versions()[11]);
-    BOOST_CHECK_EQUAL("59",             m.versioning().versions()[12]);
-    BOOST_CHECK_EQUAL("60",             m.versioning().versions()[13]);
-    BOOST_CHECK_EQUAL("61",             m.versioning().versions()[14]);
-    BOOST_CHECK_EQUAL("62",             m.versioning().versions()[15]);
-    BOOST_CHECK_EQUAL("63",             m.versioning().versions()[16]);
+    boost::optional<GavcQuery> op_q = GavcQuery::parse("adk.trunk:adk:*");
+    std::vector<std::string>  versions = m.versions_for(*op_q);
+
+    BOOST_CHECK_EQUAL(17,               versions.size());
+    BOOST_CHECK_EQUAL("45",             versions[0]);
+    BOOST_CHECK_EQUAL("46",             versions[1]);
+    BOOST_CHECK_EQUAL("47",             versions[2]);
+    BOOST_CHECK_EQUAL("48",             versions[3]);
+    BOOST_CHECK_EQUAL("49",             versions[4]);
+    BOOST_CHECK_EQUAL("50",             versions[5]);
+    BOOST_CHECK_EQUAL("51",             versions[6]);
+    BOOST_CHECK_EQUAL("52",             versions[7]);
+    BOOST_CHECK_EQUAL("53",             versions[8]);
+    BOOST_CHECK_EQUAL("56",             versions[9]);
+    BOOST_CHECK_EQUAL("57",             versions[10]);
+    BOOST_CHECK_EQUAL("58",             versions[11]);
+    BOOST_CHECK_EQUAL("59",             versions[12]);
+    BOOST_CHECK_EQUAL("60",             versions[13]);
+    BOOST_CHECK_EQUAL("61",             versions[14]);
+    BOOST_CHECK_EQUAL("62",             versions[15]);
+    BOOST_CHECK_EQUAL("63",             versions[16]);
 }
 
 BOOST_AUTO_TEST_CASE(ParseMavenMetadata_NoGroup)

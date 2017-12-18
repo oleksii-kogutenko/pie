@@ -34,6 +34,8 @@
 #include <vector>
 #include <boost/optional.hpp>
 
+#include <gavcquery.h>
+
 namespace art {
 namespace lib {
 
@@ -61,6 +63,8 @@ public:
     const std::string& artifact() const { return artifact_; }
     const std::string& version() const { return version_; }
     const Versioning& versioning() const { return versioning_; }
+
+    std::vector<std::string> versions_for(const GavcQuery& query) const;
 
 private:
     std::string group_;

@@ -44,6 +44,11 @@ public:
     bool is_comparatible(const std::string& lhs, const std::string& rhs) const;
     CompareNumericType compare(const std::string& lhs, const std::string& rhs) const;
 
+    bool operator()(const std::string& lhs, const std::string& rhs) const {
+        BOOST_ASSERT(is_comparatible(lhs, rhs));
+        return compare(lhs, rhs) > 0;
+    }
+
 private:
     GavcVersionsMatcher matcher_;
 

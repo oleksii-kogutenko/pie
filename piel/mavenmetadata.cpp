@@ -32,6 +32,9 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost_property_tree_ext.hpp>
 
+#include <gavcversionsfilter.h>
+#include <gavcversionscomparator.h>
+
 namespace art { namespace lib {
 
 namespace pt = boost::property_tree;
@@ -193,6 +196,29 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     } else {
         return boost::none;
     }
+}
+
+std::vector<std::string> MavenMetadata::versions_for(const GavcQuery& query) const
+{
+    std::vector<std::string> result = versioning_.versions_;
+
+    boost::optional<std::vector<gavc::OpType> > ops_val = query.query_version_ops();
+
+    if (!ops_val) {
+        return result;
+    }
+
+    // 1. Filter out versions what are not corresponding to query
+    GavcVersionsFilter filter = *ops_val;
+
+    result = filter.filtered(result);
+
+    // 2. Sort
+    GavcVersionsComparator comparator = *ops_val;
+
+    std::sort(result.begin(), result.end(), comparator);
+
+    return result;
 }
 
 } } // namespace art::lib
