@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef PIEL_GAVCVERSIONSFILTER_H_
-#define PIEL_GAVCVERSIONSFILTER_H_
+#ifndef GAVCVERSIONSFILTER_H_
+#define GAVCVERSIONSFILTER_H_
 
 #include <vector>
 #include <gavcquery.h>
@@ -71,4 +71,4 @@ private:
 
 } } // namespace art::lib
 
-#endif /* PIEL_GAVCVERSIONSFILTER_H_ */
+#endif /* GAVCVERSIONSFILTER_H_ */

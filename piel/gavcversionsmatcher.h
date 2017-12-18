@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef PIEL_GAVCVERSIONSMATCHER_H_
-#define PIEL_GAVCVERSIONSMATCHER_H_
+#ifndef GAVCVERSIONSMATCHER_H_
+#define GAVCVERSIONSMATCHER_H_
 
 #include <gavcquery.h>
 #include <vector>
@@ -60,4 +60,4 @@ private:
 } // namespace lib
 } // namespace art
 
-#endif /* PIEL_GAVCVERSIONSMATCHER_H_ */
+#endif /* GAVCVERSIONSMATCHER_H_ */

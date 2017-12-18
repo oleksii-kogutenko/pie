@@ -32,6 +32,7 @@
 #include <vector>
 #include <string>
 #include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace art { namespace lib {
 

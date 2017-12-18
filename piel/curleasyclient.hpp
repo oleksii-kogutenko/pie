@@ -44,12 +44,12 @@ namespace piel { namespace lib {
 //! \param CurlEasyHandlers *Handlers implementation.
 template<class CurlEasyHandlers>
 struct CurlEasyHandlersTraits {
-    static const bool have_custom_header;   //!< Implemantation has custom_header handler.
-    static const bool have_handle_header;   //!< Implemantation has handle_header handler.
-    static const bool have_handle_input;    //!< Implemantation has handle_input handler.
-    static const bool have_handle_output;   //!< Implemantation has handle_output handler.
-    static const bool have_before_input;    //!< Implemantation has before_input handler.
-    static const bool have_before_output;   //!< Implemantation has before_output handler.
+    static const bool have_custom_header;   //!< Implementation has custom_header handler.
+    static const bool have_handle_header;   //!< Implementation has handle_header handler.
+    static const bool have_handle_input;    //!< Implementation has handle_input handler.
+    static const bool have_handle_output;   //!< Implementation has handle_output handler.
+    static const bool have_before_input;    //!< Implementation has before_input handler.
+    static const bool have_before_output;   //!< Implementation has before_output handler.
 };
 
 // Macroses to define handlers traits.

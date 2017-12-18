@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(FailQuery_G)
     BOOST_CHECK(!op);
 }
 
-BOOST_AUTO_TEST_CASE(FailEmptyQuery_)
+BOOST_AUTO_TEST_CASE(FailEmptyQuery)
 {
     boost::optional<GavcQuery> op = GavcQuery::parse("");
     BOOST_CHECK(!op);

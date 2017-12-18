@@ -27,6 +27,7 @@
  */
 
 #include <gavcquery.h>
+
 #include <logging.h>
 #include <gavcconstants.h>
 

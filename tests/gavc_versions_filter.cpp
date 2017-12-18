@@ -124,20 +124,3 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_trivial_query)
 
     BOOST_CHECK(filtered_out.empty());
 }
-
-BOOST_AUTO_TEST_CASE(BasicFiltering_significant_parts)
-{
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:12.6.*.123.+.*");
-
-    BOOST_CHECK(op);
-
-    GavcQuery q = *op;
-
-    GavcVersionsMatcher marcher(*(q.query_version_ops()));
-    std::vector<std::string> sparts = marcher.significant_parts("12.6.ods.123.4453.987");
-
-    BOOST_CHECK_EQUAL(3,            sparts.size());
-    BOOST_CHECK_EQUAL("ods",        sparts[0]);
-    BOOST_CHECK_EQUAL("4453",       sparts[1]);
-    BOOST_CHECK_EQUAL("987",        sparts[2]);
-}

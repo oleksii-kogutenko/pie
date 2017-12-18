@@ -24,3 +24,8 @@ add_test (NAME MavenMetadataTest COMMAND maven_metadata_test)
 add_executable(gavc_versions_filter gavc_versions_filter.cpp)
 target_link_libraries(gavc_versions_filter piel ${Boost_LIBRARIES} crypto zip curl)
 add_test (NAME GavcVersionsFilterTest COMMAND gavc_versions_filter)
+
+#############################################################
+add_executable(gavc_versions_matcher gavc_versions_matcher.cpp)
+target_link_libraries(gavc_versions_matcher piel ${Boost_LIBRARIES} crypto zip curl)
+add_test (NAME GavcVersionsMatcherTest COMMAND gavc_versions_matcher)
