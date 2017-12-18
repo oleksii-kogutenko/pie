@@ -29,3 +29,8 @@ add_test (NAME GavcVersionsFilterTest COMMAND gavc_versions_filter)
 add_executable(gavc_versions_matcher gavc_versions_matcher.cpp)
 target_link_libraries(gavc_versions_matcher piel ${Boost_LIBRARIES} crypto zip curl)
 add_test (NAME GavcVersionsMatcherTest COMMAND gavc_versions_matcher)
+
+#############################################################
+add_executable(gavc_versions_comparator gavc_versions_comparator.cpp)
+target_link_libraries(gavc_versions_comparator piel ${Boost_LIBRARIES} crypto zip curl)
+add_test (NAME GavcVersionsComparatorTest COMMAND gavc_versions_comparator)
