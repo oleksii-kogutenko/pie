@@ -108,6 +108,42 @@ bool GavcVersionsComparator::is_comparatible(const std::string& lhs, const std::
     return lhs_parts.size() == rhs_parts.size();
 }
 
+CompareNumericType GavcVersionsComparator::compare_part(const std::string& lhs, const std::string& rhs) const
+{
+    int part_result = 0;
+    Part lhs_part(lhs), rhs_part(rhs);
+
+    if (lhs_part.type() == Part::Type_number && rhs_part.type() == Part::Type_number )
+    {
+        // numeric compare
+        if (lhs_part.value<CompareNumericType>() != rhs_part.value<CompareNumericType>()) {
+            part_result = lhs_part.value<CompareNumericType>() < rhs_part.value<CompareNumericType>() ? +1 : -1;
+        }
+
+        LOG_T << "Versions corresponding numeric parts: " << lhs_part.presentation() << " " << rhs_part.presentation() << " part_result: " << part_result;
+    }
+    else
+    {
+        // lexicographic compare
+        if (lhs_part.presentation() != rhs_part.presentation())
+        {
+            if (boost::lexicographical_compare(std::make_pair(lhs_part.presentation().begin(), lhs_part.presentation().end()),
+                    std::make_pair(rhs_part.presentation().begin(), rhs_part.presentation().end())))
+            {
+                part_result = +1;
+            }
+            else
+            {
+                part_result = -1;
+            }
+        }
+
+        LOG_T << "Versions corresponding lexicographic parts: " << lhs_part.presentation() << " " << rhs_part.presentation() << " part_result: " << part_result;
+    }
+
+    return part_result;
+}
+
 CompareNumericType GavcVersionsComparator::compare(const std::string& lhs, const std::string& rhs) const
 {
     int result = 0;
@@ -124,37 +160,7 @@ CompareNumericType GavcVersionsComparator::compare(const std::string& lhs, const
 
         for(Iter lhs_i = lhs_parts.begin(), rhs_i = rhs_parts.begin(), lhs_end = lhs_parts.end(); lhs_i != lhs_end; ++lhs_i, ++rhs_i)
         {
-            int part_result = 0;
-            Part lhs_part(*lhs_i), rhs_part(*rhs_i);
-
-            if (lhs_part.type() == Part::Type_number && rhs_part.type() == Part::Type_number )
-            {
-                // numeric compare
-                if (lhs_part.value<CompareNumericType>() != rhs_part.value<CompareNumericType>()) {
-                    part_result = lhs_part.value<CompareNumericType>() < rhs_part.value<CompareNumericType>() ? +1 : -1;
-                }
-
-                LOG_T << "Versions corresponding numeric parts: " << lhs_part.presentation() << " " << rhs_part.presentation() << " part_result: " << part_result;
-            }
-            else
-            {
-                // lexicographic compare
-                if (lhs_part.presentation() != rhs_part.presentation())
-                {
-                    if (boost::lexicographical_compare(std::make_pair(lhs_part.presentation().begin(), lhs_part.presentation().end()),
-                            std::make_pair(rhs_part.presentation().begin(), rhs_part.presentation().end())))
-                    {
-                        part_result = +1;
-                    }
-                    else
-                    {
-                        part_result = -1;
-                    }
-                }
-
-                LOG_T << "Versions corresponding lexicographic parts: " << lhs_part.presentation() << " " << rhs_part.presentation() << " part_result: " << part_result;
-            }
-
+            int part_result = compare_part(*lhs_i, *rhs_i);
             if (part_result != 0)
             {
                 result = part_result;

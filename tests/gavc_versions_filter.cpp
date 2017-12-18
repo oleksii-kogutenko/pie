@@ -124,3 +124,42 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_trivial_query)
 
     BOOST_CHECK(filtered_out.empty());
 }
+
+BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_plus)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.+");
+
+    BOOST_CHECK(op);
+
+    GavcQuery q = *op;
+
+    GavcVersionsFilter f(*(q.query_version_ops()));
+
+    std::vector<std::string> versions;
+    init_versions(versions);
+
+    std::vector<std::string> filtered       = f.filtered(versions);
+
+    BOOST_CHECK_EQUAL(1,            filtered.size());
+    BOOST_CHECK_EQUAL("16.6.536",   filtered[0]);
+}
+
+BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_minus)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.-");
+
+    BOOST_CHECK(op);
+
+    GavcQuery q = *op;
+
+    GavcVersionsFilter f(*(q.query_version_ops()));
+
+    std::vector<std::string> versions;
+    init_versions(versions);
+
+    std::vector<std::string> filtered       = f.filtered(versions);
+
+    BOOST_CHECK_EQUAL(1,            filtered.size());
+    BOOST_CHECK_EQUAL("16.6.123",   filtered[0]);
+}
+

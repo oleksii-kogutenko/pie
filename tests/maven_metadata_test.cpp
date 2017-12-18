@@ -134,6 +134,19 @@ BOOST_AUTO_TEST_CASE(ParseMavenMetadata)
     BOOST_CHECK_EQUAL("61",             versions[14]);
     BOOST_CHECK_EQUAL("62",             versions[15]);
     BOOST_CHECK_EQUAL("63",             versions[16]);
+
+    boost::optional<GavcQuery> op_q_1 = GavcQuery::parse("adk.trunk:adk:52");
+    std::vector<std::string>  versions_1 = m.versions_for(*op_q_1);
+
+    BOOST_CHECK_EQUAL(1,                versions_1.size());
+    BOOST_CHECK_EQUAL("52",             versions_1[0]);
+
+    boost::optional<GavcQuery> op_q_2 = GavcQuery::parse("adk.trunk:adk:49");
+    std::vector<std::string>  versions_2 = m.versions_for(*op_q_2);
+
+    BOOST_CHECK_EQUAL(1,                versions_2.size());
+    BOOST_CHECK_EQUAL("49",             versions_2[0]);
+
 }
 
 BOOST_AUTO_TEST_CASE(ParseMavenMetadata_NoGroup)
