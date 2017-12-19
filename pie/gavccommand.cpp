@@ -32,6 +32,7 @@
 #include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
 #include <logging.h>
+#include <mavenmetadata.h>
 
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
@@ -142,15 +143,15 @@ bool GavcCommand::parse_arguments()
     return true;
 }
 
-std::string GavcCommand::create_url() const
+std::string GavcCommand::create_url(const std::string& version_to_query) const
 {
     std::string url = server_url_;
     url.append("/api/search/gavc");
     url.append("?r=").append(server_repository_);
     url.append("&g=").append(query_.group());
     url.append("&a=").append(query_.name());
-    if (!query_.version().empty()) {
-        url.append("&v=").append(query_.version());
+    if (!version_to_query.empty()) {
+        url.append("&v=").append(version_to_query);
     }
     if (!query_.classifier().empty()) {
         url.append("&c=").append(query_.classifier());
@@ -213,30 +214,38 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         return result;
     }
 
-    //////////////////////////////////////////////////////////
-    // Proptotyping code (read maven metadata)
-
     // Get maven metadata
     art::lib::ArtGavcHandlers download_metadata_handlers(server_api_access_token_);
     piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> get_metadata_client(
         query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
     get_metadata_client.perform();
 
-    //pt::ptree metadata_root;
-    // Load the xml content into this ptree
-    //pt::read_xml(download_metadata_handlers.responce_stream(), metadata_root);
-    //////////////////////////////////////////////////////////
+    boost::optional<art::lib::MavenMetadata> metadata_op = art::lib::MavenMetadata::parse(download_metadata_handlers.responce_stream());
+    if (!metadata_op) {
+        LOG_E << "Can't retrieve maven metadata!";
+        return result;
+    }
 
-    art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
-    piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(), &api_handlers);
-    client.perform();
+    art::lib::MavenMetadata metadata = *metadata_op;
 
-    // Create a root
-    pt::ptree root;
+    std::vector<std::string> versions_to_download = metadata.versions_for(query_);
 
-    // Load the json file into this ptree
-    pt::read_json(api_handlers.responce_stream(), root);
-    pt::each(root.get_child("results"), boost::bind(&GavcCommand::on_object, this, _1));
+    for (std::vector<std::string>::const_iterator i = versions_to_download.begin(), end = versions_to_download.end(); i != end; ++i)
+    {
+        LOG_T << "Process version: " << *i;
+
+        art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
+        piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);
+        client.perform();
+
+        // Create a root
+        pt::ptree root;
+
+        // Load the json file into this ptree
+        pt::read_json(api_handlers.responce_stream(), root);
+        pt::each(root.get_child("results"), boost::bind(&GavcCommand::on_object, this, _1));
+    }
+
 
     result = 0;
 
