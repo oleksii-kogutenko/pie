@@ -31,6 +31,8 @@
 
 #include <vector>
 #include <gavcquery.h>
+#include <gavcversionsmatcher.h>
+#include <gavcversionscomparator.h>
 
 namespace art { namespace lib {
 
@@ -50,22 +52,29 @@ public:
     //! Method will return filtered collection.
     //!
     //! @param versions Collection of versions to filter.
-    //! @return Filtered versions vector.
+    //! @return Filtered sorted versions vector.
     std::vector<std::string> filtered(const std::vector<std::string>& versions);
 
     //! Method will return vector with versions what was filtered.
     //!
     //! @param versions Collection of versions to filter.
-    //! @return Vector of the filtered elements.
+    //! @return Unsorted vector of the filtered elements.
     std::vector<std::string> filtered_out(const std::vector<std::string>& versions);
 
-protected:
-    //! Method will return true if filtering is not needed. It will be true
-    //! for query_ops_ what not contains any Op_const elements.
-    bool is_trivial() const;
+    //! Access to versions marcher used by filter.
+    //!
+    //! @return reference to versions marcher instance.
+    GavcVersionsMatcher& matcher() const;
+
+    //! Access to versions comparator used by filter.
+    //!
+    //! @return reference to versions comparator instance.
+    GavcVersionsComparator& comparator() const;
 
 private:
-    std::vector<gavc::OpType> query_ops_;   //!< Query operations for creating filter.
+    std::vector<gavc::OpType>   query_ops_;     //!< Query operations for creating filter.
+    GavcVersionsMatcher         matcher_;       //!< Marcher
+    GavcVersionsComparator      comparator_;    //!< Comparator
 
 };
 

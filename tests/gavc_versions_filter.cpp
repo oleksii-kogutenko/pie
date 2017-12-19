@@ -44,6 +44,21 @@ void init_versions(std::vector<std::string>& versions)
     versions.push_back("16.6.536");
 }
 
+void init_versions_2(std::vector<std::string>& versions)
+{
+    versions.push_back("16.3.123");
+    versions.push_back("16.3.536");
+    versions.push_back("16.6.123");
+    versions.push_back("16.6.536");
+    versions.push_back("16.8.123");
+    versions.push_back("16.8.536");
+}
+
+bool contains_value(const std::vector<std::string>& vector, const std::string& value)
+{
+    return std::find(vector.begin(), vector.end(), value) != vector.end();
+}
+
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter)
 {
     boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.6.*");
@@ -66,9 +81,9 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter)
     std::vector<std::string> filtered_out   = f.filtered_out(versions);
 
     BOOST_CHECK_EQUAL(3,            filtered_out.size());
-    BOOST_CHECK_EQUAL("1234",       filtered_out[0]);
-    BOOST_CHECK_EQUAL("1223",       filtered_out[1]);
-    BOOST_CHECK_EQUAL("12",         filtered_out[2]);
+    BOOST_CHECK(contains_value(filtered_out, "1234"));
+    BOOST_CHECK(contains_value(filtered_out, "1223"));
+    BOOST_CHECK(contains_value(filtered_out, "12"));
 }
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_out_all)
@@ -91,11 +106,11 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_out_all)
     std::vector<std::string> filtered_out   = f.filtered_out(versions);
 
     BOOST_CHECK_EQUAL(5,            filtered_out.size());
-    BOOST_CHECK_EQUAL("1234",       filtered_out[0]);
-    BOOST_CHECK_EQUAL("1223",       filtered_out[1]);
-    BOOST_CHECK_EQUAL("12",         filtered_out[2]);
-    BOOST_CHECK_EQUAL("16.6.123",   filtered_out[3]);
-    BOOST_CHECK_EQUAL("16.6.536",   filtered_out[4]);
+    BOOST_CHECK(contains_value(filtered_out, "12"));
+    BOOST_CHECK(contains_value(filtered_out, "1223"));
+    BOOST_CHECK(contains_value(filtered_out, "1234"));
+    BOOST_CHECK(contains_value(filtered_out, "16.6.123"));
+    BOOST_CHECK(contains_value(filtered_out, "16.6.536"));
 }
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_trivial_query)
@@ -114,9 +129,9 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_trivial_query)
     std::vector<std::string> filtered       = f.filtered(versions);
 
     BOOST_CHECK_EQUAL(5,            filtered.size());
-    BOOST_CHECK_EQUAL("1234",       filtered[0]);
+    BOOST_CHECK_EQUAL("12",         filtered[0]);
     BOOST_CHECK_EQUAL("1223",       filtered[1]);
-    BOOST_CHECK_EQUAL("12",         filtered[2]);
+    BOOST_CHECK_EQUAL("1234",       filtered[2]);
     BOOST_CHECK_EQUAL("16.6.123",   filtered[3]);
     BOOST_CHECK_EQUAL("16.6.536",   filtered[4]);
 
@@ -161,5 +176,83 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_minus)
 
     BOOST_CHECK_EQUAL(1,            filtered.size());
     BOOST_CHECK_EQUAL("16.6.123",   filtered[0]);
+}
+
+BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_plus)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.+");
+
+    BOOST_CHECK(op);
+
+    GavcQuery q = *op;
+
+    GavcVersionsFilter f(*(q.query_version_ops()));
+
+    std::vector<std::string> versions;
+    init_versions_2(versions);
+
+    std::vector<std::string> filtered       = f.filtered(versions);
+
+    BOOST_CHECK_EQUAL(1,            filtered.size());
+    BOOST_CHECK_EQUAL("16.3.536",   filtered[0]);
+}
+
+BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_minus)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.-");
+
+    BOOST_CHECK(op);
+
+    GavcQuery q = *op;
+
+    GavcVersionsFilter f(*(q.query_version_ops()));
+
+    std::vector<std::string> versions;
+    init_versions_2(versions);
+
+    std::vector<std::string> filtered       = f.filtered(versions);
+
+    BOOST_CHECK_EQUAL(1,            filtered.size());
+    BOOST_CHECK_EQUAL("16.3.123",   filtered[0]);
+}
+
+BOOST_AUTO_TEST_CASE(BasicFiltering_filter_plus_all)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.+.*");
+
+    BOOST_CHECK(op);
+
+    GavcQuery q = *op;
+
+    GavcVersionsFilter f(*(q.query_version_ops()));
+
+    std::vector<std::string> versions;
+    init_versions_2(versions);
+
+    std::vector<std::string> filtered       = f.filtered(versions);
+
+    BOOST_CHECK_EQUAL(2,            filtered.size());
+    BOOST_CHECK_EQUAL("16.8.123",   filtered[0]);
+    BOOST_CHECK_EQUAL("16.8.536",   filtered[1]);
+}
+
+BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_all)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.*");
+
+    BOOST_CHECK(op);
+
+    GavcQuery q = *op;
+
+    GavcVersionsFilter f(*(q.query_version_ops()));
+
+    std::vector<std::string> versions;
+    init_versions_2(versions);
+
+    std::vector<std::string> filtered       = f.filtered(versions);
+
+    BOOST_CHECK_EQUAL(2,            filtered.size());
+    BOOST_CHECK_EQUAL("16.3.123",   filtered[0]);
+    BOOST_CHECK_EQUAL("16.3.536",   filtered[1]);
 }
 

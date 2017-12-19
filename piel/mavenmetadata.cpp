@@ -33,7 +33,6 @@
 #include <boost_property_tree_ext.hpp>
 
 #include <gavcversionsfilter.h>
-#include <gavcversionscomparator.h>
 
 namespace art { namespace lib {
 
@@ -210,44 +209,15 @@ std::vector<std::string> MavenMetadata::versions_for(const GavcQuery& query) con
     }
 
     std::vector<gavc::OpType> ops = *ops_val;
-    LOG_T << "Query operations list:";
-    for (std::vector<gavc::OpType>::const_iterator i = ops.begin(), end = ops.end(); i!=end; ++i) {
-        LOG_T << "   - " << i->second;
-    }
+//    LOG_T << "Query operations list:";
+//    for (std::vector<gavc::OpType>::const_iterator i = ops.begin(), end = ops.end(); i!=end; ++i) {
+//        LOG_T << "   - " << i->second;
+//    }
 
-    // Special case
-    if (ops.size() == 1 && ops[0].first == gavc::Op_const)
-    {
-        result.erase(result.begin(), result.end());
+    // Filter out versions what are not corresponding to query
+    GavcVersionsFilter filter(ops);
 
-        LOG_T << "Search for: " <<  ops[0].second << " in available versions.";
-
-        // Search single fixed version
-        if (result.end() != std::find(versioning_.versions_.begin(), versioning_.versions_.end(), ops[0].second)) {
-
-            LOG_T << ops[0].second << " - exists.";
-
-            result.push_back(ops[0].second);
-        }
-        else
-        {
-            LOG_T << ops[0].second << " - Not exists!";
-        }
-    }
-    else
-    {
-        // 1. Filter out versions what are not corresponding to query
-        GavcVersionsFilter filter = ops;
-
-        result = filter.filtered(result);
-
-        // 2. Sort
-        GavcVersionsComparator comparator = ops;
-
-        std::sort(result.begin(), result.end(), comparator);
-    }
-
-    return result;
+    return filter.filtered(result);
 }
 
 } } // namespace art::lib

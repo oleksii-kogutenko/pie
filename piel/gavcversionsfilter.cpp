@@ -62,14 +62,14 @@ struct Match {
 
     typedef Not<Match, const std::string& > not_;
 
-    Match(const std::vector<gavc::OpType>& query_ops)
-        : matcher_(query_ops)
+    Match(GavcVersionsMatcher *matcher)
+        : matcher_(matcher)
     {
     }
 
     bool operator()(const std::string& val)
     {
-        bool result = matcher_.match(val);
+        bool result = matcher_->match(val);
 
         LOG_T << "match value: " << val << " result: " << result;
 
@@ -77,30 +77,9 @@ struct Match {
     }
 
 private:
-    GavcVersionsMatcher matcher_;
+    GavcVersionsMatcher *matcher_;
 
 };
-
-GavcVersionsFilter::GavcVersionsFilter(const std::vector<gavc::OpType>& query_ops)
-    : query_ops_(query_ops)
-{
-
-}
-
-GavcVersionsFilter::~GavcVersionsFilter()
-{
-
-}
-
-bool GavcVersionsFilter::is_trivial() const
-{
-    bool result = true;
-
-    for(std::vector<gavc::OpType>::const_iterator i = query_ops_.begin(), end = query_ops_.end(); i != end && result; ++i)
-        result = !(i->first == gavc::Op_const);
-
-    return result;
-}
 
 typedef std::pair< std::string, std::vector<std::string> > SpartsTableElement;
 typedef std::list< SpartsTableElement > SpartsTable;
@@ -152,27 +131,50 @@ private:
 
 };
 
+struct VectorContains {
+
+    VectorContains(const std::vector<std::string>& collection)
+        : collection_(collection)
+    {
+    }
+
+    bool operator()(const std::string& val) const
+    {
+        return std::find(collection_.begin(), collection_.end(), val) != collection_.end();
+    }
+
+private:
+    std::vector<std::string> collection_;
+
+};
+
+GavcVersionsFilter::GavcVersionsFilter(const std::vector<gavc::OpType>& query_ops)
+    : query_ops_(query_ops)
+    , matcher_(query_ops)
+    , comparator_(query_ops)
+{
+
+}
+
+GavcVersionsFilter::~GavcVersionsFilter()
+{
+
+}
+
 std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::string>& versions)
 {
     std::vector<std::string> result = versions;
-    if (is_trivial())
-    {
-        return versions;
-    }
 
     // 1. Filter out all non matched versions.
-    Match predicate(query_ops_);
+    Match predicate(&matcher_);
     result.erase(std::remove_if(result.begin(), result.end(), Match::not_(predicate)), result.end());
-
-    GavcVersionsMatcher     matcher     = query_ops_;
-    GavcVersionsComparator  comparator  = query_ops_;
 
     // 2. Process signed parts. Build table <version, [significant parts]>
     SpartsTable sparts_table;
     for (std::vector<std::string>::const_iterator i = result.begin(), end = result.end(); i != end; ++i)
     {
         LOG_T << "Table item for: " << *i;
-        sparts_table.push_back(std::make_pair(*i, matcher.significant_parts(*i)));
+        sparts_table.push_back(std::make_pair(*i, matcher_.significant_parts(*i)));
     }
 
     // 3. For each query_ops_ filter out elements from sparts_table according to op
@@ -183,7 +185,7 @@ std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::str
         {
             LOG_T << "Filtering for field: " << field_index;
 
-            SpartsTableComparator table_comparator(&comparator, *i, field_index);
+            SpartsTableComparator table_comparator(&comparator_, *i, field_index);
             SpartsTable::iterator element_to_keep = std::max_element(sparts_table.begin(), sparts_table.end(), table_comparator);
 
             if (element_to_keep != sparts_table.end()) {
@@ -212,25 +214,11 @@ std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::str
         result.push_back(i->first);
     }
 
+    // 5. Sort results
+    std::sort(result.begin(), result.end(), comparator_);
+
     return result;
 }
-
-struct VectorContains {
-
-    VectorContains(const std::vector<std::string>& collection)
-        : collection_(collection)
-    {
-    }
-
-    bool operator()(const std::string& val) const
-    {
-        return std::find(collection_.begin(), collection_.end(), val) != collection_.end();
-    }
-
-private:
-    std::vector<std::string> collection_;
-
-};
 
 std::vector<std::string> GavcVersionsFilter::filtered_out(const std::vector<std::string>& versions)
 {

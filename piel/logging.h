@@ -39,6 +39,14 @@
 #define LOG_E   LOG_(error)
 #define LOG_F   LOG_(fatal)
 
+#define LOG_T_(x)   LOG_(trace) << x
+#define LOG_D_(x)   LOG_(debug) << x
+#define LOG_I_(x)   LOG_(info) << x
+#define LOG_W_(x)   LOG_(warning) << x
+#define LOG_E_(x)   LOG_(error) << x
+#define LOG_F_(x)   LOG_(fatal) << x
+
+
 class Logging
 {
 };
