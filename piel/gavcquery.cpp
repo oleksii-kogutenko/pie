@@ -85,7 +85,7 @@ namespace gavc {
 
             _op      = ops;
             _const   = as_string[ +( char_-_op ) ];
-            _ops     = *( _op | _const );
+            _ops     = *( (_op >> !_op) | _const );
         }
 
     private:
@@ -185,6 +185,12 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     LOG_T << "classifier: " << result.classifier();
     LOG_T << "extension: "  << result.extension();
 
+    // Attempt to parse versions query
+    boost::optional<std::vector<gavc::OpType> > ops = result.query_version_ops();
+    if (!ops) {
+        return boost::none;
+    }
+
     return result;
 }
 
@@ -207,9 +213,15 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
         return boost::none;
     }
 
-    for (std::vector<gavc::OpType>::const_iterator i = result.begin(), end = result.end(); i != end; ++i)
+    for (std::vector<gavc::OpType>::iterator i = result.begin(), end = result.end(); i != end; ++i )
     {
         LOG_T << "version query op: " << i->second;
+    }
+
+    if (!data_.version.empty() & result.empty())
+    {
+        LOG_E << "version query: " << data_.version << " has wrong syntax!";
+        return boost::none;
     }
 
     return result;

@@ -190,3 +190,31 @@ BOOST_AUTO_TEST_CASE(VersionParts)
     BOOST_CHECK(check_op(ops, 8, gavc::Op_const,    ".1.3."));
     BOOST_CHECK(check_op(ops, 9, gavc::Op_all,      "*"));
 }
+
+BOOST_AUTO_TEST_CASE(VersionParts_not_allow_ops_sequences)
+{
+    std::string q_body = "adk.trunk:adk:++++";
+
+    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    BOOST_CHECK(!op);
+
+    q_body = "adk.trunk:adk:+***";
+
+    op = GavcQuery::parse(q_body);
+    BOOST_CHECK(!op);
+
+    q_body = "adk.trunk:adk:+***+-.sadjl++";
+
+    op = GavcQuery::parse(q_body);
+    BOOST_CHECK(!op);
+
+    q_body = "adk.trunk:adk:+*";
+
+    op = GavcQuery::parse(q_body);
+    BOOST_CHECK(!op);
+
+    q_body = "adk.trunk:adk:*";
+
+    op = GavcQuery::parse(q_body);
+    BOOST_CHECK(op);
+}
