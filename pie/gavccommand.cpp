@@ -197,7 +197,11 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
         std::cout << "Downloading file from: " << download_uri << std::endl;
 
-        download_client.perform();
+        if (!download_client.perform())
+        {
+            LOG_E << "Error on downloading file attempt!";
+            LOG_E << download_client.curl_error().presentation();
+        }
 
     } else {
 
@@ -218,7 +222,13 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     art::lib::ArtGavcHandlers download_metadata_handlers(server_api_access_token_);
     piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> get_metadata_client(
         query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
-    get_metadata_client.perform();
+
+    if (!get_metadata_client.perform())
+    {
+        LOG_E << "Error get maven metadata attempt!";
+        LOG_E << get_metadata_client.curl_error().presentation();
+        return result;
+    }
 
     boost::optional<art::lib::MavenMetadata> metadata_op = art::lib::MavenMetadata::parse(download_metadata_handlers.responce_stream());
     if (!metadata_op) {
@@ -228,15 +238,21 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     art::lib::MavenMetadata metadata = *metadata_op;
 
-    std::vector<std::string> versions_to_download = metadata.versions_for(query_);
+    std::vector<std::string> versions_to_process = metadata.versions_for(query_);
 
-    for (std::vector<std::string>::const_iterator i = versions_to_download.begin(), end = versions_to_download.end(); i != end; ++i)
+    for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
     {
         LOG_T << "Process version: " << *i;
 
         art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
         piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);
-        client.perform();
+
+        if (!client.perform())
+        {
+            LOG_E << "Error on processing version: " << *i << "!";
+            LOG_E << client.curl_error().presentation();
+            return result;
+        }
 
         // Create a root
         pt::ptree root;
@@ -245,7 +261,6 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         pt::read_json(api_handlers.responce_stream(), root);
         pt::each(root.get_child("results"), boost::bind(&GavcCommand::on_object, this, _1));
     }
-
 
     result = 0;
 

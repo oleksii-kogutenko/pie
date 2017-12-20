@@ -33,6 +33,9 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
+
+//#define DEBUG_VERBOSE_CURL
 
 //! File contains implementation of libcurl curl_easy_* api wrapper. Wrapper is designed
 //! for hiding C style api usage.
@@ -98,6 +101,51 @@ struct CurlEasyHandlers {
 
 };
 
+struct CurlError {
+    CurlError()
+        : code_(CURLE_OK)
+        , message_()
+    {
+    }
+
+    CurlError(CURLcode code, const std::string& message)
+        : code_(code)
+        , message_(message)
+    {
+    }
+
+    CurlError(const CurlError& src)
+        : code_(src.code_)
+        , message_(src.message_)
+    {
+    }
+
+    CURLcode code() const
+    {
+        return code_;
+    }
+
+    std::string message() const
+    {
+        return message_;
+    }
+
+    std::string presentation() const
+    {
+        std::ostringstream oss;
+        oss << "libcurl error code: ";
+        oss << code_;
+        oss << " message: ";
+        oss << message_;
+        return oss.str();
+    }
+
+private:
+    CURLcode code_;
+    std::string message_;
+
+};
+
 //! libcurl curl_easy_* api wrapper.
 //! \param Handlers Type of the implementation of *Handlers.
 template<class Handlers>
@@ -113,6 +161,7 @@ public:
     CurlEasyClient(const std::string& url, HandlersPtr handlers)
         : url_(url)
         , handlers_(handlers)
+        , curl_error_()
     {
         curl_ = ::curl_easy_init();
     }
@@ -125,9 +174,17 @@ public:
     }
 
     //! Perform request.
-    //! \return libcurl error code.
-    //! \sa curl_easy_perform
-    CURLcode perform();
+    //! \return true if no errors, false otherwise.
+    //! \sa curl_easy_perform, curl_error
+    bool perform();
+
+    //! Get CurlError structure.
+    //! Can be used to determine error reason if false was resurned by perform.
+    //! \return reference to internal CurlError.
+    const CurlError& curl_error() const
+    {
+        return curl_error_;
+    }
 
 protected:
     static size_t handle_header(char *ptr, size_t size, size_t count, void* ctx);
@@ -135,9 +192,11 @@ protected:
     static size_t handle_read(char *ptr, size_t size, size_t count, void* ctx);
 
 private:
-    std::string url_;       //!< Working url.
-    ::CURL *curl_;          //!< libcurl handle.
-    HandlersPtr handlers_;  //!< Pointer to implementation instance of *Handlers.
+    std::string url_;               //!< Working url.
+    ::CURL *curl_;                  //!< libcurl handle.
+    HandlersPtr handlers_;          //!< Pointer to implementation instance of *Handlers.
+    char errbuf_[CURL_ERROR_SIZE];  //!< libcurl error buffer
+    CurlError curl_error_;          //!< libcurl error description
 };
 
 template<class Handlers>
@@ -168,7 +227,7 @@ size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t coun
 }
 
 template<class Handlers>
-CURLcode CurlEasyClient<Handlers>::perform()
+bool CurlEasyClient<Handlers>::perform()
 {
     ::curl_easy_setopt(curl_, CURLOPT_URL, url_.c_str());
     if (CurlEasyHandlersTraits<Handlers>::have_custom_header) {
@@ -195,8 +254,21 @@ CURLcode CurlEasyClient<Handlers>::perform()
         ::curl_easy_setopt(curl_, CURLOPT_READFUNCTION, handle_read);
         ::curl_easy_setopt(curl_, CURLOPT_UPLOAD, 1L);
     }
+#ifdef DEBUG_VERBOSE_CURL
     curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
-    return ::curl_easy_perform(curl_);
+#endif
+    curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_);
+    CURLcode code = ::curl_easy_perform(curl_);
+    bool result = CURLE_OK == code;
+    if (!result)
+    {
+        curl_error_ = CurlError(code, std::string(errbuf_));
+    }
+    else
+    {
+        curl_error_ = CurlError();
+    }
+    return result;
 }
 
 } } // namespace piel::lib
