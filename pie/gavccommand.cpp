@@ -230,7 +230,18 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         return result;
     }
 
-    boost::optional<art::lib::MavenMetadata> metadata_op = art::lib::MavenMetadata::parse(download_metadata_handlers.responce_stream());
+    // Try to parse server response.
+    boost::optional<art::lib::MavenMetadata> metadata_op = boost::none;
+    try
+    {
+        metadata_op = art::lib::MavenMetadata::parse(download_metadata_handlers.responce_stream());
+    }
+    catch (...)
+    {
+        LOG_E << "Server response has non expected format!";
+        return result;
+    }
+
     if (!metadata_op) {
         LOG_E << "Can't retrieve maven metadata!";
         return result;
