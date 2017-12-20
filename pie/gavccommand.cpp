@@ -225,7 +225,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     if (!get_metadata_client.perform())
     {
-        LOG_E << "Error get maven metadata attempt!";
+        LOG_E << "Error on requesting maven metadata.";
         LOG_E << get_metadata_client.curl_error().presentation();
         return result;
     }
@@ -238,8 +238,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     }
     catch (...)
     {
-        LOG_E << "Server response has non expected format!";
-        return result;
+        LOG_E << "Error on parsing maven metadata. Server response has non expected format.";
     }
 
     if (!metadata_op) {
