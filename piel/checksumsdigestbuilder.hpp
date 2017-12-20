@@ -86,7 +86,7 @@ template<typename value_type> class DigestFormatter
 public:
     //! Constructor.
     //! \param str reference to string what will be used to store format result.
-    DigestFormatter(std::string& str)    
+    DigestFormatter(std::string& str)
         : str_(str)
     {}
 
