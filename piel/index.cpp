@@ -27,13 +27,18 @@
  */
 
 #include <index.h>
+#include <logging.h>
+#include <boost_property_tree_ext.hpp>
+
+namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
 
 Index::Index()
-    : self_(Asset::create_for(std::string()))
-    , parent_(Asset::create_for(std::string()))
+    : self_(Asset::create_id(AssetId::base))
+    , parent_(Asset::create_id(AssetId::base))
     , content_()
+    , attributes_()
 {
 }
 
@@ -44,7 +49,6 @@ Index::~Index()
 void Index::add(const std::string& index_path, const Asset& asset)
 {
     content_.insert(std::make_pair(index_path, asset));
-    // TODO: rebuild index_assert_
 }
 
 const Index::Content& Index::content() const
@@ -52,14 +56,90 @@ const Index::Content& Index::content() const
     return content_;
 }
 
-Asset Index::self() const
+const Asset& Index::self()
 {
+    std::ostringstream os;
+    store(os);
+    self_ = Asset::create_for(os.str());
     return self_;
 }
 
-Asset Index::parent() const
+const Asset& Index::parent() const
 {
     return parent_;
+}
+
+void Index::set_(const std::string& attribute, const std::string& value)
+{
+    attributes_.insert(std::make_pair(attribute, value));
+}
+
+std::string Index::get_(const std::string& attribute, const std::string& default_value) const
+{
+    if (attributes_.find(attribute) == attributes_.end())
+    {
+        return default_value;
+    }
+    else
+    {
+        return attributes_.at(attribute);
+    }
+}
+
+// Serialization methods.
+void Index::store(std::ostream& os) const
+{
+    pt::ptree tree;
+    pt::ptree parent;
+    pt::ptree content;
+    pt::ptree attributes;
+
+    Asset::store(parent, parent_);
+    for (Content::const_iterator i = content_.begin(), end = content_.end(); i != end; ++i)
+    {
+        pt::ptree item;
+        Asset::store(item, i->second);
+        content.add_child(i->first, item);
+    }
+    for (Attributes::const_iterator i = attributes_.begin(), end = attributes_.end(); i != end; ++i)
+    {
+        attributes.add(i->first, i->second);
+    }
+
+    tree.add_child("parent", parent);
+    tree.add_child("content", content);
+    tree.add_child("attributes", attributes);
+
+    pt::write_json(os, tree);
+
+}
+
+void Index::load(std::istream& is)
+{
+    pt::ptree tree;
+
+    pt::read_json(is, tree);
+
+    parent_ = Asset::load(tree.get_child("parent"));
+
+    content_.clear();
+    pt::ptree content = tree.get_child("content");
+    for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
+        pt::ptree item = content.get_child(i->first);
+        content_.insert(std::make_pair(i->first, Asset::load(item)));
+    }
+
+    attributes_.clear();
+    pt::ptree attributes = tree.get_child("attributes");
+    for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
+        attributes_.insert(std::make_pair(i->first, i->second.data()));
+    }
+}
+
+// Get all assets including Index asset. Method will be used by storage.
+std::set<Asset> Index::assets() const
+{
+
 }
 
 } } // namespace piel::lib

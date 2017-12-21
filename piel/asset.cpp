@@ -37,26 +37,30 @@ namespace piel { namespace lib {
 class AssetImpl {
 public:
     AssetImpl()
-        : stream_(0)
     {
     }
 
     AssetImpl(const AssetId& id)
         : id_(id)
-        , stream_(0)
     {
     }
 
-    virtual ~AssetImpl() {}
+    virtual ~AssetImpl()
+    {
 
-    const AssetId& id()
+    }
+
+    virtual const AssetId& id()
     {
         if (id_ != AssetId::base)
             return id_;
 
         // Calculate id;
-        id_ = AssetId::create_for(*istream());
-        LOG_T << "Calculated asset id: " << id_.presentation();
+        std::istream *pis = istream();
+        if (0 != pis) {
+            id_ = AssetId::create_for(*pis);
+            LOG_T << "Calculated asset id: " << id_.presentation();
+        }
 
         return id_;
     }
@@ -67,7 +71,30 @@ public:
 
 protected:
     std::auto_ptr<std::istream> stream_;
-    AssetId id_;
+    AssetId                     id_;
+};
+
+class IdImpl: public AssetImpl {
+public:
+    IdImpl(const IdImpl& src)
+        : AssetImpl(src.id_)
+    {
+    }
+
+    IdImpl(const AssetId& id)
+        : AssetImpl(id)
+    {
+    }
+
+    std::istream *istream()
+    {
+        return 0;
+    }
+
+    AssetImpl *clone() const
+    {
+        return new IdImpl(*this);
+    }
 };
 
 class StringImpl: public AssetImpl {
@@ -89,7 +116,7 @@ public:
         return stream_.get();
     }
 
-    virtual AssetImpl *clone() const
+    AssetImpl *clone() const
     {
         return new StringImpl(*this);
     }
@@ -118,7 +145,7 @@ public:
         return stream_.get();
     }
 
-    virtual AssetImpl *clone() const
+    AssetImpl *clone() const
     {
         return new FileImpl(*this);
     }
@@ -130,7 +157,7 @@ private:
 
 // TODO: StorageImpl
 Asset::Asset()
-    : impl_(new StringImpl(std::string()))
+    : impl_(new IdImpl(AssetId::base))
 {
 }
 
@@ -149,6 +176,12 @@ Asset::~Asset()
     delete impl_;
 }
 
+void Asset::operator=(const Asset& src)
+{
+    delete impl_;
+    impl_ = src.impl_->clone();
+}
+
 const AssetId& Asset::id() const
 {
     return impl_->id();
@@ -159,14 +192,30 @@ std::istream *Asset::istream()
     return impl_->istream();
 }
 
-Asset Asset::create_for(const std::string& str_data)
+/*static*/ Asset Asset::create_id(const AssetId& id)
 {
-    return new StringImpl(str_data);
+    return Asset(new IdImpl(id));
 }
 
-Asset Asset::create_for(const boost::filesystem::path& file_path)
+/*static*/ Asset Asset::create_for(const std::string& str_data)
 {
-    return new FileImpl(file_path);
+    return Asset(new StringImpl(str_data));
+}
+
+/*static*/ Asset Asset::create_for(const boost::filesystem::path& file_path)
+{
+    return Asset(new FileImpl(file_path));
+}
+
+/*static*/ void Asset::store(boost::property_tree::ptree& tree, const Asset& asset)
+{
+    tree.add("id", asset.id().presentation());
+}
+
+/*static*/ Asset Asset::load(const boost::property_tree::ptree& tree)
+{
+    std::string id = tree.get<std::string>("id");
+    return Asset::create_id(AssetId::create(id));
 }
 
 } } // namespace piel::lib

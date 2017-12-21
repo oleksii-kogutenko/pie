@@ -29,7 +29,6 @@
 #include <mavenmetadata.h>
 #include <logging.h>
 
-#include <boost/property_tree/ptree.hpp>
 #include <boost_property_tree_ext.hpp>
 
 #include <gavcversionsfilter.h>

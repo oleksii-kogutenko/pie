@@ -65,4 +65,59 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     Index index;
     index.add("test_path_1/1", helloAsset);
     index.add("test_path_2/2", emptyStrAsset);
+
+    index.set_message_("test message");
+    index.set_author_("test_user");
+    index.set_email_("author@email");
+    index.set_commiter_("test_commiter");
+    index.set_commiter_email_("commiter@email");
+
+    index.set_("test attribute 1", "test attribute value 1");
+    index.set_("test attribute 2", "test attribute value 2");
+
+    BOOST_CHECK_EQUAL("test message",   index.get_message_());
+    BOOST_CHECK_EQUAL("test_user",      index.get_author_());
+    BOOST_CHECK_EQUAL("author@email",   index.get_email_());
+    BOOST_CHECK_EQUAL("test_commiter",  index.get_commiter_());
+    BOOST_CHECK_EQUAL("commiter@email", index.get_commiter_email_());
+
+    BOOST_CHECK_EQUAL("test attribute value 1",     index.get_("test attribute 1"));
+    BOOST_CHECK_EQUAL("test attribute value 2",     index.get_("test attribute 2"));
+    BOOST_CHECK_EQUAL(std::string(),                index.get_("test attribute 3"));
+    BOOST_CHECK_EQUAL("test default value 3",       index.get_("test attribute 3", "test default value 3"));
+
+    std::ostringstream test_os;
+    index.store(test_os);
+    std::string serialized_index = test_os.str();
+
+    std::cout << "index self: " << index.self().id().presentation() << std::endl;
+    std::cout << "index data: " << serialized_index << std::endl;
+
+    std::istringstream test_is(serialized_index);
+
+    Index index1;
+    index1.load(test_is);
+
+    BOOST_CHECK(index1.content().at("test_path_1/1").id() == index.content().at("test_path_1/1").id());
+    BOOST_CHECK(index1.content().at("test_path_2/2").id() == index.content().at("test_path_2/2").id());
+
+    BOOST_CHECK_EQUAL("test message",   index1.get_message_());
+    BOOST_CHECK_EQUAL("test_user",      index1.get_author_());
+    BOOST_CHECK_EQUAL("author@email",   index1.get_email_());
+    BOOST_CHECK_EQUAL("test_commiter",  index1.get_commiter_());
+    BOOST_CHECK_EQUAL("commiter@email", index1.get_commiter_email_());
+
+    BOOST_CHECK_EQUAL("test attribute value 1",     index1.get_("test attribute 1"));
+    BOOST_CHECK_EQUAL("test attribute value 2",     index1.get_("test attribute 2"));
+    BOOST_CHECK_EQUAL(std::string(),                index1.get_("test attribute 3"));
+    BOOST_CHECK_EQUAL("test default value 3",       index1.get_("test attribute 3", "test default value 3"));
+
+    std::ostringstream test_os1;
+    index1.store(test_os1);
+    std::string serialized_index1 = test_os1.str();
+
+    std::cout << "index1 self: " << index1.self().id().presentation() << std::endl;
+    std::cout << "index1 data: " << serialized_index1 << std::endl;
+
+    BOOST_CHECK_EQUAL(serialized_index1, serialized_index);
 }

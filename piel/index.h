@@ -31,7 +31,9 @@
 
 #include <asset.h>
 
+#include <iostream>
 #include <map>
+#include <set>
 
 namespace piel { namespace lib {
 
@@ -39,6 +41,7 @@ class Index
 {
 public:
     typedef std::map<std::string, Asset> Content;
+    typedef std::map<std::string, std::string> Attributes;
 
     Index();
     ~Index();
@@ -46,14 +49,37 @@ public:
     void add(const std::string& index_path, const Asset& asset);
     const Content& content() const;
 
-    Asset self() const;
-    Asset parent() const;
+    const Asset& self();
+    const Asset& parent() const;
+
+    void set_(const std::string& attribute, const std::string& value);
+    std::string get_(const std::string& attribute, const std::string& default_value = std::string()) const;
+
+#define Index_DECLARE_ATTRIBUTE(x) \
+    inline void set_ ## x ## _(const std::string& value)     { set_( #x , value); } \
+    inline std::string get_ ## x ## _() const                { return get_( #x, std::string() ); } \
+
+    Index_DECLARE_ATTRIBUTE(message)
+    Index_DECLARE_ATTRIBUTE(author)
+    Index_DECLARE_ATTRIBUTE(email)
+    Index_DECLARE_ATTRIBUTE(commiter)
+    Index_DECLARE_ATTRIBUTE(commiter_email)
+
+#undef Index_DECLARE_ATTRIBUTE
+
+    // Serialization methods.
+    void store(std::ostream& os) const;
+    void load(std::istream& is);
+
+    // Get all assets including Index asset. Method will be used by storage.
+    std::set<Asset> assets() const;
 
 private:
     Asset self_;
     Asset parent_;
-
     Content content_;
+    Attributes attributes_;
+
 };
 
 } } // namespace piel::lib

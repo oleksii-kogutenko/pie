@@ -31,6 +31,7 @@
 
 #include <assetid.h>
 #include <boost/filesystem.hpp>
+#include <boost_property_tree_ext.hpp>
 
 namespace piel { namespace lib {
 
@@ -43,10 +44,18 @@ public:
     Asset();
     Asset(const Asset& src);
     ~Asset();
+
+    void operator=(const Asset& src);
+
     const AssetId& id() const;
     std::istream *istream();
+
+    static Asset create_id(const AssetId& id);
     static Asset create_for(const std::string& str_data);
     static Asset create_for(const boost::filesystem::path& file_path);
+
+    static void store(boost::property_tree::ptree& tree, const Asset& asset);
+    static Asset load(const boost::property_tree::ptree& tree);
 
 private:
     AssetImpl *impl_;
