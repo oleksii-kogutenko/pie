@@ -31,6 +31,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <baseobjectsstorage.h>
 
 namespace piel { namespace lib {
 
@@ -74,6 +75,7 @@ protected:
     AssetId                     id_;
 };
 
+// Non readable asset.
 class IdImpl: public AssetImpl {
 public:
     IdImpl(const IdImpl& src)
@@ -97,6 +99,7 @@ public:
     }
 };
 
+// Readable asset with data in string buffer. Currently used for Index.
 class StringImpl: public AssetImpl {
 public:
     StringImpl(const StringImpl& src)
@@ -126,6 +129,7 @@ private:
 
 };
 
+// Readable asset what points to file on local filesystem.
 class FileImpl: public AssetImpl {
 public:
     FileImpl(const FileImpl& src)
@@ -155,7 +159,37 @@ private:
 
 };
 
-// TODO: StorageImpl
+// Readable asset what points to asset in objects storage.
+class StorageImpl: public AssetImpl {
+public:
+    StorageImpl(const StorageImpl& src)
+        : AssetImpl(src.id_)
+        , storage_(src.storage_)
+    {
+    }
+
+    StorageImpl(BaseObjectsStorage *storage, const AssetId& id)
+        : AssetImpl(id)
+        , storage_(storage)
+    {
+    }
+
+    std::istream *istream()
+    {
+        return storage_->istream_for(id_);
+    }
+
+    AssetImpl *clone() const
+    {
+        return new StorageImpl(*this);
+    }
+
+private:
+    BaseObjectsStorage *storage_;
+
+};
+
+
 Asset::Asset()
     : impl_(new IdImpl(AssetId::base))
 {
@@ -195,6 +229,11 @@ std::istream *Asset::istream()
 /*static*/ Asset Asset::create_id(const AssetId& id)
 {
     return Asset(new IdImpl(id));
+}
+
+/*static*/ Asset Asset::create_for(BaseObjectsStorage *storage, const AssetId& id)
+{
+    return Asset(new StorageImpl(storage, id));
 }
 
 /*static*/ Asset Asset::create_for(const std::string& str_data)

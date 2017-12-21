@@ -33,13 +33,11 @@ namespace piel { namespace lib {
 BaseIndex::BaseIndex()
         : index_()
 {
-
 }
 
 BaseIndex::BaseIndex(const BaseIndex& src)
         : index_( src.index_ )
 {
-
 }
 
 void BaseIndex::put(const std::string &name, const std::string &hash,

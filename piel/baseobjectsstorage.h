@@ -29,11 +29,12 @@
 #ifndef PIEL_BASEOBJECTSSTORAGE_H_
 #define PIEL_BASEOBJECTSSTORAGE_H_
 
+#include <asset.h>
+
 #include <string>
 #include <iostream>
 
-namespace piel {
-namespace lib {
+namespace piel { namespace lib {
 
 // Pseudocode:
 //
@@ -103,12 +104,23 @@ public:
     BaseObjectsStorage();
     virtual ~BaseObjectsStorage();
 
-//    virtual void add(const Asset& asset)                    = 0;
-//    virtual Asset get(const AssetId& assetId) const         = 0;
-//    virtual bool contains(const AssetId& assetId) const     = 0;
+    // Put readable asset into storage.
+    virtual void put(const Asset& asset) = 0;
+
+    // Check if readable asset available in storage.
+    virtual bool available(const Asset& asset) const = 0;
+
+    // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
+    virtual Asset get(const AssetId& id) const = 0;
+    virtual Asset get(const Asset& asset) const = 0;
+
+    // Get input stream for reading asset data. Low level API used by Asset implementation.
+    //External code must use get().istream() call sequense.
+    virtual std::istream *istream_for(const AssetId& id) const = 0;
+    virtual std::istream *istream_for(const Asset& asset) const = 0;
+
 };
 
-} // namespace lib
-} // namespace piel
+} } // namespace piel::lib
 
 #endif /* PIEL_BASEOBJECTSSTORAGE_H_ */

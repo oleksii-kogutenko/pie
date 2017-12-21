@@ -26,21 +26,18 @@
  *
  */
 
-#include "baseobjectsstorage.h"
+#include <baseobjectsstorage.h>
 
-namespace piel {
-namespace lib {
+namespace piel { namespace lib {
 
 BaseObjectsStorage::BaseObjectsStorage()
 {
-    // TODO Auto-generated constructor stub
 
 }
 
 BaseObjectsStorage::~BaseObjectsStorage()
 {
-    // TODO Auto-generated destructor stub
+
 }
 
-} // namespace lib
-} // namespace piel
+} } // namespace piel::lib

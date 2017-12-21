@@ -36,6 +36,7 @@
 namespace piel { namespace lib {
 
 class AssetImpl;
+class BaseObjectsStorage;
 
 class Asset
 {
@@ -51,6 +52,8 @@ public:
     std::istream *istream();
 
     static Asset create_id(const AssetId& id);
+
+    static Asset create_for(BaseObjectsStorage *storage, const AssetId& id);
     static Asset create_for(const std::string& str_data);
     static Asset create_for(const boost::filesystem::path& file_path);
 
