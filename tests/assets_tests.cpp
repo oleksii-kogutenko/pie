@@ -96,8 +96,7 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
 
     std::istringstream test_is(serialized_index);
 
-    Index index1;
-    index1.load(test_is);
+    Index index1 = Index::load(test_is);
 
     BOOST_CHECK(index1.content().at("test_path_1/1").id() == index.content().at("test_path_1/1").id());
     BOOST_CHECK(index1.content().at("test_path_2/2").id() == index.content().at("test_path_2/2").id());
@@ -123,10 +122,7 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     BOOST_CHECK_EQUAL(serialized_index1, serialized_index);
 
     MemoryObjectsStorage storage;
-
-    storage.put(helloAsset);
-    storage.put(emptyStrAsset);
-    storage.put(index1.self());
+    storage.put(index1.assets());
 
     Asset s0_asset = storage.get(helloAsset.id());
 
@@ -143,6 +139,16 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     std::cout << "i_asset data: " << osi_str << std::endl;
 
     BOOST_CHECK_EQUAL(serialized_index1, osi_str);
+
+    Index index2 = Index::load(i_asset);
+    std::ostringstream test_os2;
+    index2.store(test_os2);
+    std::string serialized_index2 = test_os2.str();
+
+    std::cout << "index2 self: " << index2.self().id().presentation() << std::endl;
+    std::cout << "index2 data: " << serialized_index2 << std::endl;
+
+    BOOST_CHECK_EQUAL(serialized_index1, serialized_index2);
 }
 
 

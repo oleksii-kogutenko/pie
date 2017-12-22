@@ -49,7 +49,7 @@ public:
     void add(const std::string& index_path, const Asset& asset);
     const Content& content() const;
 
-    const Asset& self();
+    const Asset& self() const;
     const Asset& parent() const;
 
     void set_(const std::string& attribute, const std::string& value);
@@ -69,13 +69,14 @@ public:
 
     // Serialization methods.
     void store(std::ostream& os) const;
-    void load(std::istream& is);
+    static Index load(std::istream& is);
+    static Index load(const Asset& asset);
 
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;
 
 private:
-    Asset self_;
+    mutable Asset self_;
     Asset parent_;
     Content content_;
     Attributes attributes_;

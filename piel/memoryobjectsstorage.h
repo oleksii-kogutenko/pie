@@ -47,6 +47,7 @@ public:
 
     // Put readable asset into storage.
     void put(const Asset& asset);
+    void put(std::set<Asset> assets);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;

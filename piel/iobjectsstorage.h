@@ -32,6 +32,7 @@
 #include <boost/shared_ptr.hpp>
 #include <asset.h>
 
+#include <set>
 #include <string>
 #include <iostream>
 
@@ -107,6 +108,7 @@ public:
 
     // Put readable asset into storage.
     virtual void put(const Asset& asset) = 0;
+    virtual void put(std::set<Asset> assets) = 0;
 
     // Check if readable asset available in storage.
     virtual bool contains(const AssetId& id) const = 0;

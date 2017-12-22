@@ -56,7 +56,7 @@ const Index::Content& Index::content() const
     return content_;
 }
 
-const Asset& Index::self()
+const Asset& Index::self() const
 {
     std::ostringstream os;
     store(os);
@@ -120,32 +120,53 @@ void Index::store(std::ostream& os) const
 
 }
 
-void Index::load(std::istream& is)
+/*static*/ Index Index::load(std::istream& is)
 {
+    Index result;
+
     pt::ptree tree;
 
     pt::read_json(is, tree);
 
-    parent_ = Asset::load(tree.get_child("parent"));
+    result.parent_ = Asset::load(tree.get_child("parent"));
 
-    content_.clear();
     pt::ptree content = tree.get_child("content");
     for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
         pt::ptree item = content.get_child(i->first);
-        content_.insert(std::make_pair(i->first, Asset::load(item)));
+        result.content_.insert(std::make_pair(i->first, Asset::load(item)));
     }
 
-    attributes_.clear();
     pt::ptree attributes = tree.get_child("attributes");
     for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
-        attributes_.insert(std::make_pair(i->first, i->second.data()));
+        result.attributes_.insert(std::make_pair(i->first, i->second.data()));
+    }
+
+    return result;
+}
+
+/*static*/ Index Index::load(const Asset& asset)
+{
+    boost::shared_ptr<std::istream> pis = asset.istream();
+    if (pis)
+    {
+        return load(*pis);
+    }
+    else
+    {
+        return Index();
     }
 }
 
 // Get all assets including Index asset. Method will be used by storage.
 std::set<Asset> Index::assets() const
 {
-
+    std::set<Asset> result;
+    for (Content::const_iterator i = content_.begin(), end = content_.end(); i != end; ++i)
+    {
+        result.insert(i->second);
+    }
+    result.insert(self());
+    return result;
 }
 
 } } // namespace piel::lib

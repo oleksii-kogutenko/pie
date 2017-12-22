@@ -65,6 +65,12 @@ void MemoryObjectsStorage::put(const Asset& asset)
     storage_.insert(std::make_pair(asset.id(), os.vector()));
 }
 
+void MemoryObjectsStorage::put(std::set<Asset> assets)
+{
+    for(std::set<Asset>::const_iterator i = assets.begin(), end = assets.end(); i != end; ++i)
+        put(*i);
+}
+
 // Check if readable asset available in storage.
 bool MemoryObjectsStorage::contains(const AssetId& id) const
 {
