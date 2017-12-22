@@ -30,11 +30,6 @@
 
 namespace piel { namespace lib {
 
-IObjectsStorage::IObjectsStorage()
-{
-
-}
-
 IObjectsStorage::~IObjectsStorage()
 {
 

@@ -31,11 +31,12 @@
 
 namespace piel { namespace lib {
 
-typedef boost::interprocess::basic_ivectorstream<MemoryObjectsStorage::StorageItem> ivectorstream;
-typedef boost::interprocess::basic_ovectorstream<MemoryObjectsStorage::StorageItem> ovectorstream;
+typedef boost::interprocess::basic_ivectorstream<MemoryObjectsStorage::Object> ivectorstream;
+typedef boost::interprocess::basic_ovectorstream<MemoryObjectsStorage::Object> ovectorstream;
 
 MemoryObjectsStorage::MemoryObjectsStorage()
-    : storage_()
+    : assets_()
+    , refs_()
 {
 
 }
@@ -62,7 +63,7 @@ void MemoryObjectsStorage::put(const Asset& asset)
         os << asset_istream->rdbuf();
     }
 
-    storage_.insert(std::make_pair(asset.id(), os.vector()));
+    assets_.insert(std::make_pair(asset.id(), os.vector()));
 }
 
 void MemoryObjectsStorage::put(std::set<Asset> assets)
@@ -71,19 +72,19 @@ void MemoryObjectsStorage::put(std::set<Asset> assets)
         put(*i);
 }
 
+void MemoryObjectsStorage::put(const IObjectsStorage::Ref& ref)
+{
+    refs_.insert(ref);
+}
+
 // Check if readable asset available in storage.
 bool MemoryObjectsStorage::contains(const AssetId& id) const
 {
-    return storage_.find(id) != storage_.end();
-}
-
-bool MemoryObjectsStorage::contains(const Asset& asset) const
-{
-    return contains(asset.id());
+    return assets_.find(id) != assets_.end();
 }
 
 //// Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-Asset MemoryObjectsStorage::get(const AssetId& id) const
+Asset MemoryObjectsStorage::asset(const AssetId& id) const
 {
     if (contains(id))
     {
@@ -95,18 +96,13 @@ Asset MemoryObjectsStorage::get(const AssetId& id) const
     }
 }
 
-Asset MemoryObjectsStorage::get(const Asset& asset) const
-{
-    return get(asset.id());
-}
-
 // Get input stream for reading asset data. Low level API used by Asset implementation.
 //External code must use get().istream() call sequense.
 boost::shared_ptr<std::istream> MemoryObjectsStorage::istream_for(const AssetId& id) const
 {
     if (contains(id))
     {
-        return boost::shared_ptr<std::istream>(new ivectorstream(storage_.at(id)));
+        return boost::shared_ptr<std::istream>(new ivectorstream(assets_.at(id)));
     }
     else
     {
@@ -114,9 +110,31 @@ boost::shared_ptr<std::istream> MemoryObjectsStorage::istream_for(const AssetId&
     }
 }
 
-boost::shared_ptr<std::istream> MemoryObjectsStorage::istream_for(const Asset& asset) const
+AssetId MemoryObjectsStorage::resolve(const std::string& ref) const
 {
-    return istream_for(asset.id());
+    if (refs_.find(ref) != refs_.end())
+    {
+        return refs_.at(ref);
+    }
+    else
+    {
+        // Attempt to resolve AssetId by string representation.
+        AssetId refId = AssetId::create(ref);
+        if (contains(refId))
+            return refId;
+        else
+            return AssetId::base;
+    }
+}
+
+std::set<IObjectsStorage::Ref> MemoryObjectsStorage::references() const
+{
+    std::set<IObjectsStorage::Ref> result;
+    for (References::const_iterator i = refs_.begin(), end = refs_.end(); i != end; ++i)
+    {
+        result.insert(*i);
+    }
+    return result;
 }
 
 } } // namespace piel::lib

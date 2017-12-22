@@ -48,6 +48,7 @@ public:
 
     void operator=(const Asset& src);
     bool operator<(const Asset& src) const;
+    operator AssetId() const;
 
     const AssetId& id() const;
     boost::shared_ptr<std::istream> istream() const;

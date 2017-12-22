@@ -124,13 +124,13 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     MemoryObjectsStorage storage;
     storage.put(index1.assets());
 
-    Asset s0_asset = storage.get(helloAsset.id());
+    Asset s0_asset = storage.asset(helloAsset.id());
 
     (*s0_asset.istream()) >> hello;
     BOOST_CHECK_EQUAL("hello", hello);
 
-    Asset s1_asset = storage.get(emptyStrAsset.id());
-    Asset i_asset = storage.get(index1.self().id());
+    Asset s1_asset = storage.asset(emptyStrAsset.id());
+    Asset i_asset = storage.asset(index1.self().id());
 
     std::ostringstream osi;
     osi << i_asset.istream()->rdbuf();

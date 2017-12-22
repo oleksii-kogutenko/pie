@@ -38,9 +38,10 @@ namespace piel { namespace lib {
 class MemoryObjectsStorage: public IObjectsStorage
 {
 public:
-    typedef char Byte;
-    typedef std::vector<Byte> StorageItem;
-    typedef std::map<AssetId,StorageItem> Storage;
+    typedef char                                        Byte;
+    typedef std::vector<Byte>                           Object;
+    typedef std::map<AssetId,Object>                    Storage;
+    typedef std::map<Ref::first_type,Ref::second_type>  References;
 
     MemoryObjectsStorage();
     virtual ~MemoryObjectsStorage();
@@ -48,23 +49,24 @@ public:
     // Put readable asset into storage.
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
+    void put(const IObjectsStorage::Ref& ref);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;
-    bool contains(const Asset& asset) const;
 
     // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    Asset get(const AssetId& id) const;
-    Asset get(const Asset& asset) const;
+    Asset asset(const AssetId& id) const;
 
     // Get input stream for reading asset data. Low level API used by Asset implementation.
     //External code must use get().istream() call sequense.
     boost::shared_ptr<std::istream> istream_for(const AssetId& id) const;
-    boost::shared_ptr<std::istream> istream_for(const Asset& asset) const;
+
+    AssetId resolve(const std::string& ref) const;
+    std::set<IObjectsStorage::Ref> references() const;
 
 private:
-    Storage storage_;
-
+    Storage     assets_;
+    References  refs_;
 };
 
 } } // namespace piel::lib

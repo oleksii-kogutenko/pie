@@ -223,6 +223,11 @@ bool Asset::operator<(const Asset& src) const
     return id() < src.id();
 }
 
+Asset::operator AssetId() const
+{
+    return id();
+}
+
 const AssetId& Asset::id() const
 {
     return impl_->id();
