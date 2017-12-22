@@ -89,6 +89,12 @@ std::string Index::get_(const std::string& attribute, const std::string& default
 // Serialization methods.
 void Index::store(std::ostream& os) const
 {
+    // TODO: Rework!
+    //
+    //  As the only one valid ID is data checksum, here I must have fully own storing objects implementation.
+    // Serialization result must be fully predictable and must not depends from platform, third party library
+    // or from something else.
+
     pt::ptree tree;
     pt::ptree parent;
     pt::ptree content;
