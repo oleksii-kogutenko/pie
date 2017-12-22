@@ -32,6 +32,7 @@
 #include <checksumsdigestbuilder.hpp>
 #include <asset.h>
 #include <index.h>
+#include <memoryobjectsstorage.h>
 
 using namespace piel::lib;
 
@@ -120,4 +121,30 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     std::cout << "index1 data: " << serialized_index1 << std::endl;
 
     BOOST_CHECK_EQUAL(serialized_index1, serialized_index);
+
+    MemoryObjectsStorage storage;
+
+    storage.put(helloAsset);
+    storage.put(emptyStrAsset);
+    storage.put(index1.self());
+
+    Asset s0_asset = storage.get(helloAsset.id());
+
+    (*s0_asset.istream()) >> hello;
+    BOOST_CHECK_EQUAL("hello", hello);
+
+    Asset s1_asset = storage.get(emptyStrAsset.id());
+    Asset i_asset = storage.get(index1.self().id());
+
+    std::ostringstream osi;
+    osi << i_asset.istream()->rdbuf();
+    std::string osi_str = osi.str();
+
+    std::cout << "i_asset data: " << osi_str << std::endl;
+
+    BOOST_CHECK_EQUAL(serialized_index1, osi_str);
 }
+
+
+
+

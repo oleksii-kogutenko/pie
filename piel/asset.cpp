@@ -49,7 +49,6 @@ public:
 
     virtual ~AssetImpl()
     {
-
     }
 
     virtual const AssetId& id()
@@ -58,22 +57,23 @@ public:
             return id_;
 
         // Calculate id;
-        std::istream *pis = istream();
-        if (0 != pis) {
-            id_ = AssetId::create_for(*pis);
+        boost::shared_ptr<std::istream> pis = istream();
+        if (pis)
+        {
+            id_ = AssetId::create_for(*pis.get());
             LOG_T << "Calculated asset id: " << id_.presentation();
         }
 
         return id_;
     }
 
-    virtual std::istream *istream() = 0;
+    virtual boost::shared_ptr<std::istream> istream() const = 0;
 
     virtual AssetImpl *clone() const = 0;
 
 protected:
-    std::auto_ptr<std::istream> stream_;
-    AssetId                     id_;
+    mutable boost::shared_ptr<std::istream>  stream_;
+    AssetId                                  id_;
 };
 
 // Non readable asset.
@@ -89,9 +89,9 @@ public:
     {
     }
 
-    std::istream *istream()
+    boost::shared_ptr<std::istream> istream() const
     {
-        return 0;
+        return stream_;
     }
 
     AssetImpl *clone() const
@@ -114,10 +114,10 @@ public:
     {
     }
 
-    std::istream *istream()
+    boost::shared_ptr<std::istream> istream() const
     {
         stream_.reset(new std::istringstream(str_));
-        return stream_.get();
+        return stream_;
     }
 
     AssetImpl *clone() const
@@ -144,10 +144,10 @@ public:
     {
     }
 
-    std::istream *istream()
+    boost::shared_ptr<std::istream> istream() const
     {
         stream_.reset(new std::ifstream(file_path_.c_str(), std::ifstream::in|std::ifstream::binary));
-        return stream_.get();
+        return stream_;
     }
 
     AssetImpl *clone() const
@@ -169,13 +169,13 @@ public:
     {
     }
 
-    StorageImpl(IObjectsStorage *storage, const AssetId& id)
+    StorageImpl(const IObjectsStorage *storage, const AssetId& id)
         : AssetImpl(id)
         , storage_(storage)
     {
     }
 
-    std::istream *istream()
+    boost::shared_ptr<std::istream> istream() const
     {
         return storage_->istream_for(id_);
     }
@@ -186,7 +186,7 @@ public:
     }
 
 private:
-    IObjectsStorage *storage_;
+    const IObjectsStorage *storage_;
 
 };
 
@@ -213,8 +213,9 @@ Asset::~Asset()
 
 void Asset::operator=(const Asset& src)
 {
-    delete impl_;
+    AssetImpl *prt_to_delete_ = impl_;
     impl_ = src.impl_->clone();
+    delete prt_to_delete_;
 }
 
 const AssetId& Asset::id() const
@@ -222,7 +223,7 @@ const AssetId& Asset::id() const
     return impl_->id();
 }
 
-std::istream *Asset::istream()
+boost::shared_ptr<std::istream> Asset::istream() const
 {
     return impl_->istream();
 }
@@ -232,7 +233,7 @@ std::istream *Asset::istream()
     return Asset(new IdImpl(id));
 }
 
-/*static*/ Asset Asset::create_for(IObjectsStorage *storage, const AssetId& id)
+/*static*/ Asset Asset::create_for(const IObjectsStorage *storage, const AssetId& id)
 {
     return Asset(new StorageImpl(storage, id));
 }

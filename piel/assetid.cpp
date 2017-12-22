@@ -71,6 +71,11 @@ bool AssetId::operator!=(const AssetId& src) const
     return id_ != src.id_;
 }
 
+bool AssetId::operator<(const AssetId& src) const
+{
+    return id_ < src.id_;
+}
+
 AssetId AssetId::create_for(std::istream& is)
 {
     return AssetId(is);

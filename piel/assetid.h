@@ -51,6 +51,8 @@ public:
     bool operator==(const AssetId& src) const;
     bool operator!=(const AssetId& src) const;
 
+    bool operator<(const AssetId& src) const;
+
     std::string presentation() const;
 
     static AssetId create_for(std::istream& is);

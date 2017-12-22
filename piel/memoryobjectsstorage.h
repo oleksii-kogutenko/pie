@@ -26,44 +26,46 @@
  *
  */
 
-#ifndef PIEL_ASSET_H_
-#define PIEL_ASSET_H_
+#ifndef PIEL_MEMORYOBJECTSSTORAGE_H_
+#define PIEL_MEMORYOBJECTSSTORAGE_H_
 
-#include <assetid.h>
-#include <boost/filesystem.hpp>
-#include <boost_property_tree_ext.hpp>
+#include <iobjectsstorage.h>
+#include <vector>
+#include <map>
 
 namespace piel { namespace lib {
 
-class AssetImpl;
-class IObjectsStorage;
-
-class Asset
+class MemoryObjectsStorage: public IObjectsStorage
 {
-    Asset(AssetImpl *impl);
 public:
-    Asset();
-    Asset(const Asset& src);
-    ~Asset();
+    typedef char Byte;
+    typedef std::vector<Byte> StorageItem;
+    typedef std::map<AssetId,StorageItem> Storage;
 
-    void operator=(const Asset& src);
+    MemoryObjectsStorage();
+    virtual ~MemoryObjectsStorage();
 
-    const AssetId& id() const;
-    boost::shared_ptr<std::istream> istream() const;
+    // Put readable asset into storage.
+    void put(const Asset& asset);
 
-    static Asset create_id(const AssetId& id);
+    // Check if readable asset available in storage.
+    bool contains(const AssetId& id) const;
+    bool contains(const Asset& asset) const;
 
-    static Asset create_for(const IObjectsStorage *storage, const AssetId& id);
-    static Asset create_for(const std::string& str_data);
-    static Asset create_for(const boost::filesystem::path& file_path);
+    // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
+    Asset get(const AssetId& id) const;
+    Asset get(const Asset& asset) const;
 
-    static void store(boost::property_tree::ptree& tree, const Asset& asset);
-    static Asset load(const boost::property_tree::ptree& tree);
+    // Get input stream for reading asset data. Low level API used by Asset implementation.
+    //External code must use get().istream() call sequense.
+    boost::shared_ptr<std::istream> istream_for(const AssetId& id) const;
+    boost::shared_ptr<std::istream> istream_for(const Asset& asset) const;
 
 private:
-    AssetImpl *impl_;
+    Storage storage_;
+
 };
 
 } } // namespace piel::lib
 
-#endif /* PIEL_ASSET_H_ */
+#endif /* PIEL_MEMORYOBJECTSSTORAGE_H_ */

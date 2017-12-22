@@ -29,6 +29,7 @@
 #ifndef PIEL_IOBJECTSSTORAGE_H_
 #define PIEL_IOBJECTSSTORAGE_H_
 
+#include <boost/shared_ptr.hpp>
 #include <asset.h>
 
 #include <string>
@@ -108,16 +109,17 @@ public:
     virtual void put(const Asset& asset) = 0;
 
     // Check if readable asset available in storage.
-    virtual bool available(const Asset& asset) const = 0;
+    virtual bool contains(const AssetId& id) const = 0;
+    virtual bool contains(const Asset& asset) const = 0;
 
     // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    virtual Asset get(const AssetId& id) const = 0;
-    virtual Asset get(const Asset& asset) const = 0;
+//    virtual Asset get(const AssetId& id) const = 0;
+//    virtual Asset get(const Asset& asset) const = 0;
 
     // Get input stream for reading asset data. Low level API used by Asset implementation.
     //External code must use get().istream() call sequense.
-    virtual std::istream *istream_for(const AssetId& id) const = 0;
-    virtual std::istream *istream_for(const Asset& asset) const = 0;
+    virtual boost::shared_ptr<std::istream> istream_for(const AssetId& id) const = 0;
+    virtual boost::shared_ptr<std::istream> istream_for(const Asset& asset) const = 0;
 
 };
 
