@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef PIEL_BASEOBJECTSSTORAGE_H_
-#define PIEL_BASEOBJECTSSTORAGE_H_
+#ifndef PIEL_IOBJECTSSTORAGE_H_
+#define PIEL_IOBJECTSSTORAGE_H_
 
 #include <asset.h>
 
@@ -98,11 +98,11 @@ namespace piel { namespace lib {
 // asset(index2.id == index.id);
 //
 
-class BaseObjectsStorage
+class IObjectsStorage
 {
 public:
-    BaseObjectsStorage();
-    virtual ~BaseObjectsStorage();
+    IObjectsStorage();
+    virtual ~IObjectsStorage();
 
     // Put readable asset into storage.
     virtual void put(const Asset& asset) = 0;
@@ -123,4 +123,4 @@ public:
 
 } } // namespace piel::lib
 
-#endif /* PIEL_BASEOBJECTSSTORAGE_H_ */
+#endif /* PIEL_IOBJECTSSTORAGE_H_ */

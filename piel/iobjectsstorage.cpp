@@ -26,16 +26,16 @@
  *
  */
 
-#include <baseobjectsstorage.h>
+#include <iobjectsstorage.h>
 
 namespace piel { namespace lib {
 
-BaseObjectsStorage::BaseObjectsStorage()
+IObjectsStorage::IObjectsStorage()
 {
 
 }
 
-BaseObjectsStorage::~BaseObjectsStorage()
+IObjectsStorage::~IObjectsStorage()
 {
 
 }

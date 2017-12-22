@@ -31,7 +31,8 @@
 
 #include <fstream>
 #include <sstream>
-#include <baseobjectsstorage.h>
+
+#include <iobjectsstorage.h>
 
 namespace piel { namespace lib {
 
@@ -168,7 +169,7 @@ public:
     {
     }
 
-    StorageImpl(BaseObjectsStorage *storage, const AssetId& id)
+    StorageImpl(IObjectsStorage *storage, const AssetId& id)
         : AssetImpl(id)
         , storage_(storage)
     {
@@ -185,7 +186,7 @@ public:
     }
 
 private:
-    BaseObjectsStorage *storage_;
+    IObjectsStorage *storage_;
 
 };
 
@@ -231,7 +232,7 @@ std::istream *Asset::istream()
     return Asset(new IdImpl(id));
 }
 
-/*static*/ Asset Asset::create_for(BaseObjectsStorage *storage, const AssetId& id)
+/*static*/ Asset Asset::create_for(IObjectsStorage *storage, const AssetId& id)
 {
     return Asset(new StorageImpl(storage, id));
 }
