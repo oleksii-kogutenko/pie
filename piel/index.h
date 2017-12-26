@@ -37,12 +37,14 @@
 
 namespace piel { namespace lib {
 
+class IndexesDiff;
+
 class Index
 {
 public:
     typedef std::map<std::string, Asset> Content;
     typedef std::map<std::string, std::string> Attributes;
-    typedef std::map<std::string, Attributes> ObjectsAttributes;
+    typedef std::map<std::string, Attributes> ContentAttributes;
 
     Index();
     ~Index();
@@ -82,12 +84,17 @@ public:
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;
 
+    // Get all paths
+    std::set<std::string> paths() const;
+
 private:
+    friend class        IndexesDiff;
+
     mutable Asset       self_;
     Asset               parent_;
     Content             content_;
     Attributes          attributes_;
-    ObjectsAttributes   objects_attributes_;
+    ContentAttributes   content_attributes_;
 
 };
 

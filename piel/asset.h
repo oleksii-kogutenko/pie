@@ -47,6 +47,8 @@ public:
     ~Asset();
 
     void operator=(const Asset& src);
+    bool operator!=(const Asset& src) const;
+    bool operator==(const Asset& src) const;
     bool operator<(const Asset& src) const;
     operator AssetId() const;
 

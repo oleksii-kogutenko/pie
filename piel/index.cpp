@@ -39,7 +39,7 @@ Index::Index()
     , parent_(Asset::create_id(AssetId::base))
     , content_()
     , attributes_()
-    , objects_attributes_()
+    , content_attributes_()
 {
 }
 
@@ -89,12 +89,12 @@ std::string Index::get_(const std::string& attribute, const std::string& default
 
 void Index::set_attr_(const std::string& id, const std::string& attribute, const std::string& value)
 {
-    ObjectsAttributes::iterator objs_attrs_iter = objects_attributes_.find(id);
+    ContentAttributes::iterator objs_attrs_iter = content_attributes_.find(id);
 
-    if (objs_attrs_iter == objects_attributes_.end())
+    if (objs_attrs_iter == content_attributes_.end())
     {
-        std::pair<ObjectsAttributes::iterator,bool> insert_result =
-                objects_attributes_.insert(std::make_pair(id, Attributes()));
+        std::pair<ContentAttributes::iterator,bool> insert_result =
+                content_attributes_.insert(std::make_pair(id, Attributes()));
 
         if (insert_result.second)
         {
@@ -102,7 +102,7 @@ void Index::set_attr_(const std::string& id, const std::string& attribute, const
         }
     }
 
-    if (objs_attrs_iter == objects_attributes_.end())
+    if (objs_attrs_iter == content_attributes_.end())
     {
         // Fatal!
         LOG_F << "Can't get objects attributes collection!";
@@ -114,9 +114,9 @@ void Index::set_attr_(const std::string& id, const std::string& attribute, const
 
 std::string Index::get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value) const
 {
-    ObjectsAttributes::const_iterator objs_attrs_iter = objects_attributes_.find(id);
+    ContentAttributes::const_iterator objs_attrs_iter = content_attributes_.find(id);
 
-    if (objs_attrs_iter == objects_attributes_.end())
+    if (objs_attrs_iter == content_attributes_.end())
     {
         return default_value;
     }
@@ -135,14 +135,14 @@ std::string Index::get_attr_(const std::string& id, const std::string& attribute
 
 void Index::set_attrs_(const std::string& id, const Index::Attributes& attrs)
 {
-    objects_attributes_.insert(std::make_pair(id, attrs));
+    content_attributes_.insert(std::make_pair(id, attrs));
 }
 
 boost::optional<Index::Attributes> Index::get_attrs_(const std::string& id) const
 {
-    ObjectsAttributes::const_iterator objs_attrs_iter = objects_attributes_.find(id);
+    ContentAttributes::const_iterator objs_attrs_iter = content_attributes_.find(id);
 
-    if (objs_attrs_iter == objects_attributes_.end())
+    if (objs_attrs_iter == content_attributes_.end())
     {
         return boost::none;
     }
@@ -156,13 +156,13 @@ struct SerializationConstants {
     static const std::string parent;
     static const std::string attributes;
     static const std::string content;
-    static const std::string objects_attributes;
+    static const std::string content_attributes;
 };
 
 const std::string SerializationConstants::parent                = "parent";
 const std::string SerializationConstants::attributes            = "attributes";
 const std::string SerializationConstants::content               = "content";
-const std::string SerializationConstants::objects_attributes    = "objects_attributes";
+const std::string SerializationConstants::content_attributes    = "content_attributes";
 
 // Serialization methods.
 void Index::store(std::ostream& os) const
@@ -187,7 +187,7 @@ void Index::store(std::ostream& os) const
         attributes.insert(attributes.end(), std::make_pair(i->first, i->second));
     }
 
-    for (ObjectsAttributes::const_iterator i = objects_attributes_.begin(), end = objects_attributes_.end(); i != end; ++i)
+    for (ContentAttributes::const_iterator i = content_attributes_.begin(), end = content_attributes_.end(); i != end; ++i)
     {
         pt::ptree object_attributes;
         for (Attributes::const_iterator j = i->second.begin(), end2 = i->second.end(); j != end2; ++j)
@@ -200,7 +200,7 @@ void Index::store(std::ostream& os) const
     tree.add_child(SerializationConstants::parent,              parent);
     tree.add_child(SerializationConstants::attributes,          attributes);
     tree.add_child(SerializationConstants::content,             content);
-    tree.add_child(SerializationConstants::objects_attributes,  objects_attributes);
+    tree.add_child(SerializationConstants::content_attributes,  objects_attributes);
 
     pt::write_json(os, tree, false);
 }
@@ -226,7 +226,7 @@ void Index::store(std::ostream& os) const
         result.content_.insert(std::make_pair(i->first, Asset::load(item)));
     }
 
-    pt::ptree objects_attributes = tree.get_child(SerializationConstants::objects_attributes);
+    pt::ptree objects_attributes = tree.get_child(SerializationConstants::content_attributes);
     for(pt::ptree::const_iterator i = objects_attributes.begin(), end = objects_attributes.end(); i != end; ++i) {
         Attributes obj_attrs;
         pt::ptree obj_attrs_tree = objects_attributes.get_child(i->first);
@@ -261,6 +261,17 @@ std::set<Asset> Index::assets() const
         result.insert(i->second);
     }
     result.insert(self());
+    return result;
+}
+
+// Get all paths
+std::set<std::string> Index::paths() const
+{
+    std::set<std::string> result;
+    for (Content::const_iterator i = content_.begin(), end = content_.end(); i != end; ++i)
+    {
+        result.insert(i->first);
+    }
     return result;
 }
 

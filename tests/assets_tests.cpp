@@ -32,6 +32,7 @@
 #include <checksumsdigestbuilder.hpp>
 #include <asset.h>
 #include <index.h>
+#include <indexesdiff.h>
 #include <memoryobjectsstorage.h>
 
 using namespace piel::lib;
@@ -172,6 +173,149 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     BOOST_CHECK_EQUAL("test_val_2_1", index2.get_attr_("test_path_2/2", "test.attr.2.1"));
     BOOST_CHECK_EQUAL("test_val_2_2", index2.get_attr_("test_path_2/2", "test.attr.2.2"));
     BOOST_CHECK_EQUAL("default_2",    index2.get_attr_("test_path_2/2", "test.attr.2.3", "default_2"));
+
+}
+
+BOOST_AUTO_TEST_CASE(Indexes_Diff)
+{
+    std::string helloContent = "hello";
+    Asset helloAsset = Asset::create_for(helloContent);
+
+    std::string emptyStrContent = "";
+    Asset emptyStrAsset = Asset::create_for(emptyStrContent);
+
+    Index index;
+
+    index.add("test_path_1/1", helloAsset);
+    index.set_attr_("test_path_1/1", "test.attr.1.1", "test_val_1_1");
+    index.set_attr_("test_path_1/1", "test.attr.1.2", "test_val_1_2");
+
+    index.add("test_path_2/2", emptyStrAsset);
+    index.set_attr_("test_path_2/2", "test.attr.2.1", "test_val_2_1");
+    index.set_attr_("test_path_2/2", "test.attr.2.2", "test_val_2_2");
+
+    index.set_message_("test message");
+    index.set_author_("test_user");
+    index.set_email_("author@email");
+    index.set_commiter_("test_commiter");
+    index.set_commiter_email_("commiter@email");
+    index.set_("test attribute 1", "test attribute value 1");
+    index.set_("test attribute 2", "test attribute value 2");
+
+    Index index1;
+
+    index1.add("test_path_1/1", helloAsset);
+    index1.set_attr_("test_path_1/1", "test.attr.1.1", "test_val_1_1");
+    index1.set_attr_("test_path_1/1", "test.attr.1.2", "test_val_1_2");
+
+    index1.add("test_path_2/2", emptyStrAsset);
+    index1.set_attr_("test_path_2/2", "test.attr.2.1", "test_val_2_1");
+    index1.set_attr_("test_path_2/2", "test.attr.2.2", "test_val_2_2");
+
+    index1.set_message_("test message");
+    index1.set_author_("test_user");
+    index1.set_email_("author@email");
+    index1.set_commiter_("test_commiter");
+    index1.set_commiter_email_("commiter@email");
+    index1.set_("test attribute 1", "test attribute value 1");
+    index1.set_("test attribute 2", "test attribute value 2");
+
+    IndexesDiff diff1 = IndexesDiff::diff(index, index1);
+    BOOST_CHECK(diff1.empty());
+}
+
+BOOST_AUTO_TEST_CASE(Indexes_DiffAttrs)
+{
+    Index index;
+
+    index.set_message_("test message");
+    index.set_author_("test_user");
+    index.set_email_("author@email");
+    index.set_commiter_("test_commiter");
+    index.set_commiter_email_("commiter@email");
+
+    Index index1;
+
+    index1.set_message_("test message1");
+    index1.set_author_("test_user");
+    index1.set_email_("author@email");
+    index1.set_commiter_("test_commiter2");
+    index1.set_commiter_email_("commiter@email");
+    index1.set_("test attribute 1", "test attribute value 1");
+    index1.set_("test attribute 2", "test attribute value 2");
+
+    IndexesDiff diff1 = IndexesDiff::diff(index, index1);
+    BOOST_CHECK(!diff1.empty());
+
+    std::cout << "Begin diff >>" << std::endl;
+    std::cout << diff1.format();
+    std::cout << "<< End diff" << std::endl;
+}
+
+BOOST_AUTO_TEST_CASE(Indexes_DiffContent)
+{
+    std::string helloContent = "hello";
+    Asset helloAsset = Asset::create_for(helloContent);
+
+    std::string helloContent1 = "hello1";
+    Asset helloAsset1 = Asset::create_for(helloContent1);
+
+    std::string emptyStrContent = "";
+    Asset emptyStrAsset = Asset::create_for(emptyStrContent);
+
+    Index index;
+
+    index.add("hello", helloAsset);
+
+    index.set_attr_("hello", "test-attr0-1", "test-val_1");
+    index.set_attr_("hello", "test-attr0-2", "test-val_2");
+
+    index.add("empty", emptyStrAsset);
+
+    index.set_message_("test message");
+    index.set_author_("test_user");
+    index.set_email_("author@email");
+    index.set_commiter_("test_commiter");
+    index.set_commiter_email_("commiter@email");
+
+    Index index1;
+
+    index1.add("hello", helloAsset1);
+    index1.add("empty", emptyStrAsset);
+    index1.add("empty1", emptyStrAsset);
+
+    index1.set_attr_("empty1", "test-eattr-1", "test-eval_1");
+    index1.set_attr_("empty1", "test-eattr-2", "test-eval_2");
+    index1.set_attr_("hello", "test-attr-1", "test-val_1");
+    index1.set_attr_("hello", "test-attr-2", "test-val_2");
+
+    std::ostringstream test_os;
+    index1.store(test_os);
+    std::string serialized_index1 = test_os.str();
+
+    std::cout << serialized_index1;
+
+    index1.set_message_("test message1");
+    index1.set_author_("test_user");
+    index1.set_email_("author@email");
+    index1.set_commiter_("test_commiter2");
+    index1.set_commiter_email_("commiter@email");
+    index1.set_("test attribute 1", "test attribute value 1");
+    index1.set_("test attribute 2", "test attribute value 2");
+
+    IndexesDiff diff1 = IndexesDiff::diff(index, index1);
+    BOOST_CHECK(!diff1.empty());
+
+    std::cout << "Begin diff >>" << std::endl;
+    std::cout << diff1.format();
+    std::cout << "<< End diff" << std::endl;
+
+    IndexesDiff diff2 = IndexesDiff::diff(index1, index);
+    BOOST_CHECK(!diff2.empty());
+
+    std::cout << "Begin diff >>" << std::endl;
+    std::cout << diff2.format();
+    std::cout << "<< End diff" << std::endl;
 
 }
 

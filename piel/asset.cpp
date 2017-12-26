@@ -218,6 +218,16 @@ void Asset::operator=(const Asset& src)
     delete prt_to_delete_;
 }
 
+bool Asset::operator!=(const Asset& src) const
+{
+    return id() != src.id();
+}
+
+bool Asset::operator==(const Asset& src) const
+{
+    return id() == src.id();
+}
+
 bool Asset::operator<(const Asset& src) const
 {
     return id() < src.id();
