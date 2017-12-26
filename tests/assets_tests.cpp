@@ -164,6 +164,15 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     std::cout << "index2 data: " << serialized_index2 << std::endl;
 
     BOOST_CHECK_EQUAL(serialized_index1, serialized_index2);
+
+    BOOST_CHECK_EQUAL("test_val_1_1", index2.get_attr_("test_path_1/1", "test.attr.1.1"));
+    BOOST_CHECK_EQUAL("test_val_1_2", index2.get_attr_("test_path_1/1", "test.attr.1.2"));
+    BOOST_CHECK_EQUAL("default_1",    index2.get_attr_("test_path_1/1", "test.attr.1.3", "default_1"));
+
+    BOOST_CHECK_EQUAL("test_val_2_1", index2.get_attr_("test_path_2/2", "test.attr.2.1"));
+    BOOST_CHECK_EQUAL("test_val_2_2", index2.get_attr_("test_path_2/2", "test.attr.2.2"));
+    BOOST_CHECK_EQUAL("default_2",    index2.get_attr_("test_path_2/2", "test.attr.2.3", "default_2"));
+
 }
 
 

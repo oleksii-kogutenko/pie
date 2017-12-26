@@ -133,15 +133,40 @@ std::string Index::get_attr_(const std::string& id, const std::string& attribute
     }
 }
 
+void Index::set_attrs_(const std::string& id, const Index::Attributes& attrs)
+{
+    objects_attributes_.insert(std::make_pair(id, attrs));
+}
+
+boost::optional<Index::Attributes> Index::get_attrs_(const std::string& id) const
+{
+    ObjectsAttributes::const_iterator objs_attrs_iter = objects_attributes_.find(id);
+
+    if (objs_attrs_iter == objects_attributes_.end())
+    {
+        return boost::none;
+    }
+    else
+    {
+        return objs_attrs_iter->second;
+    }
+}
+
+struct SerializationConstants {
+    static const std::string parent;
+    static const std::string attributes;
+    static const std::string content;
+    static const std::string objects_attributes;
+};
+
+const std::string SerializationConstants::parent                = "parent";
+const std::string SerializationConstants::attributes            = "attributes";
+const std::string SerializationConstants::content               = "content";
+const std::string SerializationConstants::objects_attributes    = "objects_attributes";
+
 // Serialization methods.
 void Index::store(std::ostream& os) const
 {
-    // TODO: Rework!
-    //
-    //  As the only one valid ID is data checksum, here I must have fully own storing objects implementation.
-    // Serialization result must be fully predictable and must not depends from platform, third party library
-    // or from something else.
-
     pt::ptree tree;
     pt::ptree parent;
     pt::ptree content;
@@ -172,13 +197,12 @@ void Index::store(std::ostream& os) const
         objects_attributes.insert(objects_attributes.end(), std::make_pair(i->first, object_attributes));
     }
 
-    tree.add_child("parent", parent);
-    tree.add_child("attributes", attributes);
-    tree.add_child("content", content);
-    tree.add_child("objects_attributes", objects_attributes);
+    tree.add_child(SerializationConstants::parent,              parent);
+    tree.add_child(SerializationConstants::attributes,          attributes);
+    tree.add_child(SerializationConstants::content,             content);
+    tree.add_child(SerializationConstants::objects_attributes,  objects_attributes);
 
-    pt::write_json(os, tree);
-
+    pt::write_json(os, tree, false);
 }
 
 /*static*/ Index Index::load(std::istream& is)
@@ -189,27 +213,27 @@ void Index::store(std::ostream& os) const
 
     pt::read_json(is, tree);
 
-    result.parent_ = Asset::load(tree.get_child("parent"));
+    result.parent_ = Asset::load(tree.get_child(SerializationConstants::parent));
 
-    pt::ptree attributes = tree.get_child("attributes");
+    pt::ptree attributes = tree.get_child(SerializationConstants::attributes);
     for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
         result.attributes_.insert(std::make_pair(i->first, i->second.data()));
     }
 
-    pt::ptree content = tree.get_child("content");
+    pt::ptree content = tree.get_child(SerializationConstants::content);
     for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
         pt::ptree item = content.get_child(i->first);
         result.content_.insert(std::make_pair(i->first, Asset::load(item)));
     }
 
-    pt::ptree objects_attributes = tree.get_child("objects_attributes");
+    pt::ptree objects_attributes = tree.get_child(SerializationConstants::objects_attributes);
     for(pt::ptree::const_iterator i = objects_attributes.begin(), end = objects_attributes.end(); i != end; ++i) {
         Attributes obj_attrs;
         pt::ptree obj_attrs_tree = objects_attributes.get_child(i->first);
         for(pt::ptree::const_iterator j = obj_attrs_tree.begin(), end2 = obj_attrs_tree.end(); j != end2; ++j) {
             obj_attrs.insert(std::make_pair(j->first, j->second.data()));
         }
-        result.objects_attributes_.insert(std::make_pair(i->first, obj_attrs));
+        result.set_attrs_(i->first, obj_attrs);
     }
 
     return result;

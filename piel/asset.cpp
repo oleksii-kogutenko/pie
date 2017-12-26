@@ -258,14 +258,20 @@ boost::shared_ptr<std::istream> Asset::istream() const
     return Asset(new FileImpl(file_path));
 }
 
+struct SerializationConstants {
+    static const std::string id;
+};
+
+const std::string SerializationConstants::id = "id";
+
 /*static*/ void Asset::store(boost::property_tree::ptree& tree, const Asset& asset)
 {
-    tree.add("id", asset.id().presentation());
+    tree.add(SerializationConstants::id, asset.id().presentation());
 }
 
 /*static*/ Asset Asset::load(const boost::property_tree::ptree& tree)
 {
-    std::string id = tree.get<std::string>("id");
+    std::string id = tree.get<std::string>(SerializationConstants::id);
     return Asset::create_id(AssetId::create(id));
 }
 

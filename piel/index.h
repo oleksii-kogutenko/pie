@@ -71,6 +71,9 @@ public:
     void set_attr_(const std::string& id, const std::string& attribute, const std::string& value);
     std::string get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value = std::string()) const;
 
+    void set_attrs_(const std::string& id, const Attributes& attrs);
+    boost::optional<Attributes> get_attrs_(const std::string& id) const;
+
     // Serialization methods.
     void store(std::ostream& os) const;
     static Index load(std::istream& is);
