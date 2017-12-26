@@ -39,6 +39,7 @@ Index::Index()
     , parent_(Asset::create_id(AssetId::base))
     , content_()
     , attributes_()
+    , objects_attributes_()
 {
 }
 
@@ -86,6 +87,52 @@ std::string Index::get_(const std::string& attribute, const std::string& default
     }
 }
 
+void Index::set_attr_(const std::string& id, const std::string& attribute, const std::string& value)
+{
+    ObjectsAttributes::iterator objs_attrs_iter = objects_attributes_.find(id);
+
+    if (objs_attrs_iter == objects_attributes_.end())
+    {
+        std::pair<ObjectsAttributes::iterator,bool> insert_result =
+                objects_attributes_.insert(std::make_pair(id, Attributes()));
+
+        if (insert_result.second)
+        {
+            objs_attrs_iter = insert_result.first;
+        }
+    }
+
+    if (objs_attrs_iter == objects_attributes_.end())
+    {
+        // Fatal!
+        LOG_F << "Can't get objects attributes collection!";
+        return;
+    }
+
+    objs_attrs_iter->second.insert(std::make_pair(attribute, value));
+}
+
+std::string Index::get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value) const
+{
+    ObjectsAttributes::const_iterator objs_attrs_iter = objects_attributes_.find(id);
+
+    if (objs_attrs_iter == objects_attributes_.end())
+    {
+        return default_value;
+    }
+
+    Attributes::const_iterator attrs_iter = objs_attrs_iter->second.find(attribute);
+
+    if (attrs_iter == objs_attrs_iter->second.end())
+    {
+        return default_value;
+    }
+    else
+    {
+        return objs_attrs_iter->second.at(attribute);
+    }
+}
+
 // Serialization methods.
 void Index::store(std::ostream& os) const
 {
@@ -99,22 +146,36 @@ void Index::store(std::ostream& os) const
     pt::ptree parent;
     pt::ptree content;
     pt::ptree attributes;
+    pt::ptree objects_attributes;
 
     Asset::store(parent, parent_);
+
     for (Content::const_iterator i = content_.begin(), end = content_.end(); i != end; ++i)
     {
         pt::ptree item;
         Asset::store(item, i->second);
-        content.add_child(i->first, item);
+        content.insert(content.end(), std::make_pair(i->first, item));
     }
+
     for (Attributes::const_iterator i = attributes_.begin(), end = attributes_.end(); i != end; ++i)
     {
-        attributes.add(i->first, i->second);
+        attributes.insert(attributes.end(), std::make_pair(i->first, i->second));
+    }
+
+    for (ObjectsAttributes::const_iterator i = objects_attributes_.begin(), end = objects_attributes_.end(); i != end; ++i)
+    {
+        pt::ptree object_attributes;
+        for (Attributes::const_iterator j = i->second.begin(), end2 = i->second.end(); j != end2; ++j)
+        {
+            object_attributes.insert(object_attributes.end(), std::make_pair(j->first, j->second));
+        }
+        objects_attributes.insert(objects_attributes.end(), std::make_pair(i->first, object_attributes));
     }
 
     tree.add_child("parent", parent);
-    tree.add_child("content", content);
     tree.add_child("attributes", attributes);
+    tree.add_child("content", content);
+    tree.add_child("objects_attributes", objects_attributes);
 
     pt::write_json(os, tree);
 
@@ -130,15 +191,25 @@ void Index::store(std::ostream& os) const
 
     result.parent_ = Asset::load(tree.get_child("parent"));
 
+    pt::ptree attributes = tree.get_child("attributes");
+    for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
+        result.attributes_.insert(std::make_pair(i->first, i->second.data()));
+    }
+
     pt::ptree content = tree.get_child("content");
     for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
         pt::ptree item = content.get_child(i->first);
         result.content_.insert(std::make_pair(i->first, Asset::load(item)));
     }
 
-    pt::ptree attributes = tree.get_child("attributes");
-    for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
-        result.attributes_.insert(std::make_pair(i->first, i->second.data()));
+    pt::ptree objects_attributes = tree.get_child("objects_attributes");
+    for(pt::ptree::const_iterator i = objects_attributes.begin(), end = objects_attributes.end(); i != end; ++i) {
+        Attributes obj_attrs;
+        pt::ptree obj_attrs_tree = objects_attributes.get_child(i->first);
+        for(pt::ptree::const_iterator j = obj_attrs_tree.begin(), end2 = obj_attrs_tree.end(); j != end2; ++j) {
+            obj_attrs.insert(std::make_pair(j->first, j->second.data()));
+        }
+        result.objects_attributes_.insert(std::make_pair(i->first, obj_attrs));
     }
 
     return result;

@@ -42,6 +42,7 @@ class Index
 public:
     typedef std::map<std::string, Asset> Content;
     typedef std::map<std::string, std::string> Attributes;
+    typedef std::map<std::string, Attributes> ObjectsAttributes;
 
     Index();
     ~Index();
@@ -67,6 +68,9 @@ public:
 
 #undef Index_DECLARE_ATTRIBUTE
 
+    void set_attr_(const std::string& id, const std::string& attribute, const std::string& value);
+    std::string get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value = std::string()) const;
+
     // Serialization methods.
     void store(std::ostream& os) const;
     static Index load(std::istream& is);
@@ -76,10 +80,11 @@ public:
     std::set<Asset> assets() const;
 
 private:
-    mutable Asset self_;
-    Asset parent_;
-    Content content_;
-    Attributes attributes_;
+    mutable Asset       self_;
+    Asset               parent_;
+    Content             content_;
+    Attributes          attributes_;
+    ObjectsAttributes   objects_attributes_;
 
 };
 

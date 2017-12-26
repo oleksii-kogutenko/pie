@@ -64,8 +64,23 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     BOOST_CHECK(AssetId::base != emptyStrAsset.id());
 
     Index index;
+
     index.add("test_path_1/1", helloAsset);
     index.add("test_path_2/2", emptyStrAsset);
+
+    index.set_attr_("test_path_1/1", "test.attr.1.1", "test_val_1_1");
+    index.set_attr_("test_path_1/1", "test.attr.1.2", "test_val_1_2");
+
+    index.set_attr_("test_path_2/2", "test.attr.2.1", "test_val_2_1");
+    index.set_attr_("test_path_2/2", "test.attr.2.2", "test_val_2_2");
+
+    BOOST_CHECK_EQUAL("test_val_1_1", index.get_attr_("test_path_1/1", "test.attr.1.1"));
+    BOOST_CHECK_EQUAL("test_val_1_2", index.get_attr_("test_path_1/1", "test.attr.1.2"));
+    BOOST_CHECK_EQUAL("default_1",    index.get_attr_("test_path_1/1", "test.attr.1.3", "default_1"));
+
+    BOOST_CHECK_EQUAL("test_val_2_1", index.get_attr_("test_path_2/2", "test.attr.2.1"));
+    BOOST_CHECK_EQUAL("test_val_2_2", index.get_attr_("test_path_2/2", "test.attr.2.2"));
+    BOOST_CHECK_EQUAL("default_2",    index.get_attr_("test_path_2/2", "test.attr.2.3", "default_2"));
 
     index.set_message_("test message");
     index.set_author_("test_user");
@@ -76,11 +91,11 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     index.set_("test attribute 1", "test attribute value 1");
     index.set_("test attribute 2", "test attribute value 2");
 
-    BOOST_CHECK_EQUAL("test message",   index.get_message_());
-    BOOST_CHECK_EQUAL("test_user",      index.get_author_());
-    BOOST_CHECK_EQUAL("author@email",   index.get_email_());
-    BOOST_CHECK_EQUAL("test_commiter",  index.get_commiter_());
-    BOOST_CHECK_EQUAL("commiter@email", index.get_commiter_email_());
+    BOOST_CHECK_EQUAL("test message",               index.get_message_());
+    BOOST_CHECK_EQUAL("test_user",                  index.get_author_());
+    BOOST_CHECK_EQUAL("author@email",               index.get_email_());
+    BOOST_CHECK_EQUAL("test_commiter",              index.get_commiter_());
+    BOOST_CHECK_EQUAL("commiter@email",             index.get_commiter_email_());
 
     BOOST_CHECK_EQUAL("test attribute value 1",     index.get_("test attribute 1"));
     BOOST_CHECK_EQUAL("test attribute value 2",     index.get_("test attribute 2"));
