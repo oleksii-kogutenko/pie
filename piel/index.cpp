@@ -275,4 +275,21 @@ std::set<std::string> Index::paths() const
     return result;
 }
 
+void Index::fill_symlink_attrs(const std::string& id)
+{
+    set_attr_(id, "atype", "symlink");
+}
+
+void Index::fill_file_attrs(const std::string& id, const boost::filesystem::path& file_path)
+{
+    set_attr_(id, "atype", "file");
+    // TODO: Unix file attributes.
+}
+
+void Index::fill_file_attrs(const std::string& id, boost::shared_ptr<ZipEntry> entry)
+{
+    set_attr_(id, "atype", "file");
+    // TODO: Unix file attributes.
+}
+
 } } // namespace piel::lib

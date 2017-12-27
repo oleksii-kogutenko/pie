@@ -87,6 +87,11 @@ public:
     // Get all paths
     std::set<std::string> paths() const;
 
+    // Fill predefined attributes
+    void fill_symlink_attrs(const std::string& id);
+    void fill_file_attrs(const std::string& id, const boost::filesystem::path& file_path);
+    void fill_file_attrs(const std::string& id, boost::shared_ptr<ZipEntry> entry);
+
 private:
     friend class        IndexesDiff;
 

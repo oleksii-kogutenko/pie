@@ -50,8 +50,8 @@ Index ZipIndexer::build(const fs::path& zip_file) const
     ChecksumsDigestBuilder  digest_builder;
     ZipFile                 zip( zip_file.native() );
 
-    for (zip_int64_t i = 0; i < zip.num_entries(); i++) {
-
+    for (zip_int64_t i = 0; i < zip.num_entries(); i++)
+    {
         boost::shared_ptr<ZipEntry>         entry       = zip.entry( i );
         ZipEntryAttributes                  attrs       = entry->attributes();
         ChecksumsDigestBuilder::StrDigests  checksums   = digest_builder.str_digests_for( ZIP_ENTRY_ISTREAM(entry) );
@@ -69,8 +69,13 @@ Index ZipIndexer::build(const fs::path& zip_file) const
                 << hash;
 
         result.add( entry->name(), Asset::create_for(entry) );
-        if (entry->symlink()) {
-            result.set_attr_(entry->name(), "symlink", "true");
+        if (entry->symlink())
+        {
+            result.fill_symlink_attrs(entry->name());
+        }
+        else
+        {
+            result.fill_file_attrs(entry->name(), entry);
         }
     }
 

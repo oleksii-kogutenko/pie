@@ -79,15 +79,14 @@ Index FsIndexer::build(const fs::path& dir) const
                 LOG_T << "s " << name;
 
                 result.add(name, Asset::create_for(target));
-                result.set_attr_(name, "symlink", "true");
+                result.fill_symlink_attrs(name);
             }
             else if ( fs::is_regular_file( e.path() ) )
             {
-                std::ifstream                       target( e.path().c_str(), std::ifstream::in|std::ifstream::binary );
-
                 LOG_T << "f " << name;
 
                 result.add(name, Asset::create_for(e.path()));
+                result.fill_file_attrs(name, e.path());
             }
             else if ( fs::is_directory(e.path()) )
             {
