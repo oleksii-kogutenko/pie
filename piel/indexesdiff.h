@@ -38,6 +38,7 @@ class IndexesDiff
 public:
     enum ElementState
     {
+        ElementState_unmodified,
         ElementState_removed,
         ElementState_added,
         ElementState_modified
