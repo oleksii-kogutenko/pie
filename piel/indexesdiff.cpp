@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, diakovliev
+ * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -111,20 +111,20 @@ namespace fmt {
 template<class DiffMap, class CompareMap>
 DiffMap diff_maps(const CompareMap& first_map, const CompareMap& second_map)
 {
+    typedef typename CompareMap::const_iterator             ConstIter;
+    typedef typename CompareMap::value_type::second_type    EmptyValueType;
+
     DiffMap result;
 
-    typename CompareMap::const_iterator first_begin  = first_map.begin(),
-                                        second_begin = second_map.begin();
+    ConstIter first_begin  = first_map.begin(),
+              second_begin = second_map.begin();
 
-    typename CompareMap::const_iterator first_end    = first_map.end(),
-                                        second_end   = second_map.end();
+    ConstIter first_end    = first_map.end(),
+              second_end   = second_map.end();
 
-    typedef typename CompareMap::value_type::second_type EmptyValueType;
-
-    for (typename CompareMap::const_iterator i = first_begin, end = first_end; i != end; ++i)
+    for (ConstIter i = first_begin, end = first_end; i != end; ++i)
     {
-
-        typename CompareMap::const_iterator second_content_iterator_ = second_map.find(i->first);
+        ConstIter second_content_iterator_ = second_map.find(i->first);
 
         if (second_content_iterator_ != second_end)
         {
@@ -145,9 +145,9 @@ DiffMap diff_maps(const CompareMap& first_map, const CompareMap& second_map)
         }
     }
 
-    for (typename CompareMap::const_iterator i = second_begin, end = second_end; i != end; ++i)
+    for (ConstIter i = second_begin, end = second_end; i != end; ++i)
     {
-        typename CompareMap::const_iterator first_content_iterator_ = first_map.find(i->first);
+        ConstIter first_content_iterator_ = first_map.find(i->first);
 
         if (first_content_iterator_ == first_end)
         {
