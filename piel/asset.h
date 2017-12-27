@@ -33,6 +33,8 @@
 #include <boost/filesystem.hpp>
 #include <boost_property_tree_ext.hpp>
 
+#include <zipfile.h>
+
 namespace piel { namespace lib {
 
 class AssetImpl;
@@ -60,6 +62,8 @@ public:
     static Asset create_for(const IObjectsStorage *storage, const AssetId& id);
     static Asset create_for(const std::string& str_data);
     static Asset create_for(const boost::filesystem::path& file_path);
+    static Asset create_for(boost::shared_ptr<std::istream> is);
+    static Asset create_for(boost::shared_ptr<ZipEntry> entry);
 
     static void store(boost::property_tree::ptree& tree, const Asset& asset);
     static Asset load(const boost::property_tree::ptree& tree);

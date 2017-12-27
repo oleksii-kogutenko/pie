@@ -98,6 +98,13 @@ private:
 
 };
 
+//! Indexers interface.
+struct IIndexer {
+    //! Build index.
+    //! \param whatToIndex Path to directory or archive for index.
+    Index build(const boost::filesystem::path& whatToIndex);
+};
+
 } } // namespace piel::lib
 
 #endif /* PIEL_INDEX_H_ */

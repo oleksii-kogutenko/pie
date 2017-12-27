@@ -44,14 +44,9 @@ ZipIndexer::~ZipIndexer()
 
 }
 
-std::string ZipIndexer::zip_source(const fs::path& zip_file, const std::string& entry_name) const
+Index ZipIndexer::build(const fs::path& zip_file) const
 {
-    return std::string( "zip://" ).append( zip_file.native() ).append( "#" ).append( entry_name );
-}
-
-BaseIndex ZipIndexer::build(const fs::path& zip_file) const
-{
-    BaseIndex               result;
+    Index                   result;
     ChecksumsDigestBuilder  digest_builder;
     ZipFile                 zip( zip_file.native() );
 
@@ -73,7 +68,10 @@ BaseIndex ZipIndexer::build(const fs::path& zip_file) const
                 << " sha256: "
                 << hash;
 
-        result.put( entry->name(), hash, zip_source( zip_file, entry->name() ) );
+        result.add( entry->name(), Asset::create_for(entry) );
+        if (entry->symlink()) {
+            result.set_attr_(entry->name(), "symlink", "true");
+        }
     }
 
     return result;

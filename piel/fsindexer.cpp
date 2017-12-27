@@ -28,7 +28,6 @@
 
 #include <fsindexer.h>
 #include <logging.h>
-#include <baseindex.h>
 
 #include <boost_filesystem_ext.hpp>
 #include <checksumsdigestbuilder.hpp>
@@ -48,20 +47,14 @@ FsIndexer::~FsIndexer()
 {
 }
 
-std::string FsIndexer::fs_source(const fs::path& item) const
-{
-    return std::string( "file://" ).append( fs::absolute( item ).native() );
-}
-
-BaseIndex FsIndexer::build(const fs::path& dir) const
+Index FsIndexer::build(const fs::path& dir) const
 {
     if (!is_directory(dir)) {
         LOG_F << dir << " is not a directory!";
-        return BaseIndex();
+        return Index();
     }
 
-    BaseIndex               result;
-    ChecksumsDigestBuilder  digest_builder;
+    Index                   result;
     std::queue<fs::path>    directories;
 
     directories.push( dir );
@@ -82,22 +75,19 @@ BaseIndex FsIndexer::build(const fs::path& dir) const
             if ( fs::is_symlink( e.path() ) )
             {
                 std::string                         target      = fs::read_symlink( e.path() ).generic_string();
-                ChecksumsDigestBuilder::StrDigests  checksums   = digest_builder.str_digests_for(target);
-                std::string                         hash        = checksums[ Sha256::t::name() ];
 
-                LOG_T << "s " << name << " " << hash;
+                LOG_T << "s " << name;
 
-                result.put( name, hash, fs_source( e.path() ) );
+                result.add(name, Asset::create_for(target));
+                result.set_attr_(name, "symlink", "true");
             }
             else if ( fs::is_regular_file( e.path() ) )
             {
                 std::ifstream                       target( e.path().c_str(), std::ifstream::in|std::ifstream::binary );
-                ChecksumsDigestBuilder::StrDigests  checksums   = digest_builder.str_digests_for( target );
-                std::string                         hash        = checksums[ Sha256::t::name() ];
 
-                LOG_T << "f " << name << " " << hash << std::endl;
+                LOG_T << "f " << name;
 
-                result.put( name, hash, fs_source( e.path() ) );
+                result.add(name, Asset::create_for(e.path()));
             }
             else if ( fs::is_directory(e.path()) )
             {

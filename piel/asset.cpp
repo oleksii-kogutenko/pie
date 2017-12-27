@@ -47,6 +47,12 @@ public:
     {
     }
 
+    AssetImpl(const AssetId& id, boost::shared_ptr<std::istream> stream)
+        : id_(id)
+        , stream_(stream)
+    {
+    }
+
     virtual ~AssetImpl()
     {
     }
@@ -160,6 +166,60 @@ private:
 
 };
 
+// Readable asset what points to zip file entry.
+class ZipEntryImpl: public AssetImpl {
+public:
+    ZipEntryImpl(const ZipEntryImpl& src)
+        : AssetImpl(src.id_)
+        , entry_(src.entry_)
+    {
+    }
+
+    ZipEntryImpl(boost::shared_ptr<ZipEntry> entry)
+        : entry_(entry)
+    {
+    }
+
+    boost::shared_ptr<std::istream> istream() const
+    {
+        return entry_->istream();
+    }
+
+    AssetImpl *clone() const
+    {
+        return new ZipEntryImpl(*this);
+    }
+
+private:
+    boost::shared_ptr<ZipEntry> entry_;
+
+};
+
+// Readable asset from input stream.
+class IStreamImpl: public AssetImpl {
+public:
+    IStreamImpl(const IStreamImpl& src)
+        : AssetImpl(src.id_, src.stream_)
+    {
+    }
+
+    IStreamImpl(boost::shared_ptr<std::istream> is)
+        : AssetImpl(AssetId::base, is)
+    {
+    }
+
+    boost::shared_ptr<std::istream> istream() const
+    {
+        return stream_;
+    }
+
+    AssetImpl *clone() const
+    {
+        return new IStreamImpl(*this);
+    }
+
+};
+
 // Readable asset what points to asset in objects storage.
 class StorageImpl: public AssetImpl {
 public:
@@ -266,6 +326,16 @@ boost::shared_ptr<std::istream> Asset::istream() const
 /*static*/ Asset Asset::create_for(const boost::filesystem::path& file_path)
 {
     return Asset(new FileImpl(file_path));
+}
+
+/*static*/ Asset Asset::create_for(boost::shared_ptr<std::istream> is)
+{
+    return Asset(new IStreamImpl(is));
+}
+
+/*static*/ Asset Asset::create_for(boost::shared_ptr<ZipEntry> entry)
+{
+    return Asset(new ZipEntryImpl(entry));
 }
 
 struct SerializationConstants {

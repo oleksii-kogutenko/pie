@@ -29,7 +29,7 @@
 #ifndef FSINDEXER_H
 #define FSINDEXER_H
 
-#include <baseindex.h>
+#include <index.h>
 #include <boost/filesystem.hpp>
 
 namespace piel { namespace lib {
@@ -49,14 +49,7 @@ public:
     //! Build filesystem index.
     //! \param dir indexed directory.
     //! \return an index.
-    BaseIndex build(const fs::path& dir) const;
-
-protected:
-
-    //! Format source specification for the filesystem item.
-    //! \param item filesystem item.
-    //! \return filesystem source specification in form: 'file:\\' + item.native().
-    std::string fs_source(const fs::path& item) const;
+    Index build(const fs::path& dir) const;
 
 };
 
