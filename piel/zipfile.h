@@ -97,6 +97,7 @@ class ZipFile
 public:
 
     typedef boost::shared_ptr<ZipEntry> EntryPtr;   //!< Pointer to ZipEntry.
+    typedef boost::shared_ptr<ZipFile>  FilePtr;    //!< Pointer to ZipFile.
 
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
@@ -105,8 +106,21 @@ public:
     ZipFile(const std::string& filename)
         : libzip_error_(0)
         , zip_()
+        , filename_(filename)
+        , entries_owner_()
     {
-        zip_ = ::zip_open(filename.c_str(), ZIP_RDONLY, &libzip_error_);
+        zip_ = ::zip_open(filename_.c_str(), ZIP_RDONLY, &libzip_error_);
+        entries_owner_ = FilePtr(new ZipFile(*this));
+    }
+
+    //! Copy constructor.
+    ZipFile(const ZipFile& src)
+        : libzip_error_(0)
+        , zip_()
+        , filename_(src.filename_)
+        , entries_owner_(src.entries_owner_)
+    {
+        zip_ = ::zip_open(filename_.c_str(), ZIP_RDONLY, &libzip_error_);
     }
 
     //! Destructor.
@@ -207,8 +221,10 @@ protected:
     ZipEntryAttributes file_get_external_attributes(const std::string& entry_name) const;
 
 private:
-    int libzip_error_;  //!< libzip last error code.
-    zip_t *zip_;        //!< libzip archive handle.
+    int libzip_error_;                  //!< libzip last error code.
+    zip_t *zip_;                        //!< libzip archive handle.
+    std::string filename_;              //!< stored filename
+    ZipFile::FilePtr entries_owner_;    //!< owner for entries;
 };
 
 //! libzip C api wrapper. Encapsulated api to work with archive entry.
@@ -294,16 +310,16 @@ protected:
     //! \param owner ZipFile instance.
     //! \param name zip archive entry name.
     //! \param zip_file zip_file_t libzip handle.
-    ZipEntry(ZipFile *owner, const std::string& name, zip_file_t* zip_file)
+    ZipEntry(ZipFile::FilePtr owner, const std::string& name, zip_file_t* zip_file)
         : owner_(owner)
         , name_(name)
         , zip_file_(zip_file)
     {}
 
 private:
-    ZipFile* owner_;        //!< Reference to zip file.
-    std::string name_;      //!< Entry name.
-    zip_file_t* zip_file_;  //!< Internal libzip handle.
+    ZipFile::FilePtr owner_;            //!< Reference to zip file.
+    std::string name_;                  //!< Entry name.
+    zip_file_t* zip_file_;              //!< Internal libzip handle.
 };
 
 } } // namespace piel::lib

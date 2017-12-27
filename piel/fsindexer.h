@@ -34,8 +34,6 @@
 
 namespace piel { namespace lib {
 
-namespace fs = boost::filesystem;
-
 //! Utility to build indexes for directories content.
 class FsIndexer : public IIndexer
 {
@@ -49,7 +47,7 @@ public:
     //! Build filesystem index.
     //! \param dir indexed directory.
     //! \return an index.
-    Index build(const fs::path& dir) const;
+    Index build(const boost::filesystem::path& dir) const;
 
 };
 

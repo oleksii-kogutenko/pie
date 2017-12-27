@@ -34,8 +34,6 @@
 
 namespace piel { namespace lib {
 
-namespace fs = boost::filesystem;
-
 //! Utility to build indexes for zip archives.
 class ZipIndexer : public IIndexer
 {
@@ -49,7 +47,7 @@ public:
     //! Build zip file index.
     //! \param zip_archive indexed archive.
     //! \return an index.
-    Index build(const fs::path& zip_file) const;
+    Index build(const boost::filesystem::path& zip_file) const;
 
 };
 

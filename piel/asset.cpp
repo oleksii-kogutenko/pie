@@ -47,12 +47,6 @@ public:
     {
     }
 
-    AssetImpl(const AssetId& id, boost::shared_ptr<std::istream> stream)
-        : id_(id)
-        , stream_(stream)
-    {
-    }
-
     virtual ~AssetImpl()
     {
     }
@@ -78,7 +72,6 @@ public:
     virtual AssetImpl *clone() const = 0;
 
 protected:
-    mutable boost::shared_ptr<std::istream>  stream_;
     AssetId                                  id_;
 };
 
@@ -97,7 +90,7 @@ public:
 
     boost::shared_ptr<std::istream> istream() const
     {
-        return stream_;
+        return boost::shared_ptr<std::istream>();
     }
 
     AssetImpl *clone() const
@@ -122,8 +115,7 @@ public:
 
     boost::shared_ptr<std::istream> istream() const
     {
-        stream_.reset(new std::istringstream(str_));
-        return stream_;
+        return boost::shared_ptr<std::istream>(new std::istringstream(str_));
     }
 
     AssetImpl *clone() const
@@ -152,8 +144,7 @@ public:
 
     boost::shared_ptr<std::istream> istream() const
     {
-        stream_.reset(new std::ifstream(file_path_.c_str(), std::ifstream::in|std::ifstream::binary));
-        return stream_;
+        return boost::shared_ptr<std::istream>(new std::ifstream(file_path_.c_str(), std::ifstream::in|std::ifstream::binary));
     }
 
     AssetImpl *clone() const
@@ -199,12 +190,14 @@ private:
 class IStreamImpl: public AssetImpl {
 public:
     IStreamImpl(const IStreamImpl& src)
-        : AssetImpl(src.id_, src.stream_)
+        : AssetImpl(src.id_)
+        , stream_(src.stream_)
     {
     }
 
     IStreamImpl(boost::shared_ptr<std::istream> is)
-        : AssetImpl(AssetId::base, is)
+        : AssetImpl(AssetId::base)
+        , stream_(is)
     {
     }
 
@@ -217,6 +210,9 @@ public:
     {
         return new IStreamImpl(*this);
     }
+
+private:
+    boost::shared_ptr<std::istream> stream_;
 
 };
 

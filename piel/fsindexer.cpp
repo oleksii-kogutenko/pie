@@ -28,16 +28,15 @@
 
 #include <fsindexer.h>
 #include <logging.h>
-
 #include <boost_filesystem_ext.hpp>
-#include <checksumsdigestbuilder.hpp>
 
 #include <iostream>
 #include <fstream>
 #include <queue>
-#include <boost/filesystem.hpp>
 
 namespace piel { namespace lib {
+
+namespace fs = boost::filesystem;
 
 FsIndexer::FsIndexer()
 {

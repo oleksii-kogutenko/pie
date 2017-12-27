@@ -32,12 +32,16 @@ namespace piel { namespace lib {
 
 ZipFile::EntryPtr ZipFile::entry(const std::string& entry_name)
 {
-    return ZipFile::EntryPtr(new ZipEntry(this, entry_name, fopen(entry_name)));
+    return ZipFile::EntryPtr(
+            new ZipEntry(
+                    entries_owner_, entry_name, fopen(entry_name)));
 }
 
 ZipFile::EntryPtr ZipFile::entry(zip_int64_t entry_index)
 {
-    return ZipFile::EntryPtr(new ZipEntry(this, entry_name(entry_index), fopen(entry_index)));
+    return ZipFile::EntryPtr(
+            new ZipEntry(
+                    entries_owner_, entry_name(entry_index), fopen(entry_index)));
 }
 
 zip_stat_t ZipFile::stat(zip_int64_t entry_index) const

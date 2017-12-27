@@ -39,3 +39,8 @@ add_test (NAME GavcVersionsComparatorTest COMMAND gavc_versions_comparator)
 add_executable(assets_tests assets_tests.cpp)
 target_link_libraries(assets_tests piel ${Boost_LIBRARIES} crypto zip curl)
 add_test (NAME AssetsTests COMMAND assets_tests)
+
+#############################################################
+add_executable(indexers_tests indexers_tests.cpp)
+target_link_libraries(indexers_tests piel ${Boost_LIBRARIES} crypto zip curl)
+add_test (NAME IndexersTests COMMAND indexers_tests)

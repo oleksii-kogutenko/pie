@@ -26,13 +26,15 @@
  *
  */
 
+#include <zipfile.h>
 #include <zipindexer.h>
 #include <logging.h>
 
-#include <zipfile.h>
-#include <checksumsdigestbuilder.hpp>
+#include <boost/format.hpp>
 
 namespace piel { namespace lib {
+
+namespace fs = boost::filesystem;
 
 ZipIndexer::ZipIndexer()
 {
@@ -47,15 +49,12 @@ ZipIndexer::~ZipIndexer()
 Index ZipIndexer::build(const fs::path& zip_file) const
 {
     Index                   result;
-    ChecksumsDigestBuilder  digest_builder;
     ZipFile                 zip( zip_file.native() );
 
     for (zip_int64_t i = 0; i < zip.num_entries(); i++)
     {
         boost::shared_ptr<ZipEntry>         entry       = zip.entry( i );
         ZipEntryAttributes                  attrs       = entry->attributes();
-        ChecksumsDigestBuilder::StrDigests  checksums   = digest_builder.str_digests_for( ZIP_ENTRY_ISTREAM(entry) );
-        std::string                         hash        = checksums[ Sha256::t::name() ];
 
         LOG_T   << std::string( entry->symlink() ? "s " +  entry->target() + " " : "f " )
                 << entry->name()
@@ -64,9 +63,7 @@ Index ZipIndexer::build(const fs::path& zip_file) const
                 << " attributes: "
                 << boost::format( "%1$08x" ) % ( int )attrs.attributes
                 << " mode: "
-                << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 )
-                << " sha256: "
-                << hash;
+                << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 );
 
         result.add( entry->name(), Asset::create_for(entry) );
         if (entry->symlink())

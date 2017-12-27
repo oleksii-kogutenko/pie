@@ -202,7 +202,8 @@ void Index::store(std::ostream& os) const
     tree.add_child(SerializationConstants::content,             content);
     tree.add_child(SerializationConstants::content_attributes,  objects_attributes);
 
-    pt::write_json(os, tree, false);
+    //pt::write_json(os, tree, false);
+    pt::write_json(os, tree, true);
 }
 
 /*static*/ Index Index::load(std::istream& is)
