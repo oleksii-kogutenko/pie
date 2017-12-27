@@ -30,6 +30,7 @@
 #define PIEL_INDEX_H_
 
 #include <asset.h>
+#include <boost/format.hpp>
 
 #include <iostream>
 #include <map>
@@ -87,11 +88,6 @@ public:
     // Get all paths
     std::set<std::string> paths() const;
 
-    // Fill predefined attributes
-    void fill_symlink_attrs(const std::string& id);
-    void fill_file_attrs(const std::string& id, const boost::filesystem::path& file_path);
-    void fill_file_attrs(const std::string& id, boost::shared_ptr<ZipEntry> entry);
-
 private:
     friend class        IndexesDiff;
 
@@ -100,6 +96,24 @@ private:
     Content             content_;
     Attributes          attributes_;
     ContentAttributes   content_attributes_;
+
+};
+
+//! Predefined attributes constants holder
+struct PredefinedAttributes {
+    // Asset type
+    static const std::string asset_type;
+    static const std::string asset_type__symlink;
+    static const std::string asset_type__file;
+
+    // Asset mode (unix mode)
+    static const std::string asset_mode;
+
+    // Fill predefined attributes
+    static void fill_symlink_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path);
+    static void fill_symlink_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry);
+    static void fill_file_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path);
+    static void fill_file_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry);
 
 };
 

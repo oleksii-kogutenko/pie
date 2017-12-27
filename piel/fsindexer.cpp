@@ -67,25 +67,25 @@ Index FsIndexer::build(const fs::path& dir) const
 
         for (fs::directory_iterator i = fs::directory_iterator(p), end = fs::directory_iterator(); i != end; i++)
         {
-            fs::directory_entry                 e           = *i;
-            fs::path                            relative    = fs::make_relative( dir, e.path() );
-            std::string                         name        = relative.generic_string();
+            fs::directory_entry e           = *i;
+            fs::path            relative    = fs::make_relative( dir, e.path() );
+            std::string         name        = relative.generic_string();
 
             if ( fs::is_symlink( e.path() ) )
             {
-                std::string                         target      = fs::read_symlink( e.path() ).generic_string();
+                std::string target = fs::read_symlink( e.path() ).generic_string();
 
                 LOG_T << "s " << name;
 
                 result.add(name, Asset::create_for(target));
-                result.fill_symlink_attrs(name);
+                PredefinedAttributes::fill_symlink_attrs(result, name, e.path());
             }
             else if ( fs::is_regular_file( e.path() ) )
             {
                 LOG_T << "f " << name;
 
                 result.add(name, Asset::create_for(e.path()));
-                result.fill_file_attrs(name, e.path());
+                PredefinedAttributes::fill_file_attrs(result, name, e.path());
             }
             else if ( fs::is_directory(e.path()) )
             {

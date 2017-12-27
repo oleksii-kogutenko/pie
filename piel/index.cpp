@@ -276,21 +276,39 @@ std::set<std::string> Index::paths() const
     return result;
 }
 
-void Index::fill_symlink_attrs(const std::string& id)
+const std::string PredefinedAttributes::asset_type          = "atype";
+const std::string PredefinedAttributes::asset_type__symlink = "symlink";
+const std::string PredefinedAttributes::asset_type__file    = "file";
+const std::string PredefinedAttributes::asset_mode          = "amode";
+
+/*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path)
 {
-    set_attr_(id, "atype", "symlink");
+    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
+
+    boost::filesystem::file_status s = boost::filesystem::status(file_path);
+    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
 }
 
-void Index::fill_file_attrs(const std::string& id, const boost::filesystem::path& file_path)
+/*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry)
 {
-    set_attr_(id, "atype", "file");
-    // TODO: Unix file attributes.
+    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
+
+    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
 }
 
-void Index::fill_file_attrs(const std::string& id, boost::shared_ptr<ZipEntry> entry)
+/*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path)
 {
-    set_attr_(id, "atype", "file");
-    // TODO: Unix file attributes.
+    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+
+    boost::filesystem::file_status s = boost::filesystem::status(file_path);
+    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
+}
+
+/*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry)
+{
+    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+
+    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
 }
 
 } } // namespace piel::lib

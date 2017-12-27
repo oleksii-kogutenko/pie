@@ -68,11 +68,11 @@ Index ZipIndexer::build(const fs::path& zip_file) const
         result.add( entry->name(), Asset::create_for(entry) );
         if (entry->symlink())
         {
-            result.fill_symlink_attrs(entry->name());
+            PredefinedAttributes::fill_symlink_attrs(result, entry->name(), entry);
         }
         else
         {
-            result.fill_file_attrs(entry->name(), entry);
+            PredefinedAttributes::fill_file_attrs(result, entry->name(), entry);
         }
     }
 
