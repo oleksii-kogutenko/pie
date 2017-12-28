@@ -27,6 +27,7 @@
  */
 
 #include <indexesdiff.h>
+
 #include <logging.h>
 
 namespace piel { namespace lib {
@@ -34,6 +35,7 @@ namespace piel { namespace lib {
 template<class DiffMap, class CompareMap>
 struct MapDiffBuilder {
 
+    typedef typename DiffMap::iterator                      DiffMapIterator;
     typedef typename CompareMap::const_iterator             ConstIter;
     typedef typename CompareMap::value_type::second_type    EmptyValueType;
 
@@ -44,11 +46,11 @@ struct MapDiffBuilder {
         ConstIter first_end    = first_map.end(),
                   second_end   = second_map.end();
 
-
-
         for (ConstIter i = first_map.begin(); i != first_end; ++i)
         {
             ConstIter second_iter_ = second_map.find(i->first);
+
+            std::pair<DiffMapIterator, bool> insert_result;
 
             if (second_iter_ != second_end)
             {
@@ -56,17 +58,23 @@ struct MapDiffBuilder {
                         ?  IndexesDiff::ElementState_unmodified
                         :  IndexesDiff::ElementState_modified;
 
-                result.insert(
+
+                insert_result = result.insert(
                         std::make_pair(i->first,
                                 std::make_pair(element_state,
                                         std::make_pair(i->second, second_iter_->second))));
             }
             else
             {
-                result.insert(
+                insert_result = result.insert(
                         std::make_pair(i->first,
                                 std::make_pair(IndexesDiff::ElementState_removed,
                                         std::make_pair(i->second, EmptyValueType()))));
+            }
+
+            if (!insert_result.second)
+            {
+                LOG_F << "Unable on insert maps diff element into diff. Key: " << i->first;
             }
         }
 
@@ -76,10 +84,17 @@ struct MapDiffBuilder {
 
             if (first_iter == first_end)
             {
-                result.insert(
+                std::pair<DiffMapIterator, bool> insert_result;
+
+                insert_result = result.insert(
                         std::make_pair(i->first,
                                 std::make_pair(IndexesDiff::ElementState_added,
                                         std::make_pair(EmptyValueType(), i->second))));
+
+                if (!insert_result.second)
+                {
+                    LOG_F << "Unable on insert maps diff element into diff. Key: " << i->first;
+                }
             }
         }
 
