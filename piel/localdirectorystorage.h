@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2017, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,52 +26,49 @@
  *
  */
 
-#ifndef PIEL_ASSET_H_
-#define PIEL_ASSET_H_
+#ifndef PIEL_LOCALDIRECTORYSTORAGE_H_
+#define PIEL_LOCALDIRECTORYSTORAGE_H_
 
-#include <assetid.h>
-#include <boost/filesystem.hpp>
-#include <boost_property_tree_ext.hpp>
-
-#include <zipfile.h>
+#include <boost_filesystem_ext.hpp>
+#include <iobjectsstorage.h>
+#include <properties.h>
 
 namespace piel { namespace lib {
 
-class AssetImpl;
-class IObjectsStorage;
-
-class Asset
+class LocalDirectoryStorage : public IObjectsStorage
 {
-    Asset(AssetImpl *impl);
 public:
-    Asset();
-    Asset(const Asset& src);
-    ~Asset();
+    LocalDirectoryStorage(const boost::filesystem::path& root_dir);
+    virtual ~LocalDirectoryStorage();
 
-    void operator=(const Asset& src);
-    bool operator!=(const Asset& src) const;
-    bool operator==(const Asset& src) const;
-    bool operator<(const Asset& src) const;
-    operator AssetId() const;
+    // Put readable asset(s) into storage.
+    void put(const Asset& asset);
+    void put(std::set<Asset> assets);
+    void put(const IObjectsStorage::Ref& ref);
 
-    const AssetId& id() const;
-    boost::shared_ptr<std::istream> istream() const;
+    // Check if readable asset available in storage.
+    bool contains(const AssetId& id) const;
 
-    static Asset create_id(const AssetId& id);
+    // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
+    Asset asset(const AssetId& id) const;
 
-    static Asset create_for(const IObjectsStorage *storage, const AssetId& id);
-    static Asset create_for(const std::string& str_data);
-    static Asset create_for(const boost::filesystem::path& file_path);
-    //static Asset create_for(boost::shared_ptr<std::istream> is);
-    static Asset create_for(boost::shared_ptr<ZipEntry> entry);
+    // Get input stream for reading asset data. Low level API used by Asset implementation.
+    //External code must use get().istream() call sequense.
+    boost::shared_ptr<std::istream> istream_for(const AssetId& id) const;
 
-    static void store(boost::property_tree::ptree& tree, const Asset& asset);
-    static Asset load(const boost::property_tree::ptree& tree);
+    AssetId resolve(const std::string& ref) const;
+    std::set<IObjectsStorage::Ref> references() const;
+
+protected:
+    void init();
 
 private:
-    AssetImpl *impl_;
+    boost::filesystem::path root_dir_;
+    boost::filesystem::path objects_;
+    boost::filesystem::path references_;
+    Properties refs_;
 };
 
 } } // namespace piel::lib
 
-#endif /* PIEL_ASSET_H_ */
+#endif /* PIEL_LOCALDIRECTORYSTORAGE_H_ */

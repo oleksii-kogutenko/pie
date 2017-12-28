@@ -36,14 +36,12 @@ namespace piel { namespace lib {
 
 class AssetId
 {
-protected:
-    AssetId(const std::string& id);
-
 public:
     static const AssetId base;
 
     AssetId();
     AssetId(std::istream& is);
+    AssetId(const std::string& id);
     AssetId(const AssetId& src);
 
     ~AssetId();

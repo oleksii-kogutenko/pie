@@ -34,6 +34,7 @@
 #include <index.h>
 #include <indexesdiff.h>
 #include <memoryobjectsstorage.h>
+#include <localdirectorystorage.h>
 
 using namespace piel::lib;
 
@@ -137,8 +138,9 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
 
     BOOST_CHECK_EQUAL(serialized_index1, serialized_index);
 
-    MemoryObjectsStorage storage;
-    storage.put(index1.assets());
+    LocalDirectoryStorage storage(boost::filesystem::path("/tmp/test_local_storage"));
+    storage.put(index.assets());
+    storage.put(std::make_pair("test_reference", index.self().id()));
 
     Asset s0_asset = storage.asset(helloAsset.id());
 
@@ -173,7 +175,6 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
     BOOST_CHECK_EQUAL("test_val_2_1", index2.get_attr_("test_path_2/2", "test.attr.2.1"));
     BOOST_CHECK_EQUAL("test_val_2_2", index2.get_attr_("test_path_2/2", "test.attr.2.2"));
     BOOST_CHECK_EQUAL("default_2",    index2.get_attr_("test_path_2/2", "test.attr.2.3", "default_2"));
-
 }
 
 BOOST_AUTO_TEST_CASE(Indexes_Diff)

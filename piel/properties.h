@@ -46,6 +46,11 @@ public:
     static Properties load(std::istream &is);
     void store(std::ostream &os) const;
 
+    const MapType& data() const
+    {
+        return data_;
+    }
+
     MapType& data()
     {
         return data_;

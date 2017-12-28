@@ -46,7 +46,7 @@ public:
     MemoryObjectsStorage();
     virtual ~MemoryObjectsStorage();
 
-    // Put readable asset into storage.
+    // Put readable asset(s) into storage.
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
     void put(const IObjectsStorage::Ref& ref);

@@ -186,35 +186,35 @@ private:
 
 };
 
-// Readable asset from input stream.
-class IStreamImpl: public AssetImpl {
-public:
-    IStreamImpl(const IStreamImpl& src)
-        : AssetImpl(src.id_)
-        , stream_(src.stream_)
-    {
-    }
-
-    IStreamImpl(boost::shared_ptr<std::istream> is)
-        : AssetImpl(AssetId::base)
-        , stream_(is)
-    {
-    }
-
-    boost::shared_ptr<std::istream> istream() const
-    {
-        return stream_;
-    }
-
-    AssetImpl *clone() const
-    {
-        return new IStreamImpl(*this);
-    }
-
-private:
-    boost::shared_ptr<std::istream> stream_;
-
-};
+//// Readable asset from input stream.
+//class IStreamImpl: public AssetImpl {
+//public:
+//    IStreamImpl(const IStreamImpl& src)
+//        : AssetImpl(src.id_)
+//        , stream_(src.stream_)
+//    {
+//    }
+//
+//    IStreamImpl(boost::shared_ptr<std::istream> is)
+//        : AssetImpl(AssetId::base)
+//        , stream_(is)
+//    {
+//    }
+//
+//    boost::shared_ptr<std::istream> istream() const
+//    {
+//        return stream_;
+//    }
+//
+//    AssetImpl *clone() const
+//    {
+//        return new IStreamImpl(*this);
+//    }
+//
+//private:
+//    boost::shared_ptr<std::istream> stream_;
+//
+//};
 
 // Readable asset what points to asset in objects storage.
 class StorageImpl: public AssetImpl {
@@ -324,10 +324,10 @@ boost::shared_ptr<std::istream> Asset::istream() const
     return Asset(new FileImpl(file_path));
 }
 
-/*static*/ Asset Asset::create_for(boost::shared_ptr<std::istream> is)
-{
-    return Asset(new IStreamImpl(is));
-}
+///*static*/ Asset Asset::create_for(boost::shared_ptr<std::istream> is)
+//{
+//    return Asset(new IStreamImpl(is));
+//}
 
 /*static*/ Asset Asset::create_for(boost::shared_ptr<ZipEntry> entry)
 {
