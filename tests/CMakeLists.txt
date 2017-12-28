@@ -1,6 +1,6 @@
-find_package (Boost COMPONENTS system filesystem random log unit_test_framework REQUIRED)
+find_package (Boost COMPONENTS system filesystem random log unit_test_framework regex REQUIRED)
 
-set(Piel_LIBRARIES piel crypto zip curl ${Boost_LIBRARIES})
+set(Piel_LIBRARIES piel crypto ${ZIP} curl pthread ${Boost_LIBRARIES})
 
 include_directories(${Boost_INCLUDE_DIRS})
 
