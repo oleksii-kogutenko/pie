@@ -58,8 +58,8 @@ Index FsIndexer::build(const fs::path& dir) const
 
     directories.push( dir );
 
-    while( !directories.empty() ) {
-
+    while( !directories.empty() )
+    {
         fs::path p = directories.front();
         directories.pop();
 
@@ -77,15 +77,27 @@ Index FsIndexer::build(const fs::path& dir) const
 
                 LOG_T << "s " << name;
 
-                result.add(name, Asset::create_for(target));
-                PredefinedAttributes::fill_symlink_attrs(result, name, e.path());
+                if (result.insert(name, Asset::create_for(target)))
+                {
+                    PredefinedAttributes::fill_symlink_attrs(result, name, e.path());
+                }
+                else
+                {
+                    LOG_F << "Can't insert element " << name << " into index! Probably index already have element with such name.";
+                }
             }
             else if ( fs::is_regular_file( e.path() ) )
             {
                 LOG_T << "f " << name;
 
-                result.add(name, Asset::create_for(e.path()));
-                PredefinedAttributes::fill_file_attrs(result, name, e.path());
+                if (result.insert(name, Asset::create_for(e.path())))
+                {
+                    PredefinedAttributes::fill_file_attrs(result, name, e.path());
+                }
+                else
+                {
+                    LOG_F << "Can't insert element " << name << " into index! Probably index already have element with such name.";
+                }
             }
             else if ( fs::is_directory(e.path()) )
             {

@@ -98,12 +98,10 @@ namespace java_properties {
 Properties::Properties()
     : data_()
 {
-
 }
 
 Properties::~Properties()
 {
-
 }
 
 Properties Properties::load(std::istream &is)
@@ -121,7 +119,7 @@ Properties Properties::load(std::istream &is)
         std::getline(is, buffer);
         LOG_T << "buffer: " << buffer;
         qi::phrase_parse( buffer.begin(), buffer.end(), java_properties_grammar, ascii::space, pair );
-        result.data_.insert(pair);
+        result.data_[pair.first] = pair.second;
         LOG_T << "'"<< pair.first << "' = '" << pair.second << "'";
     }
 

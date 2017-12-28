@@ -41,32 +41,25 @@ struct MapDiffBuilder {
     {
         DiffMap result;
 
-        ConstIter first_begin  = first_map.begin(),
-                  second_begin = second_map.begin();
-
         ConstIter first_end    = first_map.end(),
                   second_end   = second_map.end();
 
-        for (ConstIter i = first_begin, end = first_end; i != end; ++i)
-        {
-            ConstIter second_content_iterator_ = second_map.find(i->first);
 
-            if (second_content_iterator_ != second_end)
+
+        for (ConstIter i = first_map.begin(); i != first_end; ++i)
+        {
+            ConstIter second_iter_ = second_map.find(i->first);
+
+            if (second_iter_ != second_end)
             {
-                if (i->second != second_content_iterator_->second)
-                {
-                    result.insert(
-                            std::make_pair(i->first,
-                                    std::make_pair(IndexesDiff::ElementState_modified,
-                                            std::make_pair(i->second, second_content_iterator_->second))));
-                }
-                else
-                {
-                    result.insert(
-                            std::make_pair(i->first,
-                                    std::make_pair(IndexesDiff::ElementState_unmodified,
-                                            std::make_pair(i->second, second_content_iterator_->second))));
-                }
+                IndexesDiff::ElementState element_state = (i->second == second_iter_->second)
+                        ?  IndexesDiff::ElementState_unmodified
+                        :  IndexesDiff::ElementState_modified;
+
+                result.insert(
+                        std::make_pair(i->first,
+                                std::make_pair(element_state,
+                                        std::make_pair(i->second, second_iter_->second))));
             }
             else
             {
@@ -77,11 +70,11 @@ struct MapDiffBuilder {
             }
         }
 
-        for (ConstIter i = second_begin, end = second_end; i != end; ++i)
+        for (ConstIter i = second_map.begin(); i != second_end; ++i)
         {
-            ConstIter first_content_iterator_ = first_map.find(i->first);
+            ConstIter first_iter = first_map.find(i->first);
 
-            if (first_content_iterator_ == first_end)
+            if (first_iter == first_end)
             {
                 result.insert(
                         std::make_pair(i->first,

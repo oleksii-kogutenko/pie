@@ -61,8 +61,6 @@ public:
         data_.clear();
     }
 
-    static void test_properties();
-
 private:
     MapType data_;
 

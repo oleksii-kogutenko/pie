@@ -65,14 +65,20 @@ Index ZipIndexer::build(const fs::path& zip_file) const
                 << " mode: "
                 << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 );
 
-        result.add( entry->name(), Asset::create_for(entry) );
-        if (entry->symlink())
+        if (result.insert( entry->name(), Asset::create_for(entry) ))
         {
-            PredefinedAttributes::fill_symlink_attrs(result, entry->name(), entry);
+            if (entry->symlink())
+            {
+                PredefinedAttributes::fill_symlink_attrs(result, entry->name(), entry);
+            }
+            else
+            {
+                PredefinedAttributes::fill_file_attrs(result, entry->name(), entry);
+            }
         }
         else
         {
-            PredefinedAttributes::fill_file_attrs(result, entry->name(), entry);
+            LOG_F << "Can't insert element " << entry->name() << " into index! Probably index already have element with such name.";
         }
     }
 

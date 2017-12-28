@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(Basic_Assets)
 
     Index index;
 
-    index.add("test_path_1/1", helloAsset);
-    index.add("test_path_2/2", emptyStrAsset);
+    index.insert("test_path_1/1", helloAsset);
+    index.insert("test_path_2/2", emptyStrAsset);
 
     index.set_attr_("test_path_1/1", "test.attr.1.1", "test_val_1_1");
     index.set_attr_("test_path_1/1", "test.attr.1.2", "test_val_1_2");
@@ -186,11 +186,11 @@ BOOST_AUTO_TEST_CASE(Indexes_Diff)
 
     Index index;
 
-    index.add("test_path_1/1", helloAsset);
+    index.insert("test_path_1/1", helloAsset);
     index.set_attr_("test_path_1/1", "test.attr.1.1", "test_val_1_1");
     index.set_attr_("test_path_1/1", "test.attr.1.2", "test_val_1_2");
 
-    index.add("test_path_2/2", emptyStrAsset);
+    index.insert("test_path_2/2", emptyStrAsset);
     index.set_attr_("test_path_2/2", "test.attr.2.1", "test_val_2_1");
     index.set_attr_("test_path_2/2", "test.attr.2.2", "test_val_2_2");
 
@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(Indexes_Diff)
 
     Index index1;
 
-    index1.add("test_path_1/1", helloAsset);
+    index1.insert("test_path_1/1", helloAsset);
     index1.set_attr_("test_path_1/1", "test.attr.1.1", "test_val_1_1");
     index1.set_attr_("test_path_1/1", "test.attr.1.2", "test_val_1_2");
 
-    index1.add("test_path_2/2", emptyStrAsset);
+    index1.insert("test_path_2/2", emptyStrAsset);
     index1.set_attr_("test_path_2/2", "test.attr.2.1", "test_val_2_1");
     index1.set_attr_("test_path_2/2", "test.attr.2.2", "test_val_2_2");
 
@@ -265,12 +265,12 @@ BOOST_AUTO_TEST_CASE(Indexes_DiffContent)
 
     Index index;
 
-    index.add("hello", helloAsset);
+    index.insert("hello", helloAsset);
 
     index.set_attr_("hello", "test-attr0-1", "test-val_1");
     index.set_attr_("hello", "test-attr0-2", "test-val_2");
 
-    index.add("empty", emptyStrAsset);
+    index.insert("empty", emptyStrAsset);
 
     index.set_message_("test message");
     index.set_author_("test_user");
@@ -280,9 +280,9 @@ BOOST_AUTO_TEST_CASE(Indexes_DiffContent)
 
     Index index1;
 
-    index1.add("hello", helloAsset1);
-    index1.add("empty", emptyStrAsset);
-    index1.add("empty1", emptyStrAsset);
+    index1.insert("hello", helloAsset1);
+    index1.insert("empty", emptyStrAsset);
+    index1.insert("empty1", emptyStrAsset);
 
     index1.set_attr_("empty1", "test-eattr-1", "test-eval_1");
     index1.set_attr_("empty1", "test-eattr-2", "test-eval_2");

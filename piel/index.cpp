@@ -47,9 +47,9 @@ Index::~Index()
 {
 }
 
-void Index::add(const std::string& index_path, const Asset& asset)
+bool Index::insert(const std::string& index_path, const Asset& asset)
 {
-    content_.insert(std::make_pair(index_path, asset));
+    return content_.insert(std::make_pair(index_path, asset)).second;
 }
 
 const Index::Content& Index::content() const
@@ -72,7 +72,7 @@ const Asset& Index::parent() const
 
 void Index::set_(const std::string& attribute, const std::string& value)
 {
-    attributes_.insert(std::make_pair(attribute, value));
+    attributes_[attribute] = value;
 }
 
 std::string Index::get_(const std::string& attribute, const std::string& default_value) const
@@ -109,7 +109,7 @@ void Index::set_attr_(const std::string& id, const std::string& attribute, const
         return;
     }
 
-    objs_attrs_iter->second.insert(std::make_pair(attribute, value));
+    objs_attrs_iter->second[attribute] = value;
 }
 
 std::string Index::get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value) const
@@ -135,7 +135,7 @@ std::string Index::get_attr_(const std::string& id, const std::string& attribute
 
 void Index::set_attrs_(const std::string& id, const Index::Attributes& attrs)
 {
-    content_attributes_.insert(std::make_pair(id, attrs));
+    content_attributes_[id] = attrs;
 }
 
 boost::optional<Index::Attributes> Index::get_attrs_(const std::string& id) const
@@ -271,7 +271,10 @@ std::set<std::string> Index::paths() const
     std::set<std::string> result;
     for (Content::const_iterator i = content_.begin(), end = content_.end(); i != end; ++i)
     {
-        result.insert(i->first);
+        if (!result.insert(i->first).second)
+        {
+            LOG_F << "Not valind index! Content map contains several elements (" << content_.count(i->first) << ") for key " << i->first;
+        }
     }
     return result;
 }
