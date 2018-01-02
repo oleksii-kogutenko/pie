@@ -40,6 +40,10 @@ namespace piel { namespace lib {
 class AssetImpl;
 class IObjectsStorage;
 
+namespace errors {
+    struct unable_to_calculate_asset_id {};
+};
+
 class Asset
 {
     Asset(AssetImpl *impl);
@@ -62,11 +66,10 @@ public:
     static Asset create_for(const IObjectsStorage *storage, const AssetId& id);
     static Asset create_for(const std::string& str_data);
     static Asset create_for(const boost::filesystem::path& file_path);
-    //static Asset create_for(boost::shared_ptr<std::istream> is);
     static Asset create_for(boost::shared_ptr<ZipEntry> entry);
 
     static void store(boost::property_tree::ptree& tree, const Asset& asset);
-    static Asset load(const boost::property_tree::ptree& tree);
+    static Asset load(const boost::property_tree::ptree& tree, IObjectsStorage *storage);
 
 private:
     AssetImpl *impl_;

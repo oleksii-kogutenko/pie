@@ -35,8 +35,8 @@ namespace pt = boost::property_tree;
 namespace piel { namespace lib {
 
 Index::Index()
-    : self_(Asset::create_id(AssetId::base))
-    , parent_(Asset::create_id(AssetId::base))
+    : self_(Asset::create_id(AssetId::not_calculated))
+    , parent_()
     , content_()
     , attributes_()
     , content_attributes_()
@@ -206,7 +206,7 @@ void Index::store(std::ostream& os) const
     pt::write_json(os, tree, true);
 }
 
-/*static*/ Index Index::load(std::istream& is)
+/*static*/ Index Index::load(std::istream& is, IObjectsStorage *storage)
 {
     Index result;
 
@@ -214,7 +214,7 @@ void Index::store(std::ostream& os) const
 
     pt::read_json(is, tree);
 
-    result.parent_ = Asset::load(tree.get_child(SerializationConstants::parent));
+    result.parent_ = Asset::load(tree.get_child(SerializationConstants::parent), storage);
 
     pt::ptree attributes = tree.get_child(SerializationConstants::attributes);
     for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
@@ -224,7 +224,7 @@ void Index::store(std::ostream& os) const
     pt::ptree content = tree.get_child(SerializationConstants::content);
     for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
         pt::ptree item = content.get_child(i->first);
-        result.content_.insert(std::make_pair(i->first, Asset::load(item)));
+        result.content_.insert(std::make_pair(i->first, Asset::load(item, storage)));
     }
 
     pt::ptree objects_attributes = tree.get_child(SerializationConstants::content_attributes);
@@ -240,12 +240,12 @@ void Index::store(std::ostream& os) const
     return result;
 }
 
-/*static*/ Index Index::load(const Asset& asset)
+/*static*/ Index Index::load(const Asset& asset, IObjectsStorage *storage)
 {
     boost::shared_ptr<std::istream> pis = asset.istream();
     if (pis)
     {
-        return load(*pis);
+        return load(*pis, storage);
     }
     else
     {

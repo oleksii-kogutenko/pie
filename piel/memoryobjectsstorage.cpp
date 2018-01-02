@@ -49,8 +49,8 @@ MemoryObjectsStorage::~MemoryObjectsStorage()
 // Put readable asset into storage.
 void MemoryObjectsStorage::put(const Asset& asset)
 {
-    // Do not put AssetId::base Asset
-    if (asset.id() == AssetId::base || contains(asset.id()))
+    // Do not put AssetId::empty Asset
+    if (asset.id() == AssetId::empty || contains(asset.id()))
     {
         return;
     }
@@ -92,7 +92,7 @@ Asset MemoryObjectsStorage::asset(const AssetId& id) const
     }
     else
     {
-        return Asset::create_id(AssetId::base);
+        return Asset();
     }
 }
 
@@ -123,7 +123,7 @@ AssetId MemoryObjectsStorage::resolve(const std::string& ref) const
         if (contains(refId))
             return refId;
         else
-            return AssetId::base;
+            return AssetId::empty;
     }
 }
 

@@ -29,7 +29,7 @@
 #ifndef PIEL_INDEX_H_
 #define PIEL_INDEX_H_
 
-#include <asset.h>
+#include <iobjectsstorage.h>
 #include <boost/format.hpp>
 
 #include <iostream>
@@ -79,8 +79,8 @@ public:
 
     // Serialization methods.
     void store(std::ostream& os) const;
-    static Index load(std::istream& is);
-    static Index load(const Asset& asset);
+    static Index load(std::istream& is, IObjectsStorage *storage);
+    static Index load(const Asset& asset, IObjectsStorage *storage);
 
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;

@@ -53,13 +53,13 @@ namespace layout {
     {
         std::vector<std::string> result;
 
-        if (asset_id == AssetId::base)
+        if (asset_id == AssetId::not_calculated)
         {
             // TODO: Error
             return result;
         }
 
-        std::string asset_id_str = asset_id.presentation();
+        std::string asset_id_str = asset_id.string();
         //std::string::size_type size = asset_id.size();
 
         unsigned pos = 0;
@@ -133,6 +133,11 @@ void LocalDirectoryStorage::init()
 // Put readable asset(s) into storage.
 void LocalDirectoryStorage::put(const Asset& asset)
 {
+    if (asset.id() == AssetId::empty || contains(asset.id()))
+    {
+        return;
+    }
+
     // 1. Create parent directory for the asset
     fs::path asset_path             = layout::asset_path(objects_, asset);
     fs::path asset_parent_path      = asset_path.parent_path();
@@ -149,7 +154,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
         {
             if (!fs::create_directories(asset_parent_path))
             {
-                LOG_F << "Unable to create parent directory: " << asset_parent_path << " for the asset: " << asset.id().presentation();
+                LOG_F << "Unable to create parent directory: " << asset_parent_path << " for the asset: " << asset.id().string();
                 // TODO: throw exception
             }
         }
@@ -167,7 +172,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
     }
     else
     {
-        LOG_F << "Unable to get input stream for " << asset.id().presentation();
+        LOG_F << "Asset: " << asset.id().string() << " is not readable!";
         // TODO: throw exception
     }
 }
@@ -177,14 +182,14 @@ void LocalDirectoryStorage::put(std::set<Asset> assets)
     typedef std::set<Asset>::const_iterator ConstIter;
     for(ConstIter i = assets.begin(), end = assets.end(); i != end; ++i)
     {
-        LOG_T << "Put asset: " << i->id().presentation();
+        LOG_T << "Put asset: " << i->id().string();
         put(*i);
     }
 }
 
 void LocalDirectoryStorage::put(const IObjectsStorage::Ref& ref)
 {
-    refs_[ref.first] = ref.second.presentation();
+    refs_[ref.first] = ref.second.string();
     refs_.store(*fs::ostream(references_).get());
 }
 
@@ -232,7 +237,7 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
     }
     else
     {
-        return AssetId::base;
+        return AssetId::empty;
     }
 }
 

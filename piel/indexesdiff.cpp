@@ -196,7 +196,7 @@ namespace fmt {
 
     std::string asset_id(const Asset& a)
     {
-        return a.id().presentation();
+        return a.id().string();
     }
 
 } // namespace fmt

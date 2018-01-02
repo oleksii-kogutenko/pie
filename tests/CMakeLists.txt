@@ -1,4 +1,4 @@
-find_package (Boost COMPONENTS system filesystem log unit_test_framework REQUIRED)
+find_package (Boost COMPONENTS system filesystem random log unit_test_framework REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_definitions(-DBOOST_TEST_DYN_LINK)

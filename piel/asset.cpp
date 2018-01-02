@@ -53,15 +53,29 @@ public:
 
     virtual const AssetId& id()
     {
-        if (id_ != AssetId::base)
+        if (id_ == AssetId::empty)
+        {
             return id_;
+        }
+
+        if (id_ != AssetId::not_calculated)
+        {
+            return id_;
+        }
 
         // Calculate id;
         boost::shared_ptr<std::istream> pis = istream();
         if (pis)
         {
             id_ = AssetId::create_for(*pis.get());
-            LOG_T << "Calculated asset id: " << id_.presentation();
+            LOG_T << "Calculated asset id: " << id_.string();
+        }
+        else
+        {
+            id_ = AssetId::not_calculated;
+            LOG_F << "Unable to calculate asset id!";
+
+            throw errors::unable_to_calculate_asset_id();
         }
 
         return id_;
@@ -109,7 +123,8 @@ public:
     }
 
     StringImpl(const std::string& str)
-        : str_(str)
+        : AssetImpl(AssetId::not_calculated)
+        , str_(str)
     {
     }
 
@@ -138,7 +153,8 @@ public:
     }
 
     FileImpl(const boost::filesystem::path& file_path)
-        : file_path_(file_path)
+        : AssetImpl(AssetId::not_calculated)
+        , file_path_(file_path)
     {
     }
 
@@ -167,7 +183,8 @@ public:
     }
 
     ZipEntryImpl(boost::shared_ptr<ZipEntry> entry)
-        : entry_(entry)
+        : AssetImpl(AssetId::not_calculated)
+        , entry_(entry)
     {
     }
 
@@ -185,36 +202,6 @@ private:
     boost::shared_ptr<ZipEntry> entry_;
 
 };
-
-//// Readable asset from input stream.
-//class IStreamImpl: public AssetImpl {
-//public:
-//    IStreamImpl(const IStreamImpl& src)
-//        : AssetImpl(src.id_)
-//        , stream_(src.stream_)
-//    {
-//    }
-//
-//    IStreamImpl(boost::shared_ptr<std::istream> is)
-//        : AssetImpl(AssetId::base)
-//        , stream_(is)
-//    {
-//    }
-//
-//    boost::shared_ptr<std::istream> istream() const
-//    {
-//        return stream_;
-//    }
-//
-//    AssetImpl *clone() const
-//    {
-//        return new IStreamImpl(*this);
-//    }
-//
-//private:
-//    boost::shared_ptr<std::istream> stream_;
-//
-//};
 
 // Readable asset what points to asset in objects storage.
 class StorageImpl: public AssetImpl {
@@ -248,7 +235,7 @@ private:
 
 
 Asset::Asset()
-    : impl_(new IdImpl(AssetId::base))
+    : impl_(new IdImpl(AssetId::empty))
 {
 }
 
@@ -324,11 +311,6 @@ boost::shared_ptr<std::istream> Asset::istream() const
     return Asset(new FileImpl(file_path));
 }
 
-///*static*/ Asset Asset::create_for(boost::shared_ptr<std::istream> is)
-//{
-//    return Asset(new IStreamImpl(is));
-//}
-
 /*static*/ Asset Asset::create_for(boost::shared_ptr<ZipEntry> entry)
 {
     return Asset(new ZipEntryImpl(entry));
@@ -342,13 +324,20 @@ const std::string SerializationConstants::id = "id";
 
 /*static*/ void Asset::store(boost::property_tree::ptree& tree, const Asset& asset)
 {
-    tree.add(SerializationConstants::id, asset.id().presentation());
+    tree.add(SerializationConstants::id, asset.id().string());
 }
 
-/*static*/ Asset Asset::load(const boost::property_tree::ptree& tree)
+/*static*/ Asset Asset::load(const boost::property_tree::ptree& tree, IObjectsStorage *storage)
 {
     std::string id = tree.get<std::string>(SerializationConstants::id);
-    return Asset::create_id(AssetId::create(id));
+    if (storage != 0)
+    {
+        return Asset::create_for(storage, AssetId::create(id));
+    }
+    else
+    {
+        return Asset::create_id(AssetId::create(id));
+    }
 }
 
 } } // namespace piel::lib

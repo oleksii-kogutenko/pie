@@ -33,6 +33,10 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
+#include <sstream>
+#include <boost/random/random_device.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
 namespace boost { namespace filesystem {
 
 // Return path when appended to a_From will resolve to same as a_To
@@ -71,6 +75,36 @@ inline boost::shared_ptr<std::istream> istream( const path& from )
 inline boost::shared_ptr<std::ostream> ostream( const path& from )
 {
     return boost::shared_ptr<std::ostream>(new std::ofstream(from.string().c_str(), std::ofstream::out|std::ifstream::binary));
+}
+
+// Test utils
+inline std::string create_random_string()
+{
+    boost::random::random_device rng;
+    boost::random::uniform_int_distribution<> index_dist(5, 256);
+    int count = index_dist(rng);
+    std::ostringstream oss;
+    for(int i = 0; i < count; ++i) {
+        std::string::value_type ch = (std::string::value_type)index_dist(rng);
+        oss << ch;
+    }
+    return oss.str();
+}
+
+inline std::pair<path,std::string> create_random_temp_file()
+{
+    boost::filesystem::path temp_file = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    boost::random::random_device rng;
+    boost::random::uniform_int_distribution<> index_dist(5, 256);
+    int count = index_dist(rng);
+    boost::shared_ptr<std::ostream> ofs = boost::filesystem::ostream(boost::filesystem::path(temp_file));
+    std::ostringstream oss;
+    for(int i = 0; i < count; ++i) {
+        std::string::value_type ch = (std::string::value_type)index_dist(rng);
+        (*ofs) << ch;
+        oss << ch;
+    }
+    return std::make_pair(temp_file, oss.str());
 }
 
 } } // namespace boost::filesystem
