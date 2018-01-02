@@ -65,7 +65,7 @@ Index ZipIndexer::build(const fs::path& zip_file) const
                 << " mode: "
                 << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 );
 
-        if (result.insert( entry->name(), Asset::create_for(entry) ))
+        if (result.insert_path( entry->name(), Asset::create_for(entry) ))
         {
             if (entry->symlink())
             {

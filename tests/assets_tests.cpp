@@ -29,11 +29,12 @@
 #define BOOST_TEST_MODULE AssetsTests
 #include <boost/test/unit_test.hpp>
 
-#include <checksumsdigestbuilder.hpp>
-#include <asset.h>
 #include <test_utils.hpp>
+#include <checksumsdigestbuilder.hpp>
 
-//#include <index.h>
+#include <asset.h>
+#include <index.h>
+
 //#include <indexesdiff.h>
 //#include <memoryobjectsstorage.h>
 //#include <localdirectorystorage.h>
@@ -97,6 +98,56 @@ BOOST_AUTO_TEST_CASE(files_assets)
         boost::filesystem::remove(test_file.first);
     }
 }
+
+BOOST_AUTO_TEST_CASE(index_insert_contains_replace_remove)
+{
+    Index index;
+
+    std::string index_path;
+    Asset asset_0  = Asset::create_for(test_utils::create_random_string());
+    Asset asset_1;
+
+    bool inserted = false;
+    do {
+
+        index_path = test_utils::create_random_printable_string();
+        asset_1    = Asset::create_for(test_utils::create_random_string());
+        inserted   = index.insert_path(index_path, asset_0);
+
+    } while (!inserted || asset_1 == asset_0);
+
+    BOOST_CHECK(inserted);
+    BOOST_CHECK(asset_1 != asset_0);
+    BOOST_CHECK(index.contains_path(index_path));
+    BOOST_CHECK(!index.insert_path(index_path, asset_1));
+
+    BOOST_CHECK(index.content().at(index_path) == asset_0);
+
+    index.replace_path(index_path, asset_1);
+
+    BOOST_CHECK(index.content().at(index_path) == asset_1);
+
+    index.remove_path(index_path);
+
+    BOOST_CHECK(!index.contains_path(index_path));
+}
+
+BOOST_AUTO_TEST_CASE(basic_index_ops)
+{
+    Index index;
+
+    // Initial state
+    BOOST_CHECK(AssetId::empty == index.parent().id());
+    BOOST_CHECK(AssetId::empty != index.self().id());
+
+    // Add some random string assets
+    for (int i = 0; i < 100; ++i)
+    {
+        std::string index_path = test_utils::create_random_printable_string();
+        index.replace_path(index_path, Asset::create_for(test_utils::create_random_string()));
+    }
+}
+
     //BOOST_CHECK(AssetId::not_calculated != helloAsset.id().string());
 //
 //    std::string hello;

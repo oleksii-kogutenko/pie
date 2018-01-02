@@ -38,12 +38,10 @@ MemoryObjectsStorage::MemoryObjectsStorage()
     : assets_()
     , refs_()
 {
-
 }
 
 MemoryObjectsStorage::~MemoryObjectsStorage()
 {
-
 }
 
 // Put readable asset into storage.
@@ -61,15 +59,20 @@ void MemoryObjectsStorage::put(const Asset& asset)
     if (asset_istream)
     {
         os << asset_istream->rdbuf();
+        assets_.insert(std::make_pair(asset.id(), os.vector()));
     }
-
-    assets_.insert(std::make_pair(asset.id(), os.vector()));
+    else
+    {
+        throw errors::attempt_to_put_non_readable_asset();
+    }
 }
 
 void MemoryObjectsStorage::put(std::set<Asset> assets)
 {
     for(std::set<Asset>::const_iterator i = assets.begin(), end = assets.end(); i != end; ++i)
+    {
         put(*i);
+    }
 }
 
 void MemoryObjectsStorage::put(const IObjectsStorage::Ref& ref)

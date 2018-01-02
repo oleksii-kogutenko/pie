@@ -47,9 +47,24 @@ Index::~Index()
 {
 }
 
-bool Index::insert(const std::string& index_path, const Asset& asset)
+bool Index::insert_path(const std::string& index_path, const Asset& asset)
 {
     return content_.insert(std::make_pair(index_path, asset)).second;
+}
+
+void Index::replace_path(const std::string& index_path, const Asset& asset)
+{
+    content_[index_path] = asset;
+}
+
+bool Index::contains_path(const std::string& index_path) const
+{
+    return content_.find(index_path) != content_.end();
+}
+
+void Index::remove_path(const std::string& index_path)
+{
+    content_.erase(index_path);
 }
 
 const Index::Content& Index::content() const

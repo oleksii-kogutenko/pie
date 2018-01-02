@@ -77,7 +77,7 @@ Index FsIndexer::build(const fs::path& dir) const
 
                 LOG_T << "s " << name;
 
-                if (result.insert(name, Asset::create_for(target)))
+                if (result.insert_path(name, Asset::create_for(target)))
                 {
                     PredefinedAttributes::fill_symlink_attrs(result, name, e.path());
                 }
@@ -90,7 +90,7 @@ Index FsIndexer::build(const fs::path& dir) const
             {
                 LOG_T << "f " << name;
 
-                if (result.insert(name, Asset::create_for(e.path())))
+                if (result.insert_path(name, Asset::create_for(e.path())))
                 {
                     PredefinedAttributes::fill_file_attrs(result, name, e.path());
                 }

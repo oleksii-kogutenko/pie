@@ -50,7 +50,11 @@ public:
     Index();
     ~Index();
 
-    bool insert(const std::string& index_path, const Asset& asset);
+    bool insert_path(const std::string& index_path, const Asset& asset);
+    void replace_path(const std::string& index_path, const Asset& asset);
+    bool contains_path(const std::string& index_path) const;
+    void remove_path(const std::string& index_path);
+
     const Content& content() const;
 
     const Asset& self() const;
