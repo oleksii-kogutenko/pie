@@ -31,7 +31,7 @@
 
 #include <checksumsdigestbuilder.hpp>
 #include <asset.h>
-#include <boost_filesystem_ext.hpp>
+#include <test_utils.hpp>
 
 //#include <index.h>
 //#include <indexesdiff.h>
@@ -43,10 +43,9 @@ using namespace piel::lib;
 BOOST_AUTO_TEST_CASE(empty_asset)
 {
     Asset empty;
-    AssetId empty_id;
 
-    BOOST_CHECK(AssetId::empty          == empty_id);
-    BOOST_CHECK(AssetId::not_calculated != empty_id);
+    BOOST_CHECK(AssetId::empty          == empty);
+    BOOST_CHECK(AssetId::not_calculated != empty);
     BOOST_CHECK(AssetId::empty          != AssetId::create(""));
     BOOST_CHECK(AssetId::not_calculated != AssetId::create(""));
 }
@@ -58,13 +57,13 @@ BOOST_AUTO_TEST_CASE(not_calculated_asset)
     BOOST_CHECK_THROW(not_calculated_asset.id(), errors::unable_to_calculate_asset_id);
 }
 
-BOOST_AUTO_TEST_CASE(string_asset)
+BOOST_AUTO_TEST_CASE(strings_assets)
 {
     ChecksumsDigestBuilder digestBuilder;
 
     for (int i = 0; i < 100; ++i)
     {
-        std::string asset_content = boost::filesystem::create_random_string();
+        std::string asset_content = test_utils::create_random_string();
         Asset string_asset = Asset::create_for(asset_content);
         BOOST_CHECK(AssetId::not_calculated != string_asset);
 
@@ -73,13 +72,13 @@ BOOST_AUTO_TEST_CASE(string_asset)
     }
 }
 
-BOOST_AUTO_TEST_CASE(file_asset)
+BOOST_AUTO_TEST_CASE(files_assets)
 {
     ChecksumsDigestBuilder digestBuilder;
 
     for (int i = 0; i < 100; ++i)
     {
-        std::pair<boost::filesystem::path,std::string> test_file = boost::filesystem::create_random_temp_file();
+        std::pair<boost::filesystem::path,std::string> test_file = test_utils::create_random_file();
 
         //std::cout << "Random file: " << test_file.first.string() << std::endl;
         //std::cout << "Random content: " << test_file.second << std::endl;

@@ -56,6 +56,8 @@ public:
     const Asset& self() const;
     const Asset& parent() const;
 
+    void set_parent(const Asset& parent);
+
     void set_(const std::string& attribute, const std::string& value);
     std::string get_(const std::string& attribute, const std::string& default_value = std::string()) const;
 
@@ -79,8 +81,8 @@ public:
 
     // Serialization methods.
     void store(std::ostream& os) const;
-    static Index load(std::istream& is, IObjectsStorage *storage);
-    static Index load(const Asset& asset, IObjectsStorage *storage);
+    static Index load(std::istream& is, IObjectsStorage *storage = 0);
+    static Index load(const Asset& asset, IObjectsStorage *storage = 0);
 
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;

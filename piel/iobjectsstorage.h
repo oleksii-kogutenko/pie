@@ -38,6 +38,11 @@
 
 namespace piel { namespace lib {
 
+namespace errors {
+    // Common put error
+    struct attempt_to_put_non_readable_asset {};
+}
+
 class IObjectsStorage
 {
 public:

@@ -124,7 +124,8 @@ void LocalDirectoryStorage::init()
     if (!fs::exists(objects_) && !fs::create_directories(objects_))
     {
         LOG_F << "Unable to create objects directory: " << objects_;
-        // TODO: throw exception
+
+        throw errors::cant_create_directory();
     }
 
     refs_.store(*fs::ostream(references_).get());
@@ -155,7 +156,8 @@ void LocalDirectoryStorage::put(const Asset& asset)
             if (!fs::create_directories(asset_parent_path))
             {
                 LOG_F << "Unable to create parent directory: " << asset_parent_path << " for the asset: " << asset.id().string();
-                // TODO: throw exception
+
+                throw errors::cant_create_directory();
             }
         }
 
@@ -173,7 +175,8 @@ void LocalDirectoryStorage::put(const Asset& asset)
     else
     {
         LOG_F << "Asset: " << asset.id().string() << " is not readable!";
-        // TODO: throw exception
+
+        throw errors::attempt_to_put_non_readable_asset();
     }
 }
 

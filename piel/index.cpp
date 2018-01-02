@@ -70,6 +70,11 @@ const Asset& Index::parent() const
     return parent_;
 }
 
+void Index::set_parent(const Asset& parent)
+{
+    parent_ = parent;
+}
+
 void Index::set_(const std::string& attribute, const std::string& value)
 {
     attributes_[attribute] = value;
