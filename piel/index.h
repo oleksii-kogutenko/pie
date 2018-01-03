@@ -103,6 +103,9 @@ public:
     // Get all paths
     std::set<std::string> index_paths() const;
 
+    // Check if index is empty
+    bool empty() const;
+
 private:
     friend class        IndexesDiff;
 
@@ -132,12 +135,12 @@ struct PredefinedAttributes {
 
 };
 
-//! Indexers interface.
-struct IIndexer {
-    //! Build index.
-    //! \param whatToIndex Path to directory or archive for index.
-    Index build(const boost::filesystem::path& whatToIndex);
-};
+////! Indexers interface.
+//struct IIndexer {
+//    //! Build index.
+//    //! \param whatToIndex Path to directory or archive for index.
+//    Index build(const boost::filesystem::path& whatToIndex);
+//};
 
 } } // namespace piel::lib
 

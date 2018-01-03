@@ -36,7 +36,7 @@
 namespace piel { namespace lib {
 
 namespace errors {
-    struct cant_create_directory {};
+    struct unable_to_create_directory {};
 }
 
 class LocalDirectoryStorage : public IObjectsStorage

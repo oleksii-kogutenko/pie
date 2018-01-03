@@ -125,7 +125,7 @@ void LocalDirectoryStorage::init()
     {
         LOG_F << "Unable to create objects directory: " << objects_;
 
-        throw errors::cant_create_directory();
+        throw errors::unable_to_create_directory();
     }
 
     refs_.store(*fs::ostream(references_).get());
@@ -157,7 +157,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
             {
                 LOG_F << "Unable to create parent directory: " << asset_parent_path << " for the asset: " << asset.id().string();
 
-                throw errors::cant_create_directory();
+                throw errors::unable_to_create_directory();
             }
         }
 

@@ -47,3 +47,8 @@ add_test (NAME AssetsTests COMMAND assets_tests)
 add_executable(indexers_tests indexers_tests.cpp)
 target_link_libraries(indexers_tests ${Piel_LIBRARIES})
 add_test (NAME IndexersTests COMMAND indexers_tests)
+
+#############################################################
+add_executable(working_copy_tests working_copy_tests.cpp)
+target_link_libraries(working_copy_tests ${Piel_LIBRARIES})
+add_test (NAME WorkingCopyTests COMMAND working_copy_tests)

@@ -47,6 +47,15 @@ Index::~Index()
 {
 }
 
+
+bool Index::empty() const
+{
+    return  parent_.id() == AssetId::empty &&
+            content_.empty() &&
+            attributes_.empty() &&
+            content_attributes_.empty();
+}
+
 bool Index::insert_path(const std::string& index_path, const Asset& asset)
 {
     if (asset.id() != AssetId::empty)

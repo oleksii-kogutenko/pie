@@ -26,68 +26,36 @@
  *
  */
 
-#ifndef PROPERTIES_H
-#define PROPERTIES_H
+#define BOOST_TEST_MODULE WorkingCopyTests
+#include <boost/test/unit_test.hpp>
 
-#include <iostream>
-#include <string>
-#include <map>
+#include <test_utils.hpp>
 
-namespace piel { namespace lib {
+#include <workingcopy.h>
 
-class Properties
+using namespace piel::lib;
+
+BOOST_AUTO_TEST_CASE(init_working_copy)
 {
-public:
-    typedef std::map<std::string, std::string> MapType;
+    test_utils::TempFileHolder::Ptr wc_path = test_utils::create_temp_dir(100);
 
-    Properties();
-    ~Properties();
+    BOOST_CHECK_THROW(WorkingCopy::attach(wc_path->first), errors::attach_to_non_working_copy);
 
-    static Properties load(std::istream &is);
-    void store(std::ostream &os) const;
+    WorkingCopy wc_initialized = WorkingCopy::init(wc_path->first);
 
-    void set(const std::string& name, const std::string& value)
-    {
-        data_[name] = value;
-    }
+    // Second attempt must throw exception
+    BOOST_CHECK_THROW(WorkingCopy::init(wc_path->first), errors::init_existing_working_copy);
 
-    std::string get(const std::string& name, const std::string& default_value = std::string())
-    {
-        if (data_.find(name) == data_.end())
-        {
-            return default_value;
-        }
-        else
-        {
-            return data_.at(name);
-        }
-    }
+    WorkingCopy wc_attached = WorkingCopy::attach(wc_path->first);
 
-    const MapType& data() const
-    {
-        return data_;
-    }
+    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
+    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
+    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
+    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
 
-    MapType& data()
-    {
-        return data_;
-    }
+    std::cout << wc_initialized.diff().format();
 
-    MapType::mapped_type& operator[](const MapType::key_type& key)
-    {
-        return data_[key];
-    }
+    wc_initialized.commit("test commit message", "test_reference");
 
-    void clear()
-    {
-        data_.clear();
-    }
-
-private:
-    MapType data_;
-
-};
-
-} } //namespace piel::lib
-
-#endif // PROPERTIES_H
+    //wc_initialized.diff().content_diff();
+}

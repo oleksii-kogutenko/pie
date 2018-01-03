@@ -46,7 +46,7 @@ ZipIndexer::~ZipIndexer()
 
 }
 
-Index ZipIndexer::build(const fs::path& zip_file) const
+/*static*/ Index ZipIndexer::build(const fs::path& zip_file)
 {
     Index                   result;
     ZipFile                 zip( zip_file.native() );

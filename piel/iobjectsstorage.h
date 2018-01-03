@@ -46,6 +46,8 @@ namespace errors {
 class IObjectsStorage
 {
 public:
+    typedef boost::shared_ptr<IObjectsStorage> Ptr;
+
     virtual ~IObjectsStorage();
 
     // Put readable asset into storage.

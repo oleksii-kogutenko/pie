@@ -46,7 +46,7 @@ FsIndexer::~FsIndexer()
 {
 }
 
-Index FsIndexer::build(const fs::path& dir) const
+/*static*/ Index FsIndexer::build(const fs::path& dir, const fs::path& exclude)
 {
     if (!is_directory(dir)) {
         LOG_F << dir << " is not a directory!";
@@ -101,7 +101,14 @@ Index FsIndexer::build(const fs::path& dir) const
             }
             else if ( fs::is_directory(e.path()) )
             {
-                directories.push( e.path() );
+                if ( exclude.empty() || e.path() != exclude )
+                {
+                    directories.push( e.path() );
+                }
+                else
+                {
+                    LOG_T << "exclude directory:" << e.path();
+                }
             }
         }
     }
