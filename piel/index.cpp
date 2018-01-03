@@ -49,12 +49,27 @@ Index::~Index()
 
 bool Index::insert_path(const std::string& index_path, const Asset& asset)
 {
-    return content_.insert(std::make_pair(index_path, asset)).second;
+    if (asset.id() != AssetId::empty)
+    {
+        return content_.insert(std::make_pair(index_path, asset)).second;
+    }
+    else
+    {
+        // insert can return false
+        return false;
+    }
 }
 
 void Index::replace_path(const std::string& index_path, const Asset& asset)
 {
-    content_[index_path] = asset;
+    if (asset.id() != AssetId::empty)
+    {
+        content_[index_path] = asset;
+    }
+    else
+    {
+        throw errors::attempt_to_add_empty_asset_into_index();
+    }
 }
 
 bool Index::contains_path(const std::string& index_path) const
@@ -107,14 +122,14 @@ std::string Index::get_(const std::string& attribute, const std::string& default
     }
 }
 
-void Index::set_attr_(const std::string& id, const std::string& attribute, const std::string& value)
+void Index::set_attr_(const std::string& index_path, const std::string& attribute, const std::string& value)
 {
-    ContentAttributes::iterator objs_attrs_iter = content_attributes_.find(id);
+    ContentAttributes::iterator objs_attrs_iter = content_attributes_.find(index_path);
 
     if (objs_attrs_iter == content_attributes_.end())
     {
         std::pair<ContentAttributes::iterator,bool> insert_result =
-                content_attributes_.insert(std::make_pair(id, Attributes()));
+                content_attributes_.insert(std::make_pair(index_path, Attributes()));
 
         if (insert_result.second)
         {
@@ -124,17 +139,18 @@ void Index::set_attr_(const std::string& id, const std::string& attribute, const
 
     if (objs_attrs_iter == content_attributes_.end())
     {
-        // Fatal!
+        // Actually this code never should be reached. But the STL API semantic make it possible theoretically.
         LOG_F << "Can't get objects attributes collection!";
-        return;
+
+        throw errors::unable_to_get_path_attributes_map();
     }
 
     objs_attrs_iter->second[attribute] = value;
 }
 
-std::string Index::get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value) const
+std::string Index::get_attr_(const std::string& index_path, const std::string& attribute, const std::string& default_value) const
 {
-    ContentAttributes::const_iterator objs_attrs_iter = content_attributes_.find(id);
+    ContentAttributes::const_iterator objs_attrs_iter = content_attributes_.find(index_path);
 
     if (objs_attrs_iter == content_attributes_.end())
     {
@@ -153,14 +169,14 @@ std::string Index::get_attr_(const std::string& id, const std::string& attribute
     }
 }
 
-void Index::set_attrs_(const std::string& id, const Index::Attributes& attrs)
+void Index::set_attrs_(const std::string& index_path, const Index::Attributes& attrs)
 {
-    content_attributes_[id] = attrs;
+    content_attributes_[index_path] = attrs;
 }
 
-boost::optional<Index::Attributes> Index::get_attrs_(const std::string& id) const
+boost::optional<Index::Attributes> Index::get_attrs_(const std::string& index_path) const
 {
-    ContentAttributes::const_iterator objs_attrs_iter = content_attributes_.find(id);
+    ContentAttributes::const_iterator objs_attrs_iter = content_attributes_.find(index_path);
 
     if (objs_attrs_iter == content_attributes_.end())
     {
@@ -285,8 +301,21 @@ std::set<Asset> Index::assets() const
     return result;
 }
 
+// Get asset by path
+boost::optional<Asset> Index::asset(const std::string& index_path) const
+{
+    if (content_.find(index_path) != content_.end())
+    {
+        return content_.at(index_path);
+    }
+    else
+    {
+        return boost::none;
+    }
+}
+
 // Get all paths
-std::set<std::string> Index::paths() const
+std::set<std::string> Index::index_paths() const
 {
     std::set<std::string> result;
     for (Content::const_iterator i = content_.begin(), end = content_.end(); i != end; ++i)
@@ -294,6 +323,8 @@ std::set<std::string> Index::paths() const
         if (!result.insert(i->first).second)
         {
             LOG_F << "Not valind index! Content map contains several elements (" << content_.count(i->first) << ") for key " << i->first;
+
+            throw errors::index_has_several_equals_paths();
         }
     }
     return result;
@@ -304,34 +335,34 @@ const std::string PredefinedAttributes::asset_type__symlink = "symlink";
 const std::string PredefinedAttributes::asset_type__file    = "file";
 const std::string PredefinedAttributes::asset_mode          = "amode";
 
-/*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path)
+/*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {
-    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
+    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
 
     boost::filesystem::file_status s = boost::filesystem::status(file_path);
-    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
 }
 
-/*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry)
+/*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
 {
-    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
+    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
 
-    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
 }
 
-/*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path)
+/*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {
-    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
     boost::filesystem::file_status s = boost::filesystem::status(file_path);
-    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
 }
 
-/*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry)
+/*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
 {
-    index.set_attr_(id, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
-    index.set_attr_(id, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
 }
 
 } } // namespace piel::lib

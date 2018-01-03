@@ -38,6 +38,12 @@
 
 namespace piel { namespace lib {
 
+namespace errors {
+    struct unable_to_get_path_attributes_map {};
+    struct index_has_several_equals_paths {};
+    struct attempt_to_add_empty_asset_into_index {};
+};
+
 class IndexesDiff;
 
 class Index
@@ -77,11 +83,11 @@ public:
 
 #undef Index_DECLARE_ATTRIBUTE
 
-    void set_attr_(const std::string& id, const std::string& attribute, const std::string& value);
-    std::string get_attr_(const std::string& id, const std::string& attribute, const std::string& default_value = std::string()) const;
+    void set_attr_(const std::string& index_path, const std::string& attribute, const std::string& value);
+    std::string get_attr_(const std::string& index_path, const std::string& attribute, const std::string& default_value = std::string()) const;
 
-    void set_attrs_(const std::string& id, const Attributes& attrs);
-    boost::optional<Attributes> get_attrs_(const std::string& id) const;
+    void set_attrs_(const std::string& index_path, const Attributes& attrs);
+    boost::optional<Attributes> get_attrs_(const std::string& index_path) const;
 
     // Serialization methods.
     void store(std::ostream& os) const;
@@ -91,8 +97,11 @@ public:
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;
 
+    // Get asset by path
+    boost::optional<Asset> asset(const std::string& index_path) const;
+
     // Get all paths
-    std::set<std::string> paths() const;
+    std::set<std::string> index_paths() const;
 
 private:
     friend class        IndexesDiff;
@@ -116,10 +125,10 @@ struct PredefinedAttributes {
     static const std::string asset_mode;
 
     // Fill predefined attributes
-    static void fill_symlink_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path);
-    static void fill_symlink_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry);
-    static void fill_file_attrs(Index& index, const std::string& id, const boost::filesystem::path& file_path);
-    static void fill_file_attrs(Index& index, const std::string& id, boost::shared_ptr<ZipEntry> entry);
+    static void fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path);
+    static void fill_symlink_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
+    static void fill_file_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path);
+    static void fill_file_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
 
 };
 

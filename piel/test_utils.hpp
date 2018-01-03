@@ -11,7 +11,7 @@
 namespace piel { namespace lib { namespace test_utils {
 
 // Test utils
-inline std::string create_random_string()
+inline std::string generate_random_string()
 {
     boost::random::random_device rng;
     boost::random::uniform_int_distribution<> index_dist(5, 256);
@@ -24,11 +24,11 @@ inline std::string create_random_string()
     return oss.str();
 }
 
-inline std::string create_random_printable_string()
+inline std::string generate_random_printable_string(unsigned min_size = 5, unsigned max_size = 256)
 {
     boost::random::random_device rng;
     std::string ch_vector = "123456789qwertyuiopasdfghjklzxcvbnm";
-    boost::random::uniform_int_distribution<> index_dist(5, 256);
+    boost::random::uniform_int_distribution<> index_dist(min_size, max_size);
     boost::random::uniform_int_distribution<> vector_dist(0, ch_vector.size() -1);
     int count = index_dist(rng);
     std::ostringstream oss;
@@ -39,11 +39,23 @@ inline std::string create_random_printable_string()
     return oss.str();
 }
 
-inline std::pair<boost::filesystem::path,std::string> create_random_file()
+struct TempFileHolder: public std::pair<boost::filesystem::path,std::string> {
+    typedef boost::shared_ptr<TempFileHolder> Ptr;
+    TempFileHolder(const boost::filesystem::path& path, const std::string& content)
+        : std::pair<boost::filesystem::path,std::string>(std::make_pair(path, content))
+    {
+    }
+    ~TempFileHolder()
+    {
+        if (exists(first)) remove(first);
+    }
+};
+
+inline TempFileHolder::Ptr create_random_temp_file(unsigned min_size = 5, unsigned max_size = 256)
 {
     boost::filesystem::path temp_file = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     boost::random::random_device rng;
-    boost::random::uniform_int_distribution<> index_dist(5, 256);
+    boost::random::uniform_int_distribution<> index_dist(min_size, max_size);
     int count = index_dist(rng);
     boost::shared_ptr<std::ostream> ofs = boost::filesystem::ostream(boost::filesystem::path(temp_file));
     std::ostringstream oss;
@@ -52,7 +64,12 @@ inline std::pair<boost::filesystem::path,std::string> create_random_file()
         (*ofs) << ch;
         oss << ch;
     }
-    return std::make_pair(temp_file, oss.str());
+    return TempFileHolder::Ptr(new TempFileHolder(temp_file, oss.str()));
+}
+
+inline std::map<std::string,std::string> generate_unique_map()
+{
+
 }
 
 } } } // namespace piel::lib::test_utils
