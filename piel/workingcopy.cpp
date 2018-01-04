@@ -44,14 +44,26 @@ namespace layout {
         static const std::string config_file;
     };
 
-    const std::string L::metadata_dir            = ".pie";
-    const std::string L::storage_dir             = "storage";
-    const std::string L::reference_index_file    = "index.json";
-    const std::string L::config_file             = "config.properties";
+    /*static*/ const std::string L::metadata_dir            = ".pie";
+    /*static*/ const std::string L::storage_dir             = "storage";
+    /*static*/ const std::string L::reference_index_file    = "index.json";
+    /*static*/ const std::string L::config_file             = "config.properties";
 
 };
 
 /*static*/ const int WorkingCopy::local_storage_index = 0;
+
+/*static*/ Properties::DefaultFromEnv PredefinedConfigs::author =
+        Properties::Property("author",         "unknown").default_from_env("PIE_AUTHOR");
+
+/*static*/ Properties::DefaultFromEnv PredefinedConfigs::email =
+        Properties::Property("email",          "unknown").default_from_env("PIE_EMAIL");
+
+/*static*/ Properties::DefaultFromEnv PredefinedConfigs::commiter =
+        Properties::Property("commiter",       "unknown").default_from_env("PIE_COMMITER");
+
+/*static*/ Properties::DefaultFromEnv PredefinedConfigs::commiter_email =
+        Properties::Property("commiter_email", "unknown").default_from_env("PIE_COMMITER_EMAIL");
 
 WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     : working_dir_(working_dir)
@@ -165,11 +177,6 @@ boost::optional<Index> WorkingCopy::index_from_ref(const IObjectsStorage::Ptr& s
         return boost::none;
     }
 }
-
-Properties::FromEnv PredefinedConfigs::author          = Properties::Property("author",         "unknown").from_env("PIE_AUTHOR");
-Properties::FromEnv PredefinedConfigs::email           = Properties::Property("email",          "unknown").from_env("PIE_EMAIL");
-Properties::FromEnv PredefinedConfigs::commiter        = Properties::Property("commiter",       "unknown").from_env("PIE_COMMITER");
-Properties::FromEnv PredefinedConfigs::commiter_email  = Properties::Property("commiter_email", "unknown").from_env("PIE_COMMITER_EMAIL");
 
 std::string WorkingCopy::commit(const std::string& message, const std::string& ref_to)
 {

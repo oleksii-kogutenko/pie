@@ -42,7 +42,7 @@ public:
     typedef std::map<std::string, std::string> MapType;
 
     // Forward
-    struct FromEnv;
+    struct DefaultFromEnv;
 
     struct Property
     {
@@ -73,24 +73,24 @@ public:
             return value_.second;
         }
 
-        FromEnv from_env(const std::string& env_var)
+        DefaultFromEnv default_from_env(const std::string& env_var)
         {
-            return FromEnv(*this, env_var);
+            return DefaultFromEnv(*this, env_var);
         }
 
     private:
         MapType::value_type value_;
     };
 
-    struct FromEnv : public Property
+    struct DefaultFromEnv : public Property
     {
-        FromEnv(const Property& property, const std::string& env_var)
+        DefaultFromEnv(const Property& property, const std::string& env_var)
             : Property(property)
             , env_var_(env_var)
         {
         }
 
-        virtual ~FromEnv()
+        virtual ~DefaultFromEnv()
         {
         }
 

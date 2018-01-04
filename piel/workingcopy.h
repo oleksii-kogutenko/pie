@@ -81,10 +81,10 @@ private:
 };
 
 struct PredefinedConfigs {
-    static Properties::FromEnv author;
-    static Properties::FromEnv email;
-    static Properties::FromEnv commiter;
-    static Properties::FromEnv commiter_email;
+    static Properties::DefaultFromEnv author;
+    static Properties::DefaultFromEnv email;
+    static Properties::DefaultFromEnv commiter;
+    static Properties::DefaultFromEnv commiter_email;
 };
 
 } } // namespace piel::lib
