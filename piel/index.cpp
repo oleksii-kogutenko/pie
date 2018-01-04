@@ -215,8 +215,8 @@ void Index::store(std::ostream& os) const
     pt::ptree tree;
     pt::ptree parent;
     pt::ptree content;
-    pt::ptree attributes;
     pt::ptree objects_attributes;
+    pt::ptree attributes;
 
     Asset::store(parent, parent_);
 
@@ -229,7 +229,7 @@ void Index::store(std::ostream& os) const
 
     for (Attributes::const_iterator i = attributes_.begin(), end = attributes_.end(); i != end; ++i)
     {
-        attributes.insert(attributes.end(), std::make_pair(i->first, i->second));
+        attributes.insert(attributes.end(), std::make_pair(i->first, pt::ptree(i->second)));
     }
 
     for (ContentAttributes::const_iterator i = content_attributes_.begin(), end = content_attributes_.end(); i != end; ++i)
@@ -237,7 +237,7 @@ void Index::store(std::ostream& os) const
         pt::ptree object_attributes;
         for (Attributes::const_iterator j = i->second.begin(), end2 = i->second.end(); j != end2; ++j)
         {
-            object_attributes.insert(object_attributes.end(), std::make_pair(j->first, j->second));
+            object_attributes.insert(object_attributes.end(), std::make_pair(j->first, pt::ptree(j->second)));
         }
         objects_attributes.insert(objects_attributes.end(), std::make_pair(i->first, object_attributes));
     }

@@ -137,4 +137,41 @@ void Properties::store(std::ostream &os) const
     }
 }
 
+void Properties::set(const Property::name_type& name, const Property::value_type& value)
+{
+    data_[name] = value;
+}
+
+Properties::Property::value_type Properties::get(const Property::name_type& name, const Property::value_type& default_value) const
+{
+    if (data_.find(name) == data_.end())
+    {
+        return default_value;
+    }
+    else
+    {
+        return data_.at(name);
+    }
+}
+
+const Properties::MapType& Properties::data() const
+{
+    return data_;
+}
+
+Properties::MapType& Properties::data()
+{
+    return data_;
+}
+
+Properties::MapType::mapped_type& Properties::operator[](const Properties::MapType::key_type& key)
+{
+    return data_[key];
+}
+
+void Properties::clear()
+{
+    data_.clear();
+}
+
 } } //namespace piel::lib

@@ -166,6 +166,11 @@ boost::optional<Index> WorkingCopy::index_from_ref(const IObjectsStorage::Ptr& s
     }
 }
 
+Properties::FromEnv PredefinedConfigs::author          = Properties::Property("author",         "unknown").from_env("PIE_AUTHOR");
+Properties::FromEnv PredefinedConfigs::email           = Properties::Property("email",          "unknown").from_env("PIE_EMAIL");
+Properties::FromEnv PredefinedConfigs::commiter        = Properties::Property("commiter",       "unknown").from_env("PIE_COMMITER");
+Properties::FromEnv PredefinedConfigs::commiter_email  = Properties::Property("commiter_email", "unknown").from_env("PIE_COMMITER_EMAIL");
+
 std::string WorkingCopy::commit(const std::string& message, const std::string& ref_to)
 {
     IObjectsStorage::Ptr local_storage = storages_[local_storage_index];
@@ -183,10 +188,10 @@ std::string WorkingCopy::commit(const std::string& message, const std::string& r
     }
 
     // Fill from config
-    current_index_.set_author_(config_.get("author", "unknown"));
-    current_index_.set_email_(config_.get("email", "unknown"));
-    current_index_.set_commiter_(config_.get("commiter", "unknown"));
-    current_index_.set_commiter_email_(config_.get("commiter_email", "unknown"));
+    current_index_.set_author_(         config_.get(PredefinedConfigs::author).value());
+    current_index_.set_email_(          config_.get(PredefinedConfigs::email).value());
+    current_index_.set_commiter_(       config_.get(PredefinedConfigs::commiter).value());
+    current_index_.set_commiter_email_( config_.get(PredefinedConfigs::commiter_email).value());
 
     // Set message
     current_index_.set_message_(message);

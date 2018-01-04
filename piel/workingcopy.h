@@ -80,6 +80,13 @@ private:
     Index current_index_;                           //!< Actual directory index (current directory state)
 };
 
+struct PredefinedConfigs {
+    static Properties::FromEnv author;
+    static Properties::FromEnv email;
+    static Properties::FromEnv commiter;
+    static Properties::FromEnv commiter_email;
+};
+
 } } // namespace piel::lib
 
 #endif /* PIEL_WORKINGCOPY_H_ */

@@ -159,7 +159,7 @@ ChecksumsDigestBuilder::finalize<ChecksumsDigestBuilder::StrDigests>()
 {
     ChecksumsDigestBuilder::StrDigests result;
     for(ChecksumsDigestBuilder::CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
-        result.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
+        result.insert(std::make_pair((*i)->name(), (*i)->format((*i)->finalize())));
     }
     return result;
 }
@@ -170,7 +170,7 @@ ChecksumsDigestBuilder::finalize<ChecksumsDigestBuilder::Digests>()
 {
     ChecksumsDigestBuilder::Digests result;
     for(ChecksumsDigestBuilder::CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
-        result.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
+        result.insert(std::make_pair((*i)->name(), (*i)->finalize()));
     }
     return result;
 }

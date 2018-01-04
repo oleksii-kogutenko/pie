@@ -12,6 +12,8 @@ include_directories(${Boost_INCLUDE_DIR})
 add_executable(properties properties.cpp)
 target_link_libraries(properties ${Piel_LIBRARIES})
 add_test (NAME Properties COMMAND properties)
+set_tests_properties(Properties
+    PROPERTIES ENVIRONMENT "test_env_var=test_env_var_default_value")
 
 #############################################################
 add_executable(gavc_query_parsing gavc_query_parsing.cpp)
