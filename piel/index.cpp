@@ -274,14 +274,14 @@ void Index::store(std::ostream& os) const
 
     pt::ptree content = tree.get_child(SerializationConstants::content);
     for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
-        pt::ptree item = content.get_child(i->first);
+        pt::ptree item = i->second;
         result.content_.insert(std::make_pair(i->first, Asset::load(item, storage)));
     }
 
     pt::ptree objects_attributes = tree.get_child(SerializationConstants::content_attributes);
     for(pt::ptree::const_iterator i = objects_attributes.begin(), end = objects_attributes.end(); i != end; ++i) {
         Attributes obj_attrs;
-        pt::ptree obj_attrs_tree = objects_attributes.get_child(i->first);
+        pt::ptree obj_attrs_tree = i->second;
         for(pt::ptree::const_iterator j = obj_attrs_tree.begin(), end2 = obj_attrs_tree.end(); j != end2; ++j) {
             obj_attrs.insert(std::make_pair(j->first, j->second.data()));
         }
