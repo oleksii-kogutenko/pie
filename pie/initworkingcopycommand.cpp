@@ -54,7 +54,7 @@ void InitWorkingCopyCommand::show_command_help_message(const po::options_descrip
 
 int InitWorkingCopyCommand::perform()
 {
-    po::options_description desc("Init options");
+    po::options_description desc("Initializing options");
 
     if (show_help(desc, argc_, argv_))
     {

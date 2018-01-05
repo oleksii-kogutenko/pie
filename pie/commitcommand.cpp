@@ -67,7 +67,7 @@ int CommitCommand::perform()
     }
     catch (piel::lib::errors::attach_to_non_working_copy e)
     {
-        std::cerr << "Attempt to perform operation outside working copy!" << std::endl;
+        std::cerr << "Attempt to perform operation outside of working copy!" << std::endl;
         return -1;
     }
 

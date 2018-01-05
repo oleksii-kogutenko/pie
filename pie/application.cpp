@@ -47,7 +47,10 @@ bool ICommand::show_help(boost::program_options::options_description &desc, int 
 
     if (vm.count("help")) {
         std::cout << help_desc;
-        show_command_help_message(desc);
+        if (!desc.options().empty())
+        {
+            show_command_help_message(desc);
+        }
         return true;
     }
 
