@@ -53,6 +53,7 @@ public:
     static WorkingCopy init(const boost::filesystem::path& working_dir);
     static WorkingCopy attach(const boost::filesystem::path& working_dir);
 
+    void clean();
     std::string checkout(const std::string& ref_to);
     std::string reset(const std::string& ref_to);
     std::string commit(const std::string& message, const std::string& ref_to);

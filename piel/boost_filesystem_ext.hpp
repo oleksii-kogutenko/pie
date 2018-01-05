@@ -76,6 +76,20 @@ inline boost::shared_ptr<std::ostream> ostream( const path& from )
     return boost::shared_ptr<std::ostream>(new std::ofstream(from.string().c_str(), std::ofstream::out|std::ifstream::binary));
 }
 
+inline void remove_directory_content(const path& dir, const path& exclude)
+{
+    if (!is_directory(dir)) return;
+
+    for (directory_iterator i = directory_iterator(dir), end = directory_iterator(); i != end; i++)
+    {
+        directory_entry e           = *i;
+        if (exclude.empty() || e.path() != exclude)
+        {
+            remove_all(e.path());
+        }
+    }
+}
+
 inline std::string copy_into(boost::shared_ptr<std::ostream> osp, boost::shared_ptr<std::istream> isp)
 {
     typedef std::vector<char> BufferType;

@@ -167,7 +167,7 @@ std::string WorkingCopy::checkout(const std::string& ref_to)
 
     reference_index_ = *ref_index;
 
-    IndexToFsExporter index_exporter(reference_index_);
+    IndexToFsExporter index_exporter(reference_index_, ExportPolicy__replace_existing);
     index_exporter.export_to(working_dir_);
 
     reference_index_.store(*boost::filesystem::ostream(reference_index_file_));
@@ -181,9 +181,15 @@ void WorkingCopy::export_to(const boost::filesystem::path& directory)
     index_exporter.export_to(directory);
 }
 
+void WorkingCopy::clean()
+{
+    boost::filesystem::remove_directory_content(working_dir_, metadata_dir_);
+}
+
 std::string WorkingCopy::reset(const std::string& ref_to)
 {
-    return ref_to;
+    clean();
+    return checkout(ref_to);
 }
 
 boost::optional<Index> WorkingCopy::index_from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref) const
