@@ -32,6 +32,7 @@
 #include <test_utils.hpp>
 
 #include <workingcopy.h>
+#include <indextofsexporter.h>
 
 using namespace piel::lib;
 
@@ -57,5 +58,13 @@ BOOST_AUTO_TEST_CASE(init_working_copy)
 
     wc_initialized.commit("test commit message", "test_reference");
 
-    //wc_initialized.diff().content_diff();
+    boost::filesystem::path test_dir = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+    BOOST_CHECK_THROW(wc_initialized.export_to(test_dir), errors::attempt_to_export_to_non_existing_directory);
+
+    boost::filesystem::create_directories(test_dir);
+
+    wc_initialized.export_to(test_dir);
+
+    boost::filesystem::remove_all(test_dir);
 }

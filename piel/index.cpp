@@ -29,10 +29,16 @@
 #include <index.h>
 #include <logging.h>
 #include <boost_property_tree_ext.hpp>
+#include <boost_filesystem_ext.hpp>
 
 namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
+
+const std::string PredefinedAttributes::asset_type          = "atype";
+const std::string PredefinedAttributes::asset_type__symlink = "symlink";
+const std::string PredefinedAttributes::asset_type__file    = "file";
+const std::string PredefinedAttributes::asset_mode          = "amode";
 
 Index::Index()
     : self_(Asset::create_id(AssetId::not_calculated))
@@ -338,11 +344,6 @@ std::set<std::string> Index::index_paths() const
     }
     return result;
 }
-
-const std::string PredefinedAttributes::asset_type          = "atype";
-const std::string PredefinedAttributes::asset_type__symlink = "symlink";
-const std::string PredefinedAttributes::asset_type__file    = "file";
-const std::string PredefinedAttributes::asset_mode          = "amode";
 
 /*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {

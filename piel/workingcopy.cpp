@@ -28,6 +28,7 @@
 
 #include <workingcopy.h>
 #include <fsindexer.h>
+#include <indextofsexporter.h>
 #include <boost_filesystem_ext.hpp>
 #include <logging.h>
 
@@ -156,7 +157,28 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
 
 std::string WorkingCopy::checkout(const std::string& ref_to)
 {
-    return ref_to;
+    IObjectsStorage::Ptr local_storage = storages_[local_storage_index];
+
+    boost::optional<Index> ref_index = index_from_ref(local_storage, ref_to);
+    if (!ref_index)
+    {
+        return "";
+    }
+
+    reference_index_ = *ref_index;
+
+    IndexToFsExporter index_exporter(reference_index_);
+    index_exporter.export_to(working_dir_);
+
+    reference_index_.store(*boost::filesystem::ostream(reference_index_file_));
+
+    return reference_index_.self().id().string();
+}
+
+void WorkingCopy::export_to(const boost::filesystem::path& directory)
+{
+    IndexToFsExporter index_exporter(reference_index_);
+    index_exporter.export_to(directory);
 }
 
 std::string WorkingCopy::reset(const std::string& ref_to)

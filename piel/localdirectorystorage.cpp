@@ -147,8 +147,6 @@ void LocalDirectoryStorage::put(const Asset& asset)
 
     boost::shared_ptr<std::istream> isp = asset.istream();
 
-    typedef std::vector<char> BufferType;
-
     if (isp)
     {
         if (!fs::exists(asset_parent_path))
@@ -163,14 +161,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
 
         boost::shared_ptr<std::ostream> osp = fs::ostream(asset_path);
 
-        BufferType copy_buffer(512*1024);
-        std::streamsize readed = 0;
-        do {
-            BufferType::size_type readed = isp->read(copy_buffer.data(), copy_buffer.size()).gcount();
-            if (readed) {
-                osp->write(copy_buffer.data(), readed);
-            }
-        } while(!isp->eof() & !isp->fail() & !isp->bad());
+        boost::filesystem::copy_into(osp, isp);
     }
     else
     {

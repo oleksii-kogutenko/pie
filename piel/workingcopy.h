@@ -57,6 +57,7 @@ public:
     std::string reset(const std::string& ref_to);
     std::string commit(const std::string& message, const std::string& ref_to);
     IndexesDiff diff(const std::string& ref_base = std::string()) const;
+    void export_to(const boost::filesystem::path& directory);
 
     void set_config(const std::string& name, const std::string& value);
     std::string get_config(const std::string& name, const std::string& default_value = std::string());

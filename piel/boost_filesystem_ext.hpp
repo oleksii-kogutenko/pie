@@ -33,6 +33,9 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
+#include <assetid.h>
+#include <checksumsdigestbuilder.hpp>
+
 namespace boost { namespace filesystem {
 
 // Return path when appended to a_From will resolve to same as a_To
@@ -71,6 +74,29 @@ inline boost::shared_ptr<std::istream> istream( const path& from )
 inline boost::shared_ptr<std::ostream> ostream( const path& from )
 {
     return boost::shared_ptr<std::ostream>(new std::ofstream(from.string().c_str(), std::ofstream::out|std::ifstream::binary));
+}
+
+inline std::string copy_into(boost::shared_ptr<std::ostream> osp, boost::shared_ptr<std::istream> isp)
+{
+    typedef std::vector<char> BufferType;
+
+    piel::lib::ChecksumsDigestBuilder digest_builder;
+    digest_builder.init();
+
+    BufferType copy_buffer(512*1024);
+    std::streamsize readed = 0;
+    do {
+        BufferType::size_type readed = isp->read(copy_buffer.data(), copy_buffer.size()).gcount();
+        if (readed) {
+            osp->write(copy_buffer.data(), readed);
+            digest_builder.update(copy_buffer.data(), readed);
+        }
+    } while(!isp->eof() & !isp->fail() & !isp->bad());
+
+    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
+            digest_builder.finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
+
+    return str_digests[piel::lib::AssetId::digest_algo];
 }
 
 } } // namespace boost::filesystem
