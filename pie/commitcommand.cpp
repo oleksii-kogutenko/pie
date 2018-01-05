@@ -56,13 +56,17 @@ int CommitCommand::perform()
 {
     po::options_description desc("Commit options");
 
-    if (show_help(desc, argc_, argv_)) {
+    if (show_help(desc, argc_, argv_))
+    {
         return -1;
     }
 
-    try {
+    try
+    {
         working_copy_ = working_copy_.attach(boost::filesystem::current_path());
-    } catch (piel::lib::errors::attach_to_non_working_copy e) {
+    }
+    catch (piel::lib::errors::attach_to_non_working_copy e)
+    {
         std::cerr << "Attempt to perform operation outside working copy!" << std::endl;
         return -1;
     }
@@ -73,7 +77,16 @@ int CommitCommand::perform()
         return -1;
     }
 
-    working_copy_.commit("test message", "test_ref");
+    try
+    {
+        std::string ref = working_copy_.commit("test message", "test_ref");
+        std::cout << "Commited: " << ref << std::endl;
+    }
+    catch (piel::lib::errors::nothing_to_commit e)
+    {
+        std::cerr << "No changes!" << std::endl;
+        return -1;
+    }
 
     return 0;
 }

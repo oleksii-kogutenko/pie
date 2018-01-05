@@ -56,13 +56,17 @@ int InitWorkingCopyCommand::perform()
 {
     po::options_description desc("Init options");
 
-    if (show_help(desc, argc_, argv_)) {
+    if (show_help(desc, argc_, argv_))
+    {
         return -1;
     }
 
-    try {
+    try
+    {
         working_copy_ = working_copy_.init(boost::filesystem::current_path());
-    } catch (piel::lib::errors::init_existing_working_copy e) {
+    }
+    catch (piel::lib::errors::init_existing_working_copy e)
+    {
         std::cerr << "Attempt to initialize already initialized working copy!" << std::endl;
         return -1;
     }

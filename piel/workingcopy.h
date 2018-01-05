@@ -39,6 +39,7 @@ namespace piel { namespace lib {
 namespace errors {
     struct init_existing_working_copy {};
     struct attach_to_non_working_copy {};
+    struct nothing_to_commit {};
 };
 
 class WorkingCopy

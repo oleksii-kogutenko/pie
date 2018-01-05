@@ -221,6 +221,19 @@ boost::optional<Index> WorkingCopy::index_from_ref(const IObjectsStorage::Ptr& s
 
 std::string WorkingCopy::commit(const std::string& message, const std::string& ref_to)
 {
+    IndexesDiff indexes_diff = diff(ref_to);
+    if (indexes_diff.empty())
+    {
+        LOG_T << "Diff is empty!";
+        throw errors::nothing_to_commit();
+    }
+
+    LOG_T << "Non empty diff:";
+
+    std::cout << indexes_diff.format();
+
+    LOG_T << "Continue commit.";
+
     IObjectsStorage::Ptr local_storage = storages_[local_storage_index];
 
     boost::optional<Index> ref_index = index_from_ref(local_storage, ref_to);
@@ -264,10 +277,12 @@ IndexesDiff WorkingCopy::diff(const std::string& ref_base) const
     boost::optional<Index> ref_index = index_from_ref(local_storage, ref_base);
     if (ref_index)
     {
+        LOG_T << "1. Calculate diff " << ref_index->self().id().string() << " <-> CDIR";
         return IndexesDiff::diff(*ref_index, FsIndexer::build(working_dir_, metadata_dir_));
     }
     else
     {
+        LOG_T << "2. Calculate diff " << reference_index_.self().id().string() << " <-> CDIR";
         return IndexesDiff::diff(reference_index_, FsIndexer::build(working_dir_, metadata_dir_));
     }
 }

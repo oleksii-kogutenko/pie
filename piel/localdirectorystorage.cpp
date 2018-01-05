@@ -112,11 +112,27 @@ LocalDirectoryStorage::LocalDirectoryStorage(const boost::filesystem::path& root
 
     LOG_T << "Objects path: " << objects_ << " References: " << references_;
 
-    init();
+    if (!fs::exists(objects_) || !fs::exists(references_))
+    {
+        LOG_T << "Init. Objects path: " << objects_ << " References: " << references_;
+        init();
+    }
+    else
+    {
+        LOG_T << "Attach. Objects path: " << objects_ << " References: " << references_;
+        attach();
+    }
 }
 
 LocalDirectoryStorage::~LocalDirectoryStorage()
 {
+}
+
+void LocalDirectoryStorage::attach()
+{
+    LOG_T << "Loading references from: " << references_;
+
+    refs_ = Properties::load(*fs::istream(references_).get());
 }
 
 void LocalDirectoryStorage::init()
@@ -127,6 +143,8 @@ void LocalDirectoryStorage::init()
 
         throw errors::unable_to_create_directory();
     }
+
+    LOG_T << "Init empty references: " << references_;
 
     refs_.store(*fs::ostream(references_).get());
 }
@@ -227,6 +245,7 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
     Properties::MapType::const_iterator i = refs_.data().find(ref);
     if (i != refs_.data().end())
     {
+        LOG_T << "Ref: " << ref << " resolved to id: " << i->second;
         return AssetId::create(i->second);
     }
     else

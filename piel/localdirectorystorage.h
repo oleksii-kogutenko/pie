@@ -65,6 +65,7 @@ public:
 
 protected:
     void init();
+    void attach();
 
 private:
     boost::filesystem::path root_dir_;

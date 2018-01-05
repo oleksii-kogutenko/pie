@@ -137,7 +137,6 @@ IndexesDiff::~IndexesDiff()
 bool IndexesDiff::empty() const
 {
     return !different_content() &&
-           !different_attributes() &&
            !different_content_attributes();
 }
 
