@@ -40,6 +40,7 @@ public:
     static const AssetId not_calculated;
     static const AssetId empty;
     static const std::string digest_algo;
+    static const int digest_len;
 
     AssetId();
     AssetId(std::istream& is);
