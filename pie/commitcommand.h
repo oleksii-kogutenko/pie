@@ -26,19 +26,33 @@
  *
  */
 
+#ifndef PIE_COMMITCOMMAND_H_
+#define PIE_COMMITCOMMAND_H_
+
 #include <application.h>
-#include <gavccommand.h>
+#include <workingcopy.h>
 
-#include <initworkingcopycommand.h>
-#include <commitcommand.h>
+namespace pie { namespace app {
 
-int main(int argc, char **argv)
+class CommitCommand : public ICommand
 {
-    pie::app::Application application(argc, argv);
+public:
+    CommitCommand(Application *app, int argc, char **argv);
+    virtual ~CommitCommand();
 
-    application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit."));
+    int perform();
 
-    return application.run();
-}
+protected:
+    void show_command_help_message(const boost::program_options::options_description& desc);
+
+private:
+    int argc_;
+    char **argv_;
+
+    piel::lib::WorkingCopy working_copy_;
+
+};
+
+} } // namespace pie::app
+
+#endif /* PIE_INITWORKINGCOPYCOMMAND_H_ */

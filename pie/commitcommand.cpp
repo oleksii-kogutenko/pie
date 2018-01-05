@@ -26,19 +26,56 @@
  *
  */
 
-#include <application.h>
-#include <gavccommand.h>
-
-#include <initworkingcopycommand.h>
 #include <commitcommand.h>
 
-int main(int argc, char **argv)
+#include <boost_filesystem_ext.hpp>
+
+namespace pie { namespace app {
+
+namespace po = boost::program_options;
+
+CommitCommand::CommitCommand(Application *app, int argc, char **argv)
+    : ICommand(app)
+    , argc_(argc)
+    , argv_(argv)
+    , working_copy_()
 {
-    pie::app::Application application(argc, argv);
-
-    application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit."));
-
-    return application.run();
 }
+
+CommitCommand::~CommitCommand()
+{
+}
+
+void CommitCommand::show_command_help_message(const po::options_description& desc)
+{
+    std::cerr << "Usage: commit" << std::endl;
+    std::cout << desc;
+}
+
+int CommitCommand::perform()
+{
+    po::options_description desc("Commit options");
+
+    if (show_help(desc, argc_, argv_)) {
+        return -1;
+    }
+
+    try {
+        working_copy_ = working_copy_.attach(boost::filesystem::current_path());
+    } catch (piel::lib::errors::attach_to_non_working_copy e) {
+        std::cerr << "Attempt to perform operation outside working copy!" << std::endl;
+        return -1;
+    }
+
+    if (!working_copy_.is_valid())
+    {
+        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
+        return -1;
+    }
+
+    working_copy_.commit("test message", "test_ref");
+
+    return 0;
+}
+
+} } // namespace pie::app
