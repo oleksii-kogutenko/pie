@@ -33,6 +33,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/program_options.hpp>
 
+namespace pie { namespace app {
+
 // Forward
 class Application;
 
@@ -77,7 +79,7 @@ public:
 
     boost::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const {
         return boost::shared_ptr<ICommand>(new Command(app, argc, argv));
-    }    
+    }
 
     std::string name() const        { return name_;         }
     std::string description() const { return description_;  }
@@ -88,7 +90,7 @@ private:
 };
 
 class CommandsFactory {
-public:    
+public:
     typedef std::map<std::string, boost::shared_ptr<ICommmandConstructor> > Constructors;
 
     CommandsFactory(Application *app);
@@ -118,5 +120,7 @@ private:
     char **argv_;
     CommandsFactory commands_factory_;
 };
+
+} } // namespace pie::app
 
 #endif // APPLICATION_H

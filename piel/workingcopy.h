@@ -47,8 +47,11 @@ public:
     typedef std::vector<IObjectsStorage::Ptr> Storages;
     static const int local_storage_index;
 
+    WorkingCopy();
     WorkingCopy(const boost::filesystem::path& working_dir);
     ~WorkingCopy();
+
+    bool is_valid() const;
 
     static WorkingCopy init(const boost::filesystem::path& working_dir);
     static WorkingCopy attach(const boost::filesystem::path& working_dir);

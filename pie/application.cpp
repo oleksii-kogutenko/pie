@@ -29,6 +29,8 @@
 #include <application.h>
 #include <iostream>
 
+namespace pie { namespace app {
+
 bool ICommand::show_help(boost::program_options::options_description &desc, int argc, char **argv)
 {
     boost::program_options::options_description help_desc("Help options");
@@ -106,7 +108,7 @@ boost::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
 void CommandsFactory::show_registered_commands() const
 {
     std::cout << "Commands:" << std::endl;
-    Constructors::const_iterator cmd_iter = constructors_.begin(), 
+    Constructors::const_iterator cmd_iter = constructors_.begin(),
                                  end      = constructors_.end();
     for (;cmd_iter != end; ++cmd_iter) {
         std::cout << "\t" << cmd_iter->second->name()
@@ -141,3 +143,5 @@ void Application::show_registered_commands() const
 {
     commands_factory_.show_registered_commands();
 }
+
+} } // namespace pie::app

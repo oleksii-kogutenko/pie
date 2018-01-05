@@ -26,50 +26,54 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#include <initworkingcopycommand.h>
 
-#include <application.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
+#include <boost_filesystem_ext.hpp>
 
 namespace pie { namespace app {
 
-class GavcCommand: public ICommand
+namespace po = boost::program_options;
+
+InitWorkingCopyCommand::InitWorkingCopyCommand(Application *app, int argc, char **argv)
+    : ICommand(app)
+    , argc_(argc)
+    , argv_(argv)
+    , working_copy_()
 {
-public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+}
 
-    virtual int perform();
+InitWorkingCopyCommand::~InitWorkingCopyCommand()
+{
+}
 
-    bool have_to_download_results() const { return have_to_download_results_; }
+void InitWorkingCopyCommand::show_command_help_message(const po::options_description& desc)
+{
+    std::cerr << "Usage: init" << std::endl;
+    std::cout << desc;
+}
 
-protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
-    std::string create_url(const std::string& version_to_query) const;
-    void on_object(boost::property_tree::ptree::value_type obj);
-    bool get_from_env(boost::program_options::variables_map& vm,
-                      const std::string& opt_name,
-                      const std::string& env_var,
-                      std::string& var);
+int InitWorkingCopyCommand::perform()
+{
+    po::options_description desc("Init options");
 
-private:
-    int argc_;
-    char **argv_;
+    if (show_help(desc, argc_, argv_)) {
+        return -1;
+    }
 
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
+    try {
+        working_copy_ = working_copy_.init(boost::filesystem::current_path());
+    } catch (piel::lib::errors::init_existing_working_copy e) {
+        std::cerr << "Attempt to initialize already initialized working copy!" << std::endl;
+        return -1;
+    }
 
-    art::lib::GavcQuery query_;
+    if (!working_copy_.is_valid())
+    {
+        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
+        return -1;
+    }
 
-    bool have_to_download_results_;
-
-};
+    return 0;
+}
 
 } } // namespace pie::app
-
-#endif // GAVCCOMMAND_H

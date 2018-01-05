@@ -28,12 +28,14 @@
 
 #include <application.h>
 #include <gavccommand.h>
+#include <initworkingcopycommand.h>
 
 int main(int argc, char **argv)
 {
-    Application application(argc, argv);
+    pie::app::Application application(argc, argv);
 
-    application.register_command(new CommmandConstructor<GavcCommand>("gavc", "GAVC query implementation"));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
 
     return application.run();
 }

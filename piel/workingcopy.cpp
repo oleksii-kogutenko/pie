@@ -66,6 +66,14 @@ namespace layout {
 /*static*/ Properties::DefaultFromEnv PredefinedConfigs::commiter_email =
         Properties::Property("commiter_email", "unknown").default_from_env("PIE_COMMITER_EMAIL");
 
+WorkingCopy::WorkingCopy()
+    : working_dir_()
+    , storages_(local_storage_index + 1)
+    , reference_index_()
+    , current_index_()
+{
+}
+
 WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     : working_dir_(working_dir)
     , storages_(local_storage_index + 1)
@@ -80,6 +88,11 @@ WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
 
 WorkingCopy::~WorkingCopy()
 {
+}
+
+bool WorkingCopy::is_valid() const
+{
+    return !working_dir_.empty();
 }
 
 void WorkingCopy::init_storages()

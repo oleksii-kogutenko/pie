@@ -37,6 +37,8 @@
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
 
+namespace pie { namespace app {
+
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
@@ -276,3 +278,5 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     return result;
 }
+
+} } // namespace pie::app

@@ -26,50 +26,33 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#ifndef PIE_INITWORKINGCOPYCOMMAND_H_
+#define PIE_INITWORKINGCOPYCOMMAND_H_
 
 #include <application.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
+#include <workingcopy.h>
 
 namespace pie { namespace app {
 
-class GavcCommand: public ICommand
+class InitWorkingCopyCommand : public ICommand
 {
 public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+    InitWorkingCopyCommand(Application *app, int argc, char **argv);
+    virtual ~InitWorkingCopyCommand();
 
-    virtual int perform();
-
-    bool have_to_download_results() const { return have_to_download_results_; }
+    int perform();
 
 protected:
-    bool parse_arguments();
     void show_command_help_message(const boost::program_options::options_description& desc);
-    std::string create_url(const std::string& version_to_query) const;
-    void on_object(boost::property_tree::ptree::value_type obj);
-    bool get_from_env(boost::program_options::variables_map& vm,
-                      const std::string& opt_name,
-                      const std::string& env_var,
-                      std::string& var);
 
 private:
     int argc_;
     char **argv_;
 
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-
-    art::lib::GavcQuery query_;
-
-    bool have_to_download_results_;
+    piel::lib::WorkingCopy working_copy_;
 
 };
 
 } } // namespace pie::app
 
-#endif // GAVCCOMMAND_H
+#endif /* PIE_INITWORKINGCOPYCOMMAND_H_ */
