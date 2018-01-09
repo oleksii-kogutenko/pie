@@ -50,6 +50,7 @@ private:
     char **argv_;
 
     piel::lib::WorkingCopy::Ptr working_copy_;
+    std::string ref_;
 
 };
 

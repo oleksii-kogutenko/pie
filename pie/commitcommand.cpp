@@ -56,11 +56,20 @@ void CommitCommand::show_command_help_message(const po::options_description& des
 int CommitCommand::perform()
 {
     po::options_description desc("Commit options");
+    desc.add_options()
+        ("message,m",   po::value<std::string>(&message_)->required(), "Commit message.")
+        ;
 
     if (show_help(desc, argc_, argv_))
     {
         return -1;
     }
+
+    po::variables_map vm;
+    po::parsed_options parsed =
+        po::command_line_parser(argc_, argv_).options(desc).allow_unregistered().run();
+    po::store(parsed, vm);
+    po::notify(vm);
 
     try
     {
@@ -80,9 +89,9 @@ int CommitCommand::perform()
 
     try
     {
-        piel::cmd::Commit commit(working_copy_, "test_ref");
+        piel::cmd::Commit commit(working_copy_);
 
-        commit.set_message("test message");
+        commit.set_message(message_);
 
         std::string ref = commit();
         std::cout << "Commited: " << ref << std::endl;

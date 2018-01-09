@@ -75,7 +75,7 @@ void MemoryObjectsStorage::put(std::set<Asset> assets)
     }
 }
 
-void MemoryObjectsStorage::put(const IObjectsStorage::Ref& ref)
+void MemoryObjectsStorage::put(const refs::Ref& ref)
 {
     refs_.insert(ref);
 }
@@ -138,9 +138,9 @@ AssetId MemoryObjectsStorage::resolve(const std::string& ref) const
     }
 }
 
-std::set<IObjectsStorage::Ref> MemoryObjectsStorage::references() const
+std::set<refs::Ref> MemoryObjectsStorage::references() const
 {
-    std::set<IObjectsStorage::Ref> result;
+    std::set<refs::Ref> result;
     for (References::const_iterator i = refs_.begin(), end = refs_.end(); i != end; ++i)
     {
         result.insert(*i);

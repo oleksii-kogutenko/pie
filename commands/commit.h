@@ -41,7 +41,7 @@ namespace errors {
 class Commit: public WorkingCopyCommand
 {
 public:
-    Commit(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& ref_to);
+    Commit(const piel::lib::WorkingCopy::Ptr& working_copy);
     virtual ~Commit();
 
     std::string operator()();
@@ -49,12 +49,10 @@ public:
     const Commit* set_message(const std::string& message);
 
 protected:
-    piel::lib::IndexesDiff diff(const std::string& ref_base) const;
+    piel::lib::IndexesDiff diff(const piel::lib::Index& current_index) const;
 
 private:
-    std::string                     ref_to_;
-
-    std::string                     message_;
+    std::string message_;
 };
 
 struct PredefinedConfigs {

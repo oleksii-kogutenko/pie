@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, diakovliev
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,54 +26,30 @@
  *
  */
 
-#ifndef PIEL_LOCALDIRECTORYSTORAGE_H_
-#define PIEL_LOCALDIRECTORYSTORAGE_H_
+#ifndef COMMANDS_CREATE_H_
+#define COMMANDS_CREATE_H_
 
-#include <boost_filesystem_ext.hpp>
-#include <iobjectsstorage.h>
-#include <properties.h>
-
-namespace piel { namespace lib {
+#include <workingcopycommand.h>
 
 namespace errors {
-    struct unable_to_create_directory {};
-}
-
-class LocalDirectoryStorage : public IObjectsStorage
-{
-public:
-    LocalDirectoryStorage(const boost::filesystem::path& root_dir);
-    virtual ~LocalDirectoryStorage();
-
-    // Put readable asset(s) into storage.
-    void put(const Asset& asset);
-    void put(std::set<Asset> assets);
-    void put(const refs::Ref& ref);
-
-    // Check if readable asset available in storage.
-    bool contains(const AssetId& id) const;
-
-    // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    Asset asset(const AssetId& id) const;
-
-    // Get input stream for reading asset data. Low level API used by Asset implementation.
-    //External code must use get().istream() call sequense.
-    boost::shared_ptr<std::istream> istream_for(const AssetId& id) const;
-
-    AssetId resolve(const std::string& ref) const;
-    std::set<refs::Ref> references() const;
-
-protected:
-    void init();
-    void attach();
-
-private:
-    boost::filesystem::path root_dir_;
-    boost::filesystem::path objects_;
-    boost::filesystem::path references_;
-    Properties refs_;
+    struct non_empty_reference_already_exists {};
 };
 
-} } // namespace piel::lib
+namespace piel { namespace cmd {
 
-#endif /* PIEL_LOCALDIRECTORYSTORAGE_H_ */
+class Create: public WorkingCopyCommand
+{
+public:
+    Create(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& new_ref);
+    virtual ~Create();
+
+    void operator()();
+
+private:
+    std::string new_ref_;
+
+};
+
+} } // namespace piel::cmd
+
+#endif /* COMMANDS_CREATE_H_ */

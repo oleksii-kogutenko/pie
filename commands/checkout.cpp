@@ -44,18 +44,18 @@ Checkout::~Checkout()
 
 std::string Checkout::operator()()
 {
-    boost::optional<piel::lib::Index> ref_index = piel::lib::Index::from_ref(working_copy()->local_storage(), ref_to_);
-    if (!ref_index)
+    piel::lib::Index reference_index = working_copy()->reference_index();
+
+    if (piel::lib::AssetId::empty != working_copy()->local_storage()->resolve(ref_to_))
     {
-        return "";
+        boost::optional<piel::lib::Index> ref_index = piel::lib::Index::from_ref(working_copy()->local_storage(), ref_to_);
+        reference_index = *ref_index;
+
+        piel::lib::IndexToFsExporter index_exporter(reference_index, piel::lib::ExportPolicy__replace_existing);
+        index_exporter.export_to(working_copy()->working_dir());
     }
 
-    piel::lib::Index reference_index = *ref_index;
-
-    piel::lib::IndexToFsExporter index_exporter(reference_index, piel::lib::ExportPolicy__replace_existing);
-    index_exporter.export_to(working_copy()->working_dir());
-
-    working_copy()->set_reference_index(reference_index);
+    working_copy()->update_reference(ref_to_, reference_index);
     return working_copy()->reference_index().self().id().string();
 }
 

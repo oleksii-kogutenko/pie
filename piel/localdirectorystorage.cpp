@@ -199,7 +199,7 @@ void LocalDirectoryStorage::put(std::set<Asset> assets)
     }
 }
 
-void LocalDirectoryStorage::put(const IObjectsStorage::Ref& ref)
+void LocalDirectoryStorage::put(const refs::Ref& ref)
 {
     refs_[ref.first] = ref.second.string();
     refs_.store(*fs::ostream(references_).get());
@@ -267,9 +267,9 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
     }
 }
 
-std::set<IObjectsStorage::Ref> LocalDirectoryStorage::references() const
+std::set<refs::Ref> LocalDirectoryStorage::references() const
 {
-    std::set<IObjectsStorage::Ref> result;
+    std::set<refs::Ref> result;
     for(Properties::MapType::const_iterator i = refs_.data().begin(), end = refs_.data().end(); i != end; ++i)
     {
         result.insert(*i);

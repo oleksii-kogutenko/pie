@@ -43,6 +43,12 @@ namespace errors {
     struct attempt_to_put_non_readable_asset {};
 }
 
+namespace refs {
+    typedef std::pair<std::string, AssetId>             Ref;
+    typedef std::pair<Ref,Ref>                          RefsRange;
+    typedef std::pair<Ref::first_type,Ref::first_type>  Range;
+}
+
 class IObjectsStorage
 {
 public:
@@ -65,11 +71,11 @@ public:
     virtual boost::shared_ptr<std::istream> istream_for(const AssetId& id) const = 0;
 
     // References related API
-    typedef std::pair<std::string, AssetId> Ref;
+    //typedef std::pair<std::string, AssetId> Ref;
 
-    virtual void put(const Ref& ref) = 0;
+    virtual void put(const refs::Ref& ref) = 0;
     virtual AssetId resolve(const std::string& refName) const = 0;
-    virtual std::set<Ref> references() const = 0;
+    virtual std::set<refs::Ref> references() const = 0;
 
 };
 

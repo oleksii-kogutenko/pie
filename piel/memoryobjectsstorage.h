@@ -38,10 +38,10 @@ namespace piel { namespace lib {
 class MemoryObjectsStorage: public IObjectsStorage
 {
 public:
-    typedef char                                        Byte;
-    typedef std::vector<Byte>                           Object;
-    typedef std::map<AssetId,Object>                    Storage;
-    typedef std::map<Ref::first_type,Ref::second_type>  References;
+    typedef char                                                    Byte;
+    typedef std::vector<Byte>                                       Object;
+    typedef std::map<AssetId,Object>                                Storage;
+    typedef std::map<refs::Ref::first_type,refs::Ref::second_type>  References;
 
     MemoryObjectsStorage();
     virtual ~MemoryObjectsStorage();
@@ -49,7 +49,7 @@ public:
     // Put readable asset(s) into storage.
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
-    void put(const IObjectsStorage::Ref& ref);
+    void put(const refs::Ref& ref);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;
@@ -62,7 +62,7 @@ public:
     boost::shared_ptr<std::istream> istream_for(const AssetId& id) const;
 
     AssetId resolve(const std::string& ref) const;
-    std::set<IObjectsStorage::Ref> references() const;
+    std::set<refs::Ref> references() const;
 
 private:
     Storage     assets_;

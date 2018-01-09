@@ -40,6 +40,7 @@ namespace piel { namespace lib {
 namespace errors {
     struct init_existing_working_copy {};
     struct attach_to_non_working_copy {};
+    struct unable_to_find_reference_file {};
 };
 
 class WorkingCopy: private boost::noncopyable
@@ -54,7 +55,7 @@ public:
 
     bool is_valid() const;
 
-    static Ptr init(const boost::filesystem::path& working_dir);
+    static Ptr init(const boost::filesystem::path& working_dir, const std::string reference);
     static Ptr attach(const boost::filesystem::path& working_dir);
 
     void set_config(const std::string& name, const std::string& value);
@@ -68,27 +69,36 @@ public:
     Properties& config();
     Storages& storages();
 
-    void set_reference_index(const Index& new_reference_index);
+    std::string reference() const;
     const Index& reference_index() const;
+
+    void update_reference(const std::string& new_reference, const Index& new_reference_index);
+
     Index current_index() const;
 
 protected:
     WorkingCopy();
     WorkingCopy(const boost::filesystem::path& working_dir);
 
+    void set_reference(const std::string& new_reference);
+    void set_reference_index(const Index& new_reference_index);
+
 private:
-    void init_filesystem();
+    void init_filesystem(const std::string reference);
+    void init_storages(const std::string reference);
     void attach_filesystem();
-    void init_storages();
+    void attach_storages();
 
 private:
     boost::filesystem::path working_dir_;
     boost::filesystem::path metadata_dir_;
     boost::filesystem::path storage_dir_;
+    boost::filesystem::path reference_file_;
     boost::filesystem::path reference_index_file_;
     boost::filesystem::path config_file_;
     Properties              config_;                             //!< Working copy configuration parameters
     Storages                storages_;                           //!< Local storages collection
+    std::string             reference_;                          //!< Reference name.
     Index                   reference_index_;                    //!< Original index what checkouted into working copy
 };
 

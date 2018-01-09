@@ -43,12 +43,14 @@ namespace layout {
     struct L {
         static const std::string metadata_dir;
         static const std::string storage_dir;
+        static const std::string reference_file;
         static const std::string reference_index_file;
         static const std::string config_file;
     };
 
     /*static*/ const std::string L::metadata_dir            = ".pie";
     /*static*/ const std::string L::storage_dir             = "storage";
+    /*static*/ const std::string L::reference_file          = "reference";
     /*static*/ const std::string L::reference_index_file    = "index.json";
     /*static*/ const std::string L::config_file             = "config.properties";
 
@@ -71,6 +73,7 @@ namespace layout {
 WorkingCopy::WorkingCopy()
     : working_dir_()
     , storages_(local_storage_index + 1)
+    , reference_()
     , reference_index_()
 {
 }
@@ -78,10 +81,12 @@ WorkingCopy::WorkingCopy()
 WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     : working_dir_(working_dir)
     , storages_(local_storage_index + 1)
+    , reference_()
     , reference_index_()
 {
     metadata_dir_           = working_dir_  / layout::L::metadata_dir;
     storage_dir_            = metadata_dir_ / layout::L::storage_dir;
+    reference_file_         = metadata_dir_ / layout::L::reference_file;
     reference_index_file_   = metadata_dir_ / layout::L::reference_index_file;
     config_file_            = metadata_dir_ / layout::L::config_file;
 }
@@ -95,7 +100,13 @@ bool WorkingCopy::is_valid() const
     return !working_dir_.empty();
 }
 
-void WorkingCopy::init_storages()
+void WorkingCopy::init_storages(const std::string reference)
+{
+    storages_[local_storage_index] = IObjectsStorage::Ptr(new LocalDirectoryStorage(storage_dir_));
+    storages_[local_storage_index]->put(refs::Ref(reference, Asset()));
+}
+
+void WorkingCopy::attach_storages()
 {
     storages_[local_storage_index] = IObjectsStorage::Ptr(new LocalDirectoryStorage(storage_dir_));
 }
@@ -105,19 +116,20 @@ IObjectsStorage::Ptr WorkingCopy::local_storage() const
     return storages_[local_storage_index];
 }
 
-void WorkingCopy::init_filesystem()
+void WorkingCopy::init_filesystem(const std::string reference)
 {
     if (!fs::create_directories(metadata_dir_) || !fs::create_directories(storage_dir_))
     {
         throw errors::init_existing_working_copy();
     }
 
-    if (fs::exists(reference_index_file_) || fs::exists(config_file_))
+    if (fs::exists(reference_file_) || fs::exists(reference_index_file_) || fs::exists(config_file_))
     {
         throw errors::init_existing_working_copy();
     }
 
-    init_storages();
+    set_reference(reference);
+    init_storages(reference);
 }
 
 void WorkingCopy::attach_filesystem()
@@ -127,10 +139,15 @@ void WorkingCopy::attach_filesystem()
         throw errors::attach_to_non_working_copy();
     }
 
-    // Load config
-    if (fs::exists(config_file_))
+    // Load reference
+    if (fs::exists(reference_file_))
     {
-        config_ = Properties::load(*boost::filesystem::istream(config_file_));
+        boost::shared_ptr<std::istream> pifs = boost::filesystem::istream(reference_file_);
+        std::getline((*pifs), reference_);
+    }
+    else
+    {
+        throw errors::unable_to_find_reference_file();
     }
 
     // Load reference index
@@ -139,7 +156,13 @@ void WorkingCopy::attach_filesystem()
         reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_));
     }
 
-    init_storages();
+    // Load config
+    if (fs::exists(config_file_))
+    {
+        config_ = Properties::load(*boost::filesystem::istream(config_file_));
+    }
+
+    attach_storages();
 }
 
 fs::path WorkingCopy::working_dir() const
@@ -182,10 +205,10 @@ Index WorkingCopy::current_index() const
     return FsIndexer::build(working_dir_, metadata_dir_);
 }
 
-/*static*/ WorkingCopy::Ptr WorkingCopy::init(const boost::filesystem::path& working_dir)
+/*static*/ WorkingCopy::Ptr WorkingCopy::init(const boost::filesystem::path& working_dir, const std::string reference)
 {
     WorkingCopy::Ptr result(new WorkingCopy(working_dir));
-    result->init_filesystem();
+    result->init_filesystem(reference);
     return result;
 }
 
@@ -216,6 +239,34 @@ void WorkingCopy::set_reference_index(const Index& new_reference_index)
 {
     new_reference_index.store(*boost::filesystem::ostream(reference_index_file_));
     reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
+}
+
+std::string WorkingCopy::reference() const
+{
+    return reference_;
+}
+
+void WorkingCopy::set_reference(const std::string& new_reference)
+{
+    if (new_reference == reference_) return;
+
+    // Store
+    {
+        boost::shared_ptr<std::ostream> pofs = boost::filesystem::ostream(reference_file_);
+        (*pofs) << new_reference << std::endl;
+    }
+
+    // Load
+    {
+        boost::shared_ptr<std::istream> pifs = boost::filesystem::istream(reference_file_);
+        std::getline((*pifs), reference_);
+    }
+}
+
+void WorkingCopy::update_reference(const std::string& new_reference, const Index& new_reference_index)
+{
+    set_reference(new_reference);
+    set_reference_index(new_reference_index);
 }
 
 } } // namespace piel::lib

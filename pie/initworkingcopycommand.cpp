@@ -39,6 +39,7 @@ InitWorkingCopyCommand::InitWorkingCopyCommand(Application *app, int argc, char 
     , argc_(argc)
     , argv_(argv)
     , working_copy_()
+    , ref_()
 {
 }
 
@@ -55,15 +56,27 @@ void InitWorkingCopyCommand::show_command_help_message(const po::options_descrip
 int InitWorkingCopyCommand::perform()
 {
     po::options_description desc("Initializing options");
+    desc.add_options()
+        ("ref",         po::value<std::string>(&ref_)->required(),     "Reference name to create.");
+        ;
+
+    po::positional_options_description pos_desc;
+    pos_desc.add("ref", -1);
 
     if (show_help(desc, argc_, argv_))
     {
         return -1;
     }
 
+    po::variables_map vm;
+    po::parsed_options parsed =
+        po::command_line_parser(argc_, argv_).options(desc).positional(pos_desc).allow_unregistered().run();
+    po::store(parsed, vm);
+    po::notify(vm);
+
     try
     {
-        working_copy_ = piel::lib::WorkingCopy::init(boost::filesystem::current_path());
+        working_copy_ = piel::lib::WorkingCopy::init(boost::filesystem::current_path(), ref_);
     }
     catch (piel::lib::errors::init_existing_working_copy e)
     {
