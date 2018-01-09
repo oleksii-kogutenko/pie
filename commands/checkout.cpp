@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,58 +26,37 @@
  *
  */
 
-#include <initworkingcopycommand.h>
-
+#include <checkout.h>
+#include <indextofsexporter.h>
 #include <boost_filesystem_ext.hpp>
 
-namespace pie { namespace app {
+namespace piel { namespace cmd {
 
-namespace po = boost::program_options;
-
-InitWorkingCopyCommand::InitWorkingCopyCommand(Application *app, int argc, char **argv)
-    : ICommand(app)
-    , argc_(argc)
-    , argv_(argv)
-    , working_copy_()
+Checkout::Checkout(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& ref_to)
+    : WorkingCopyCommand(working_copy)
+    , ref_to_(ref_to)
 {
 }
 
-InitWorkingCopyCommand::~InitWorkingCopyCommand()
+Checkout::~Checkout()
 {
 }
 
-void InitWorkingCopyCommand::show_command_help_message(const po::options_description& desc)
+std::string Checkout::operator()()
 {
-    std::cerr << "Usage: init" << std::endl;
-    std::cout << desc;
+    boost::optional<piel::lib::Index> ref_index = piel::lib::Index::from_ref(working_copy()->local_storage(), ref_to_);
+    if (!ref_index)
+    {
+        return "";
+    }
+
+    piel::lib::Index reference_index = *ref_index;
+
+    piel::lib::IndexToFsExporter index_exporter(reference_index, piel::lib::ExportPolicy__replace_existing);
+    index_exporter.export_to(working_copy()->working_dir());
+
+    working_copy()->set_reference_index(reference_index);
+    return working_copy()->reference_index().self().id().string();
 }
 
-int InitWorkingCopyCommand::perform()
-{
-    po::options_description desc("Initializing options");
-
-    if (show_help(desc, argc_, argv_))
-    {
-        return -1;
-    }
-
-    try
-    {
-        working_copy_ = piel::lib::WorkingCopy::init(boost::filesystem::current_path());
-    }
-    catch (piel::lib::errors::init_existing_working_copy e)
-    {
-        std::cerr << "Attempt to initialize already initialized working copy!" << std::endl;
-        return -1;
-    }
-
-    if (!working_copy_->is_valid())
-    {
-        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
-        return -1;
-    }
-
-    return 0;
-}
-
-} } // namespace pie::app
+} } // namespace piel::cmd

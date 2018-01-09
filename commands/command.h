@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,33 +26,18 @@
  *
  */
 
-#ifndef PIE_COMMITCOMMAND_H_
-#define PIE_COMMITCOMMAND_H_
+#ifndef COMMANDS_COMMAND_H_
+#define COMMANDS_COMMAND_H_
 
-#include <application.h>
-#include <workingcopy.h>
+namespace piel { namespace cmd {
 
-namespace pie { namespace app {
-
-class CommitCommand : public ICommand
+class Command
 {
 public:
-    CommitCommand(Application *app, int argc, char **argv);
-    virtual ~CommitCommand();
-
-    int perform();
-
-protected:
-    void show_command_help_message(const boost::program_options::options_description& desc);
-
-private:
-    int argc_;
-    char **argv_;
-
-    piel::lib::WorkingCopy::Ptr working_copy_;
-
+    Command();
+    virtual ~Command();
 };
 
-} } // namespace pie::app
+} } // namespace piel::cmd
 
-#endif /* PIE_INITWORKINGCOPYCOMMAND_H_ */
+#endif /* COMMANDS_COMMAND_H_ */

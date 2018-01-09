@@ -345,6 +345,20 @@ std::set<std::string> Index::index_paths() const
     return result;
 }
 
+/*static*/ boost::optional<Index> Index::from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref)
+{
+    AssetId ref_to_asset_id = storage->resolve(ref);
+    if (ref_to_asset_id != AssetId::empty)
+    {
+        Asset ref_to_asset = storage->asset(ref_to_asset_id);
+        return Index::load(ref_to_asset);
+    }
+    else
+    {
+        return boost::none;
+    }
+}
+
 /*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {
     index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);

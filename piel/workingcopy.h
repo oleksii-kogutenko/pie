@@ -33,46 +33,54 @@
 #include <index.h>
 #include <indexesdiff.h>
 #include <localdirectorystorage.h>
+#include <boost/weak_ptr.hpp>
 
 namespace piel { namespace lib {
 
 namespace errors {
     struct init_existing_working_copy {};
     struct attach_to_non_working_copy {};
-    struct nothing_to_commit {};
 };
 
-class WorkingCopy
+class WorkingCopy: private boost::noncopyable
 {
 public:
     typedef std::vector<IObjectsStorage::Ptr> Storages;
+    typedef boost::shared_ptr<WorkingCopy> Ptr;
+    typedef boost::weak_ptr<WorkingCopy> Weak;
     static const int local_storage_index;
 
-    WorkingCopy();
-    WorkingCopy(const boost::filesystem::path& working_dir);
     ~WorkingCopy();
 
     bool is_valid() const;
 
-    static WorkingCopy init(const boost::filesystem::path& working_dir);
-    static WorkingCopy attach(const boost::filesystem::path& working_dir);
-
-    void clean();
-    std::string checkout(const std::string& ref_to);
-    std::string reset(const std::string& ref_to);
-    std::string commit(const std::string& message, const std::string& ref_to);
-    IndexesDiff diff(const std::string& ref_base = std::string()) const;
-    void export_to(const boost::filesystem::path& directory);
+    static Ptr init(const boost::filesystem::path& working_dir);
+    static Ptr attach(const boost::filesystem::path& working_dir);
 
     void set_config(const std::string& name, const std::string& value);
     std::string get_config(const std::string& name, const std::string& default_value = std::string());
+
+    IObjectsStorage::Ptr local_storage() const;
+    boost::filesystem::path working_dir() const;
+    boost::filesystem::path metadata_dir() const;
+    boost::filesystem::path storage_dir() const;
+    boost::filesystem::path reference_index_file() const;
+    boost::filesystem::path config_file() const;
+    Properties& config();
+    Storages& storages();
+
+    void set_reference_index(const Index& new_reference_index);
+    const Index& reference_index() const;
+    Index current_index() const;
+
+protected:
+    WorkingCopy();
+    WorkingCopy(const boost::filesystem::path& working_dir);
 
 private:
     void init_filesystem();
     void attach_filesystem();
     void init_storages();
-
-    boost::optional<Index> index_from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref) const;
 
 private:
     boost::filesystem::path working_dir_;
@@ -80,10 +88,10 @@ private:
     boost::filesystem::path storage_dir_;
     boost::filesystem::path reference_index_file_;
     boost::filesystem::path config_file_;
-    Properties config_;                             //!< Working copy configuration parameters
-    Storages storages_;                             //!< Local storages collection
-    Index reference_index_;                         //!< Original index what checkouted into working copy
-    Index current_index_;                           //!< Actual directory index (current directory state)
+    Properties              config_;                             //!< Working copy configuration parameters
+    Storages                storages_;                           //!< Local storages collection
+    Index                   reference_index_;                    //!< Original index what checkouted into working copy
+    Index                   current_index_;                      //!< Actual directory index (current directory state)
 };
 
 struct PredefinedConfigs {

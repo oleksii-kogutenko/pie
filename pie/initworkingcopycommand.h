@@ -49,7 +49,7 @@ private:
     int argc_;
     char **argv_;
 
-    piel::lib::WorkingCopy working_copy_;
+    piel::lib::WorkingCopy::Ptr working_copy_;
 
 };
 

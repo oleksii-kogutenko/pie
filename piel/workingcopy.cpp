@@ -32,6 +32,8 @@
 #include <boost_filesystem_ext.hpp>
 #include <logging.h>
 
+#include <checkout.h>
+
 namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
@@ -100,6 +102,11 @@ void WorkingCopy::init_storages()
     storages_[local_storage_index] = IObjectsStorage::Ptr(new LocalDirectoryStorage(storage_dir_));
 }
 
+IObjectsStorage::Ptr WorkingCopy::local_storage() const
+{
+    return storages_[local_storage_index];
+}
+
 void WorkingCopy::init_filesystem()
 {
     if (!fs::create_directories(metadata_dir_) || !fs::create_directories(storage_dir_))
@@ -137,17 +144,62 @@ void WorkingCopy::attach_filesystem()
     init_storages();
 }
 
-/*static*/ WorkingCopy WorkingCopy::init(const boost::filesystem::path& working_dir)
+fs::path WorkingCopy::working_dir() const
 {
-    WorkingCopy result(working_dir);
-    result.init_filesystem();
+    return working_dir_;
+}
+
+fs::path WorkingCopy::metadata_dir() const
+{
+    return metadata_dir_;
+}
+
+fs::path WorkingCopy::storage_dir() const
+{
+    return storage_dir_;
+}
+
+fs::path WorkingCopy::reference_index_file() const
+{
+    return reference_index_file_;
+}
+
+fs::path WorkingCopy::config_file() const
+{
+    return config_file_;
+}
+
+Properties& WorkingCopy::config()
+{
+    return config_;
+}
+
+WorkingCopy::Storages& WorkingCopy::storages()
+{
+    return storages_;
+}
+
+const Index& WorkingCopy::reference_index() const
+{
+    return reference_index_;
+}
+
+Index WorkingCopy::current_index() const
+{
+    return FsIndexer::build(working_dir_, metadata_dir_);
+}
+
+/*static*/ WorkingCopy::Ptr WorkingCopy::init(const boost::filesystem::path& working_dir)
+{
+    WorkingCopy::Ptr result(new WorkingCopy(working_dir));
+    result->init_filesystem();
     return result;
 }
 
-/*static*/ WorkingCopy WorkingCopy::attach(const boost::filesystem::path& working_dir)
+/*static*/ WorkingCopy::Ptr WorkingCopy::attach(const boost::filesystem::path& working_dir)
 {
-    WorkingCopy result(working_dir);
-    result.attach_filesystem();
+    WorkingCopy::Ptr result(new WorkingCopy(working_dir));
+    result->attach_filesystem();
     return result;
 }
 
@@ -167,124 +219,10 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
     return config_.get(name, default_value);
 }
 
-
-std::string WorkingCopy::checkout(const std::string& ref_to)
+void WorkingCopy::set_reference_index(const Index& new_reference_index)
 {
-    IObjectsStorage::Ptr local_storage = storages_[local_storage_index];
-
-    boost::optional<Index> ref_index = index_from_ref(local_storage, ref_to);
-    if (!ref_index)
-    {
-        return "";
-    }
-
-    reference_index_ = *ref_index;
-
-    IndexToFsExporter index_exporter(reference_index_, ExportPolicy__replace_existing);
-    index_exporter.export_to(working_dir_);
-
-    reference_index_.store(*boost::filesystem::ostream(reference_index_file_));
-
-    return reference_index_.self().id().string();
-}
-
-void WorkingCopy::export_to(const boost::filesystem::path& directory)
-{
-    IndexToFsExporter index_exporter(reference_index_);
-    index_exporter.export_to(directory);
-}
-
-void WorkingCopy::clean()
-{
-    boost::filesystem::remove_directory_content(working_dir_, metadata_dir_);
-}
-
-std::string WorkingCopy::reset(const std::string& ref_to)
-{
-    clean();
-    return checkout(ref_to);
-}
-
-boost::optional<Index> WorkingCopy::index_from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref) const
-{
-    AssetId ref_to_asset_id = storage->resolve(ref);
-    if (ref_to_asset_id != AssetId::empty)
-    {
-        Asset ref_to_asset = storage->asset(ref_to_asset_id);
-        return Index::load(ref_to_asset);
-    }
-    else
-    {
-        return boost::none;
-    }
-}
-
-std::string WorkingCopy::commit(const std::string& message, const std::string& ref_to)
-{
-    IndexesDiff indexes_diff = diff(ref_to);
-    if (indexes_diff.empty())
-    {
-        LOG_T << "Diff is empty!";
-        throw errors::nothing_to_commit();
-    }
-
-    LOG_T << "Non empty diff:";
-
-    std::cout << indexes_diff.format();
-
-    LOG_T << "Continue commit.";
-
-    IObjectsStorage::Ptr local_storage = storages_[local_storage_index];
-
-    boost::optional<Index> ref_index = index_from_ref(local_storage, ref_to);
-    if (ref_index)
-    {
-        reference_index_ = *ref_index;
-    }
-
-    current_index_ = FsIndexer::build(working_dir_, metadata_dir_);
-    if (!reference_index_.empty())
-    {
-        current_index_.set_parent(reference_index_.self());
-    }
-
-    // Fill from config
-    current_index_.set_author_(         config_.get(PredefinedConfigs::author).value());
-    current_index_.set_email_(          config_.get(PredefinedConfigs::email).value());
-    current_index_.set_commiter_(       config_.get(PredefinedConfigs::commiter).value());
-    current_index_.set_commiter_email_( config_.get(PredefinedConfigs::commiter_email).value());
-
-    // Set message
-    current_index_.set_message_(message);
-
-    // Put changes into local storage
-    local_storage->put(current_index_.assets());
-    local_storage->put(IObjectsStorage::Ref(ref_to, current_index_.self()));
-
-    // Store index
-    current_index_.store(*boost::filesystem::ostream(reference_index_file_));
-
-    // Restore reference index
-    reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_), local_storage.get());
-
-    return reference_index_.self().id().string();
-}
-
-IndexesDiff WorkingCopy::diff(const std::string& ref_base) const
-{
-    IObjectsStorage::Ptr local_storage = storages_[local_storage_index];
-
-    boost::optional<Index> ref_index = index_from_ref(local_storage, ref_base);
-    if (ref_index)
-    {
-        LOG_T << "1. Calculate diff " << ref_index->self().id().string() << " <-> CDIR";
-        return IndexesDiff::diff(*ref_index, FsIndexer::build(working_dir_, metadata_dir_));
-    }
-    else
-    {
-        LOG_T << "2. Calculate diff " << reference_index_.self().id().string() << " <-> CDIR";
-        return IndexesDiff::diff(reference_index_, FsIndexer::build(working_dir_, metadata_dir_));
-    }
+    new_reference_index.store(*boost::filesystem::ostream(reference_index_file_));
+    reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
 }
 
 } } // namespace piel::lib

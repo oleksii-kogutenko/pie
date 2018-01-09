@@ -4,7 +4,7 @@ file(GLOB SOURCES "*.cpp")
 add_executable(${Module_name} ${SOURCES})
 
 # Components
-target_link_libraries(${Module_name} piel)
+target_link_libraries(${Module_name} piel commands)
 
 # Externals
 #

@@ -26,6 +26,7 @@
  *
  */
 
+#include <commit.h>
 #include <commitcommand.h>
 
 #include <boost_filesystem_ext.hpp>
@@ -63,7 +64,7 @@ int CommitCommand::perform()
 
     try
     {
-        working_copy_ = working_copy_.attach(boost::filesystem::current_path());
+        working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
     }
     catch (piel::lib::errors::attach_to_non_working_copy e)
     {
@@ -71,7 +72,7 @@ int CommitCommand::perform()
         return -1;
     }
 
-    if (!working_copy_.is_valid())
+    if (!working_copy_->is_valid())
     {
         std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
         return -1;
@@ -79,10 +80,14 @@ int CommitCommand::perform()
 
     try
     {
-        std::string ref = working_copy_.commit("test message", "test_ref");
+        piel::cmd::Commit commit(working_copy_, "test_ref");
+
+        commit.set_message("test message");
+
+        std::string ref = commit();
         std::cout << "Commited: " << ref << std::endl;
     }
-    catch (piel::lib::errors::nothing_to_commit e)
+    catch (piel::cmd::errors::nothing_to_commit e)
     {
         std::cerr << "No changes!" << std::endl;
         return -1;

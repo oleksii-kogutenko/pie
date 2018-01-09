@@ -3,10 +3,11 @@ project(pie)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-include_directories("piel", "pie")
+include_directories("piel", "commands", "pie")
 
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_subdirectory(piel)
+add_subdirectory(commands)
 add_subdirectory(pie)
 
 enable_testing()

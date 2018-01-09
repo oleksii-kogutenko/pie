@@ -106,6 +106,8 @@ public:
     // Check if index is empty
     bool empty() const;
 
+    static boost::optional<Index> from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
+
 private:
     friend class        IndexesDiff;
 
