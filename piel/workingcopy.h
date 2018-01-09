@@ -64,7 +64,6 @@ public:
     boost::filesystem::path working_dir() const;
     boost::filesystem::path metadata_dir() const;
     boost::filesystem::path storage_dir() const;
-    boost::filesystem::path reference_index_file() const;
     boost::filesystem::path config_file() const;
     Properties& config();
     Storages& storages();
@@ -91,7 +90,6 @@ private:
     Properties              config_;                             //!< Working copy configuration parameters
     Storages                storages_;                           //!< Local storages collection
     Index                   reference_index_;                    //!< Original index what checkouted into working copy
-    Index                   current_index_;                      //!< Actual directory index (current directory state)
 };
 
 struct PredefinedConfigs {

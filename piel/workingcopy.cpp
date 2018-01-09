@@ -72,7 +72,6 @@ WorkingCopy::WorkingCopy()
     : working_dir_()
     , storages_(local_storage_index + 1)
     , reference_index_()
-    , current_index_()
 {
 }
 
@@ -80,7 +79,6 @@ WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     : working_dir_(working_dir)
     , storages_(local_storage_index + 1)
     , reference_index_()
-    , current_index_()
 {
     metadata_dir_           = working_dir_  / layout::L::metadata_dir;
     storage_dir_            = metadata_dir_ / layout::L::storage_dir;
@@ -157,11 +155,6 @@ fs::path WorkingCopy::metadata_dir() const
 fs::path WorkingCopy::storage_dir() const
 {
     return storage_dir_;
-}
-
-fs::path WorkingCopy::reference_index_file() const
-{
-    return reference_index_file_;
 }
 
 fs::path WorkingCopy::config_file() const
