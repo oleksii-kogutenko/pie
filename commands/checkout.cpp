@@ -36,11 +36,18 @@ namespace piel { namespace cmd {
 Checkout::Checkout(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& ref_to)
     : WorkingCopyCommand(working_copy)
     , ref_to_(ref_to)
+    , force_(false)
 {
 }
 
 Checkout::~Checkout()
 {
+}
+
+const Checkout* Checkout::set_force(bool force)
+{
+    force_ = force;
+    return this;
 }
 
 std::string Checkout::operator()()
@@ -49,13 +56,16 @@ std::string Checkout::operator()()
 
     if (piel::lib::AssetId::empty != working_copy()->local_storage()->resolve(ref_to_))
     {
-        // Check for non commit changes
-        piel::lib::Index current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
-
-        piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
-        if (!diff.empty())
+        if (!force_)
         {
-            throw errors::there_are_non_commited_changes();
+            // Check for non commit changes
+            piel::lib::Index current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+
+            piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
+            if (!diff.empty())
+            {
+                throw errors::there_are_non_commited_changes();
+            }
         }
 
         // Remove working directory content (exclude metadata)

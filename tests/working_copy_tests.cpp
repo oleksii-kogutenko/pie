@@ -38,6 +38,7 @@
 #include <create.h>
 #include <clean.h>
 #include <checkout.h>
+#include <reset.h>
 
 namespace cmd=piel::cmd;
 namespace lib=piel::lib;
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
     commit_1();
 
     // Random changes in dir
-    lib::test_utils::update_temp_dir(wc_path->first, wc->metadata_dir());
+    lib::test_utils::update_temp_dir(wc->working_dir(), wc->metadata_dir());
 
     commit_1.set_message("Commit to " + ref_name_1);
     commit_1();
@@ -97,8 +98,73 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
     checkout_2();
 
     // Random changes in dir
-    lib::test_utils::update_temp_dir(wc_path->first, wc->metadata_dir());
+    lib::test_utils::update_temp_dir(wc->working_dir(), wc->metadata_dir());
 
     cmd::Clean clean(wc);
     clean();
+}
+
+BOOST_AUTO_TEST_CASE(reset_workspace)
+{
+    lib::test_utils::DirState init_state;
+    init_state["test_file_1"] = "test file 1 content 1";
+    init_state["test_file_2"] = "test file 1 content 2";
+    init_state["test_file_3"] = "test file 1 content 3";
+    init_state["test_file_4"] = "test file 1 content 4";
+    init_state["dir1/test_file_4"] = "test file 1 content 4";
+    init_state["dir2/test_file_4"] = "test file 1 content 4";
+    init_state["dir3/test_file_4"] = "test file 1 content 4";
+
+    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir();
+
+    // Init workspace
+    lib::WorkingCopy::Ptr wc = lib::WorkingCopy::init(wc_path->first, ref_name_1);
+    lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), init_state);
+
+    cmd::Commit commit(wc);
+    commit.set_message("Initial commit to " + ref_name_1);
+    commit();
+
+    // Random changes in dir
+    lib::test_utils::update_temp_dir(wc->working_dir(), wc->metadata_dir());
+
+    lib::test_utils::DirState random_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
+
+    BOOST_CHECK(init_state != random_state);
+
+    cmd::Reset reset(wc, ref_name_1);
+    reset();
+
+    lib::test_utils::DirState after_reset_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
+
+    BOOST_CHECK(init_state == after_reset_state);
+
+    lib::test_utils::DirState state_1;
+    state_1["test_file_1"] = "test file 1 mcontent 1";
+    state_1["test_file_2"] = "test file 1 content 2";
+    state_1["test_file_3"] = "test file 1 content 3";
+    state_1["test_file_4"] = "test file 1 content 4";
+    state_1["dir1/test_file_4"] = "test file 1 mcontent 4";
+    state_1["dir2/test_file_4"] = "test file 1 content 4";
+    state_1["dir3/test_file_4"] = "test file 1 content 4";
+    BOOST_CHECK(init_state != state_1);
+
+    lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), state_1);
+
+    commit.set_message("Commit to " + ref_name_1);
+    commit();
+
+    // Random changes in dir
+    lib::test_utils::update_temp_dir(wc->working_dir(), wc->metadata_dir());
+
+    random_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
+
+    BOOST_CHECK(init_state != random_state);
+    BOOST_CHECK(state_1 != random_state);
+
+    reset();
+
+    after_reset_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
+
+    BOOST_CHECK(state_1 == after_reset_state);
 }

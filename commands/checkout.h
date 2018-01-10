@@ -44,9 +44,11 @@ public:
     virtual ~Checkout();
 
     std::string operator()();
+    const Checkout* set_force(bool force);
 
 private:
     std::string ref_to_;
+    bool force_;
 
 };
 

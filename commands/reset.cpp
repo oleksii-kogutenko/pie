@@ -29,6 +29,7 @@
 #include <reset.h>
 #include <clean.h>
 #include <checkout.h>
+#include <logging.h>
 
 namespace piel { namespace cmd {
 
@@ -36,19 +37,23 @@ Reset::Reset(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string&
     : WorkingCopyCommand(working_copy)
     , ref_to_(ref_to)
 {
-
 }
 
 Reset::~Reset()
 {
-
 }
 
 std::string Reset::operator()()
 {
+    LOG_T << "Perform clean.";
     Clean clean(working_copy());
-    clean();
+    std::string clean_result = clean();
+    LOG_T << "Clean result: " << clean_result;
+
+    LOG_T << "Perform checkout.";
     Checkout checkout(working_copy(), ref_to_);
+    checkout.set_force(true);
+
     return checkout();
 }
 
