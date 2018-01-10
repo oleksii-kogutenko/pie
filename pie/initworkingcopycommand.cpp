@@ -49,7 +49,7 @@ InitWorkingCopyCommand::~InitWorkingCopyCommand()
 
 void InitWorkingCopyCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: init" << std::endl;
+    std::cerr << "Usage: init <ref>" << std::endl;
     std::cout << desc;
 }
 

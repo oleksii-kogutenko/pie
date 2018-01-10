@@ -150,12 +150,6 @@ void WorkingCopy::attach_filesystem()
         throw errors::unable_to_find_reference_file();
     }
 
-    // Load reference index
-    if (fs::exists(reference_index_file_))
-    {
-        reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_));
-    }
-
     // Load config
     if (fs::exists(config_file_))
     {
@@ -163,6 +157,12 @@ void WorkingCopy::attach_filesystem()
     }
 
     attach_storages();
+
+    // Load reference index
+    if (fs::exists(reference_index_file_))
+    {
+        reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
+    }
 }
 
 fs::path WorkingCopy::working_dir() const

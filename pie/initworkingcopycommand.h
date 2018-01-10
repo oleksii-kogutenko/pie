@@ -34,7 +34,7 @@
 
 namespace pie { namespace app {
 
-class InitWorkingCopyCommand : public ICommand
+class InitWorkingCopyCommand: public ICommand
 {
 public:
     InitWorkingCopyCommand(Application *app, int argc, char **argv);

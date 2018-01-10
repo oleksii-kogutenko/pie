@@ -337,7 +337,7 @@ std::set<std::string> Index::index_paths() const
     {
         if (!result.insert(i->first).second)
         {
-            LOG_F << "Not valind index! Content map contains several elements (" << content_.count(i->first) << ") for key " << i->first;
+            LOG_F << "Not valid index! Content map contains several elements (" << content_.count(i->first) << ") for key " << i->first;
 
             throw errors::index_has_several_equals_paths();
         }

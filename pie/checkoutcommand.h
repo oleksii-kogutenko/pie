@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,25 +26,34 @@
  *
  */
 
+#ifndef PIE_CHECKOUTCOMMAND_H_
+#define PIE_CHECKOUTCOMMAND_H_
+
 #include <application.h>
-#include <gavccommand.h>
+#include <workingcopy.h>
 
-#include <initworkingcopycommand.h>
-#include <createcommand.h>
-#include <checkoutcommand.h>
-#include <resetcommand.h>
-#include <commitcommand.h>
+namespace pie { namespace app {
 
-int main(int argc, char **argv)
+class CheckoutCommand: public ICommand
 {
-    pie::app::Application application(argc, argv);
+public:
+    CheckoutCommand(Application *app, int argc, char **argv);
+    virtual ~CheckoutCommand();
 
-    application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("create", "Create new empty reference."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CheckoutCommand>("checkout", "Checkout reference."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset to reference."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit."));
+    int perform();
 
-    return application.run();
-}
+protected:
+    void show_command_help_message(const boost::program_options::options_description& desc);
+
+private:
+    int argc_;
+    char **argv_;
+
+    piel::lib::WorkingCopy::Ptr working_copy_;
+    std::string ref_;
+
+};
+
+} } // namespace pie::app
+
+#endif /* PIE_CHECKOUTCOMMAND_H_ */

@@ -82,7 +82,7 @@ std::string Checkout::operator()()
     }
     else
     {
-        LOG_T << "Unable to resolve ref: " << ref_to_;
+        LOG_T << "Resolved empty reference: " << ref_to_;
     }
 
     // Update working copy reference

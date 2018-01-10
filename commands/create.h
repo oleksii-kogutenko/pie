@@ -31,11 +31,11 @@
 
 #include <workingcopycommand.h>
 
+namespace piel { namespace cmd {
+
 namespace errors {
     struct non_empty_reference_already_exists {};
 };
-
-namespace piel { namespace cmd {
 
 class Create: public WorkingCopyCommand
 {

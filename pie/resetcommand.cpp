@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,8 +26,10 @@
  *
  */
 
-#include <commit.h>
-#include <commitcommand.h>
+#include <resetcommand.h>
+
+#include <clean.h>
+#include <reset.h>
 
 #include <boost_filesystem_ext.hpp>
 
@@ -35,30 +37,34 @@ namespace pie { namespace app {
 
 namespace po = boost::program_options;
 
-CommitCommand::CommitCommand(Application *app, int argc, char **argv)
+ResetCommand::ResetCommand(Application *app, int argc, char **argv)
     : ICommand(app)
     , argc_(argc)
     , argv_(argv)
     , working_copy_()
+    , ref_()
 {
 }
 
-CommitCommand::~CommitCommand()
+ResetCommand::~ResetCommand()
 {
 }
 
-void CommitCommand::show_command_help_message(const po::options_description& desc)
+void ResetCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: commit" << std::endl;
+    std::cerr << "Usage: reset <ref>" << std::endl;
     std::cout << desc;
 }
 
-int CommitCommand::perform()
+int ResetCommand::perform()
 {
-    po::options_description desc("Commit options");
+    po::options_description desc("Reset to reference options");
     desc.add_options()
-        ("message,m",   po::value<std::string>(&message_)->required(), "Commit message.")
+        ("ref",         po::value<std::string>(&ref_)->required(),     "Content will be reset to.");
         ;
+
+    po::positional_options_description pos_desc;
+    pos_desc.add("ref", -1);
 
     if (show_help(desc, argc_, argv_))
     {
@@ -67,19 +73,40 @@ int CommitCommand::perform()
 
     po::variables_map vm;
     po::parsed_options parsed =
-        po::command_line_parser(argc_, argv_).options(desc).allow_unregistered().run();
+        po::command_line_parser(argc_, argv_).options(desc).positional(pos_desc).allow_unregistered().run();
     po::store(parsed, vm);
     po::notify(vm);
 
     try
     {
         working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
+
+        piel::cmd::Reset reset(working_copy_, ref_);
+        std::string reset_result = reset();
+
+        std::cout << "Reset reference: " << ref_ << " hash: " << reset_result << std::endl;
     }
-    catch (piel::lib::errors::attach_to_non_working_copy e)
+    catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {
-        std::cerr << "Attempt to perform operation outside of working copy!" << std::endl;
+        std::cerr << "No working copy detected at " <<  boost::filesystem::current_path() << "!" << std::endl;
         return -1;
     }
+    catch (const piel::lib::errors::unable_to_find_reference_file& e)
+    {
+        std::cerr << "Unable to find reference file at working copy!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::non_readable_asset& e)
+    {
+        std::cerr << "Non readable asset!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::asset_data_is_corrupted& e)
+    {
+        std::cerr << "Corrupted asset detected!" << std::endl;
+        return -1;
+    }
+
 
     if (!working_copy_->is_valid())
     {
@@ -87,22 +114,8 @@ int CommitCommand::perform()
         return -1;
     }
 
-    try
-    {
-        piel::cmd::Commit commit(working_copy_);
-
-        commit.set_message(message_);
-
-        std::string hash = commit();
-        std::cout << "Commited hash: " << hash << " reference: " << working_copy_->reference() << std::endl;
-    }
-    catch (piel::cmd::errors::nothing_to_commit e)
-    {
-        std::cerr << "No changes!" << std::endl;
-        return -1;
-    }
-
     return 0;
 }
+
 
 } } // namespace pie::app

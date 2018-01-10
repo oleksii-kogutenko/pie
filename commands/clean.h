@@ -34,6 +34,7 @@
 namespace piel { namespace cmd {
 
 namespace errors {
+    struct non_readable_asset {};
     struct asset_data_is_corrupted {};
 }
 

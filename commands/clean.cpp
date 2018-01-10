@@ -69,12 +69,20 @@ std::string Clean::operator()()
 
                 fs::create_directories(item_parent);
 
-                // Create item and copy content into it
-                boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
-
                 LOG_T << "Restore removed file: " << item_path;
 
-                if (asset.id().string() != fs::copy_into(osp, asset.istream()))
+                // Create item and copy content into it
+                boost::shared_ptr<std::istream> isp = asset.istream();
+                if (!isp)
+                {
+                    LOG_F << "Non readable asset: " << asset.id().string();
+
+                    throw errors::non_readable_asset();
+                }
+
+                boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
+
+                if (asset.id().string() != fs::copy_into(osp, isp))
                 {
                     LOG_F << "Corrupted data.";
 
@@ -92,7 +100,7 @@ std::string Clean::operator()()
                     // It will be succeesible if directory now empty
                     try {
                         fs::remove(item_path.parent_path());
-                    } catch (std::runtime_error e) {}
+                    } catch (const std::runtime_error& e) {}
                 }
             }
             break;
