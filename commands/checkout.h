@@ -33,6 +33,10 @@
 
 namespace piel { namespace cmd {
 
+namespace errors {
+    struct there_are_non_commited_changes {};
+}
+
 class Checkout: public WorkingCopyCommand
 {
 public:

@@ -27,6 +27,7 @@
  */
 
 #include <checkout.h>
+#include <fsindexer.h>
 #include <indextofsexporter.h>
 #include <boost_filesystem_ext.hpp>
 
@@ -48,6 +49,19 @@ std::string Checkout::operator()()
 
     if (piel::lib::AssetId::empty != working_copy()->local_storage()->resolve(ref_to_))
     {
+        // Check for non commit changes
+        piel::lib::Index current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+
+        piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
+        if (!diff.empty())
+        {
+            throw errors::there_are_non_commited_changes();
+        }
+
+        // Remove working directory content (exclude metadata)
+        boost::filesystem::remove_directory_content(working_copy()->working_dir(), working_copy()->metadata_dir());
+
+        // Export data from index
         boost::optional<piel::lib::Index> ref_index = piel::lib::Index::from_ref(working_copy()->local_storage(), ref_to_);
         reference_index = *ref_index;
 
@@ -55,6 +69,7 @@ std::string Checkout::operator()()
         index_exporter.export_to(working_copy()->working_dir());
     }
 
+    // Update working copy reference
     working_copy()->update_reference(ref_to_, reference_index);
     return working_copy()->reference_index().self().id().string();
 }

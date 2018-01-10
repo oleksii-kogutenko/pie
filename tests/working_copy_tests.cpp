@@ -77,6 +77,12 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
     commit_1.set_message("Initial commit to " + ref_name_1);
     commit_1();
 
+    // Random changes in dir
+    lib::test_utils::update_temp_dir(wc_path->first, wc->metadata_dir());
+
+    commit_1.set_message("Commit to " + ref_name_1);
+    commit_1();
+
     cmd::Create create(wc, ref_name_2);
     create();
 
@@ -90,6 +96,7 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
     cmd::Checkout checkout_2(wc, ref_name_2);
     checkout_2();
 
+    // Random changes in dir
     lib::test_utils::update_temp_dir(wc_path->first, wc->metadata_dir());
 
     cmd::Clean clean(wc);
