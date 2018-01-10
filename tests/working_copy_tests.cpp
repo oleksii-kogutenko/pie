@@ -34,33 +34,64 @@
 #include <workingcopy.h>
 #include <indextofsexporter.h>
 
-using namespace piel::lib;
+#include <commit.h>
+#include <create.h>
+#include <clean.h>
+#include <checkout.h>
+
+namespace cmd=piel::cmd;
+namespace lib=piel::lib;
+
+std::string ref_name_1 = "test_reference_1";
+std::string ref_name_2 = "test_reference_2";
 
 BOOST_AUTO_TEST_CASE(init_working_copy)
 {
-//    test_utils::TempFileHolder::Ptr wc_path = test_utils::create_temp_dir(100);
-//
-//    BOOST_CHECK_THROW(WorkingCopy::attach(wc_path->first), errors::attach_to_non_working_copy);
-//
-//    WorkingCopy wc_initialized = WorkingCopy::init(wc_path->first);
-//
-//    // Second attempt must throw exception
-//    BOOST_CHECK_THROW(WorkingCopy::init(wc_path->first), errors::init_existing_working_copy);
-//
-//    WorkingCopy wc_attached = WorkingCopy::attach(wc_path->first);
-//
-//    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
-//    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
-//    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
-//    wc_initialized.set_config(test_utils::generate_random_printable_string(), test_utils::generate_random_printable_string());
-//
-//    std::cout << wc_initialized.diff().format();
-//
-//    wc_initialized.commit("test commit message", "test_reference");
-//
-//    boost::filesystem::path test_dir = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-//
-//    boost::filesystem::create_directories(test_dir);
-//
-//    boost::filesystem::remove_all(test_dir);
+    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir(100);
+
+    BOOST_CHECK_THROW(lib::WorkingCopy::attach(wc_path->first), lib::errors::attach_to_non_working_copy);
+
+    lib::WorkingCopy::Ptr wc_initialized = lib::WorkingCopy::init(wc_path->first, ref_name_1);
+
+    // Second attempt must throw exception
+    BOOST_CHECK_THROW(lib::WorkingCopy::init(wc_path->first, ref_name_1), lib::errors::init_existing_working_copy);
+}
+
+BOOST_AUTO_TEST_CASE(initial_commit)
+{
+    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir(100);
+
+    lib::WorkingCopy::Ptr wc = lib::WorkingCopy::init(wc_path->first, ref_name_1);
+
+    cmd::Commit commit(wc);
+    commit();
+}
+
+BOOST_AUTO_TEST_CASE(create_new_ref)
+{
+    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir(100);
+
+    lib::WorkingCopy::Ptr wc = lib::WorkingCopy::init(wc_path->first, ref_name_1);
+
+    cmd::Commit commit_1(wc);
+    commit_1.set_message("Initial commit to " + ref_name_1);
+    commit_1();
+
+    cmd::Create create(wc, ref_name_2);
+    create();
+
+    cmd::Commit commit_2(wc);
+    commit_2.set_message("Initial commit to " + ref_name_2);
+    commit_2();
+
+    cmd::Checkout checkout_1(wc, ref_name_1);
+    checkout_1();
+
+    cmd::Checkout checkout_2(wc, ref_name_2);
+    checkout_2();
+
+    lib::test_utils::update_temp_dir(wc_path->first, wc->metadata_dir());
+
+    cmd::Clean clean(wc);
+    clean();
 }

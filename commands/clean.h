@@ -33,13 +33,17 @@
 
 namespace piel { namespace cmd {
 
+namespace errors {
+    struct asset_data_is_corrupted {};
+}
+
 class Clean: public WorkingCopyCommand
 {
 public:
     Clean(const piel::lib::WorkingCopy::Ptr& working_copy);
     virtual ~Clean();
 
-    void operator()();
+    std::string operator()();
 };
 
 } } // namespace piel::cmd

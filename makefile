@@ -1,6 +1,8 @@
 src_tree := $(CURDIR)
 build_tree := ${src_tree}/_build
 
+export CTEST_OUTPUT_ON_FAILURE=1
+
 .PHONY: prepare-%
 
 all: build

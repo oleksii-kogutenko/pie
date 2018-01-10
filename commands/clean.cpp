@@ -27,8 +27,13 @@
  */
 
 #include <clean.h>
+#include <fsindexer.h>
+#include <indexesdiff.h>
+#include <logging.h>
 
 namespace piel { namespace cmd {
+
+namespace fs = boost::filesystem;
 
 Clean::Clean(const piel::lib::WorkingCopy::Ptr& working_copy)
     : WorkingCopyCommand(working_copy)
@@ -39,9 +44,69 @@ Clean::~Clean()
 {
 }
 
-void Clean::operator()()
+std::string Clean::operator()()
 {
-    boost::filesystem::remove_directory_content(working_copy()->working_dir(), working_copy()->metadata_dir());
+    piel::lib::Index current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+
+    piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(working_copy()->reference_index(), current_index);
+    if (!diff.empty())
+    {
+        typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ConstIter;
+        for(ConstIter i = diff.content_diff().begin(), end = diff.content_diff().end(); i != end; ++i)
+        {
+            fs::path item_path = working_copy()->working_dir() / i->first;
+
+            switch (i->second.first)
+            {
+            case piel::lib::IndexesDiff::ElementState_unmodified:
+            break;
+            case piel::lib::IndexesDiff::ElementState_removed:
+            {
+                boost::optional<piel::lib::Asset> oa = working_copy()->reference_index().asset(i->first);
+                piel::lib::Asset asset = *oa;
+
+                fs::path item_parent = item_path.parent_path();
+
+                fs::create_directories(item_parent);
+
+                // Create item and copy content into it
+                boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
+
+                LOG_T << "Restore removed file: " << item_path;
+
+                if (asset.id().string() != fs::copy_into(osp, asset.istream()))
+                {
+                    LOG_F << "Corrupted data.";
+
+                    throw errors::asset_data_is_corrupted();
+                }
+            }
+            break;
+            case piel::lib::IndexesDiff::ElementState_added:
+            {
+                LOG_T << "Remove added file: " << item_path;
+
+                fs::remove(item_path);
+                if (item_path.parent_path() != working_copy()->working_dir())
+                {
+                    // It will be succeesible if directory now empty
+                    try {
+                        fs::remove(item_path.parent_path());
+                    } catch (std::runtime_error e) {}
+                }
+            }
+            break;
+            case piel::lib::IndexesDiff::ElementState_modified:
+                // Keep modifications
+
+                LOG_T << "Keep modifications in file: " << item_path;
+
+            break;
+            }
+        }
+    }
+
+    return working_copy()->reference_index().self().id().string();
 }
 
 } } // namespace piel::cmd

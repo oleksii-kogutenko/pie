@@ -31,7 +31,8 @@
 
 #include <boost/log/trivial.hpp>
 
-#define LOG_(x) BOOST_LOG_TRIVIAL(x) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
+//#define LOG_(x) BOOST_LOG_TRIVIAL(x) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
+#define LOG_(x) BOOST_LOG_TRIVIAL(x) << "[" << __FILE__ << ":" << __LINE__ << "] "
 #define LOG_T   LOG_(trace)
 #define LOG_D   LOG_(debug)
 #define LOG_I   LOG_(info)

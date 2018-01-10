@@ -136,7 +136,7 @@ void IndexToFsExporter::export_to(const boost::filesystem::path& directory)
         }
         else
         {
-            LOG_F << "Non readable asset.";
+            LOG_F << "Non readable asset: " << i->second.id().string();
 
             // Non readable asset
             throw errors::attempt_to_export_non_readable_asset();

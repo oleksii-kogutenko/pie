@@ -50,7 +50,11 @@ void Create::operator()()
         throw errors::non_empty_reference_already_exists();
     }
 
+    piel::lib::Index empty_index;
+
+    working_copy()->local_storage()->put(empty_index.assets());
     working_copy()->local_storage()->put(piel::lib::refs::Ref(new_ref_, piel::lib::Asset()));
+    working_copy()->update_reference(new_ref_, empty_index);
 
     LOG_T << "Created new empty reference: " << new_ref_;
 }

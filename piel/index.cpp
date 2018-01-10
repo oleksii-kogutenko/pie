@@ -351,7 +351,7 @@ std::set<std::string> Index::index_paths() const
     if (ref_to_asset_id != AssetId::empty)
     {
         Asset ref_to_asset = storage->asset(ref_to_asset_id);
-        return Index::load(ref_to_asset);
+        return Index::load(ref_to_asset, storage.get());
     }
     else
     {

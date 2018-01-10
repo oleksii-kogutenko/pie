@@ -51,6 +51,42 @@ struct TempFileHolder: public std::pair<boost::filesystem::path,std::string> {
     }
 };
 
+inline void update_temp_dir(boost::filesystem::path temp_dir, boost::filesystem::path exclude, unsigned min_size = 5, unsigned max_size = 256)
+{
+    boost::random::random_device rng;
+
+    boost::random::uniform_int_distribution<> rm_add_modify(1, 100);
+    boost::random::uniform_int_distribution<> index_dist(min_size, max_size);
+
+    for (boost::filesystem::directory_iterator i = boost::filesystem::directory_iterator(temp_dir), end = boost::filesystem::directory_iterator(); i != end; i++)
+    {
+        boost::filesystem::directory_entry e = *i;
+        if (e.path() != exclude)
+        {
+            if (rm_add_modify(rng) < 50)
+            {
+                boost::filesystem::remove_all(e.path());
+            }
+            else
+            {
+                boost::filesystem::path temp_file = temp_dir / boost::filesystem::unique_path();
+                if (rm_add_modify(rng) < 50)
+                {
+                    temp_file = e.path();
+                }
+                int count = index_dist(rng);
+                boost::shared_ptr<std::ostream> ofs = boost::filesystem::ostream(boost::filesystem::path(temp_file));
+                std::ostringstream oss;
+                for(int i = 0; i < count; ++i) {
+                    std::string::value_type ch = (std::string::value_type)index_dist(rng);
+                    (*ofs) << ch;
+                    oss << ch;
+                }
+            }
+        }
+    }
+}
+
 inline TempFileHolder::Ptr create_temp_dir(unsigned files_count = 0, unsigned min_size = 5, unsigned max_size = 256)
 {
     boost::filesystem::path temp_dir = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
