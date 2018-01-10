@@ -28,6 +28,7 @@
 
 #include <checkout.h>
 #include <fsindexer.h>
+#include <logging.h>
 #include <indextofsexporter.h>
 #include <boost_filesystem_ext.hpp>
 
@@ -64,6 +65,7 @@ std::string Checkout::operator()()
             piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
             if (!diff.empty())
             {
+                LOG_T << "There are non commited changes!";
                 throw errors::there_are_non_commited_changes();
             }
         }
@@ -77,6 +79,10 @@ std::string Checkout::operator()()
 
         piel::lib::IndexToFsExporter index_exporter(reference_index, piel::lib::ExportPolicy__replace_existing);
         index_exporter.export_to(working_copy()->working_dir());
+    }
+    else
+    {
+        LOG_T << "Unable to resolve ref: " << ref_to_;
     }
 
     // Update working copy reference

@@ -119,7 +119,7 @@ AssetId MemoryObjectsStorage::resolve(const std::string& ref) const
     {
         return refs_.at(ref);
     }
-    else if (ref.size() == AssetId::digest_len)
+    else if (ref.length() == AssetId::str_digest_len)
     {
         // Attempt to resolve AssetId by string representation.
         AssetId id = AssetId::create(ref);

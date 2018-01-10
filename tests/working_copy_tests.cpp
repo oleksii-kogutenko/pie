@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(reset_workspace)
 
     cmd::Commit commit(wc);
     commit.set_message("Initial commit to " + ref_name_1);
-    commit();
+    std::string initial_state_id = commit();
 
     // Random changes in dir
     lib::test_utils::update_temp_dir(wc->working_dir(), wc->metadata_dir());
@@ -167,4 +167,11 @@ BOOST_AUTO_TEST_CASE(reset_workspace)
     after_reset_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
 
     BOOST_CHECK(state_1 == after_reset_state);
+
+    cmd::Reset reset_to_initial(wc, initial_state_id);
+    reset_to_initial();
+
+    after_reset_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
+
+    BOOST_CHECK(init_state == after_reset_state);
 }

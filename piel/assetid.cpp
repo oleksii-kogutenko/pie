@@ -33,8 +33,9 @@ namespace piel { namespace lib {
 
 const AssetId AssetId::not_calculated("<not calculated>");
 const AssetId AssetId::empty("<empty>");
-const std::string AssetId::digest_algo = Sha256::t::name();
-const int AssetId::digest_len = Sha256::t::len();
+
+const std::string AssetId::digest_algo  = Sha256::t::name();
+const int AssetId::str_digest_len       = Sha256::t::len() * 2;
 
 AssetId::AssetId()
     : id_(AssetId::empty.id_)

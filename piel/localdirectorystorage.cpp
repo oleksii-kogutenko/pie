@@ -248,7 +248,7 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
         LOG_T << "Ref: " << ref << " resolved to id: " << i->second;
         return AssetId::create(i->second);
     }
-    else if (ref.size() == AssetId::digest_len)
+    else if (ref.length() == AssetId::str_digest_len)
     {
         AssetId id = AssetId::create(ref);
         if (id != AssetId::empty && contains(id))
@@ -258,11 +258,13 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
         }
         else
         {
+            LOG_T << "Uknown id: " << ref;
             return AssetId::empty;
         }
     }
     else
     {
+        LOG_T << "Uknown string: " << ref;
         return AssetId::empty;
     }
 }
