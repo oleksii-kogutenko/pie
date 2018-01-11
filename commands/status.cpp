@@ -122,9 +122,8 @@ std::string Status::operator()()
                     }
 
                     std::cout << fmt::tab(1)
-                              << "attribute: "
                               << fmt::element_state(j->second.first)
-                              << " "
+                              << " attribute: "
                               << j->first
                               << " "
                               << j->second.second.first

@@ -39,6 +39,7 @@ namespace errors {
     struct attempt_to_export_non_readable_asset {};
     struct unable_to_create_item_parent {};
     struct exported_data_is_corrupted {};
+    struct unknown_asset_type {};
 };
 
 enum ExportingPolitic

@@ -120,19 +120,56 @@ void IndexToFsExporter::export_to(const boost::filesystem::path& directory)
                 }
             }
 
-            LOG_T << "Copy data from asset.";
+            std::string asset_type = index_.get_attr_(i->first,
+                    PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
-            // Create item and copy content into it
-            boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
+            std::string asset_mode_str = index_.get_attr_(i->first, PredefinedAttributes::asset_mode);
 
-            if (i->second.id().string() != fs::copy_into(osp, isp))
+            int asset_mode = PredefinedAttributes::parse_asset_mode(asset_mode_str,
+                    PredefinedAttributes::default_asset_mode);
+
+            if (asset_type == PredefinedAttributes::asset_type__file)
             {
-                LOG_F << "Corrupted data.";
+                LOG_T << "Copy data from asset to file.";
 
-                throw errors::exported_data_is_corrupted();
+                boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
+
+                if (i->second.id().string() != fs::copy_into(osp, isp))
+                {
+                    LOG_F << "Corrupted asset data.";
+
+                    throw errors::exported_data_is_corrupted();
+                }
+
+                fs::permissions(item_path, (fs::perms)asset_mode);
             }
+            else if (asset_type == PredefinedAttributes::asset_type__symlink)
+            {
+                LOG_T << "Create symbolic link.";
 
-            // TODO: Process file attributes
+                std::ostringstream* ossp = new std::ostringstream();
+                boost::shared_ptr<std::ostream> oss(ossp);
+
+                if (i->second.id().string() != fs::copy_into(oss, isp))
+                {
+                    LOG_F << "Corrupted asset data.";
+
+                    throw errors::exported_data_is_corrupted();
+                }
+
+                std::string symlink_target = ossp->str();
+
+                LOG_T << "Create symbolic link " << item_path << " -> " << symlink_target;
+
+                fs::create_symlink(symlink_target, item_path);
+
+                // TODO: permissions for symlinks
+                //fs::permissions(item_path, fs::perms::symlink_perms|((fs::perms)asset_mode));
+            }
+            else
+            {
+                throw errors::unknown_asset_type();
+            }
         }
         else
         {

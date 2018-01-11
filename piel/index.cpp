@@ -30,15 +30,18 @@
 #include <logging.h>
 #include <boost_property_tree_ext.hpp>
 #include <boost_filesystem_ext.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
 
-const std::string PredefinedAttributes::asset_type          = "atype";
-const std::string PredefinedAttributes::asset_type__symlink = "symlink";
-const std::string PredefinedAttributes::asset_type__file    = "file";
-const std::string PredefinedAttributes::asset_mode          = "amode";
+/*static*/ const std::string PredefinedAttributes::asset_type          = "atype";
+/*static*/ const std::string PredefinedAttributes::asset_type__symlink = "symlink";
+/*static*/ const std::string PredefinedAttributes::asset_type__file    = "file";
+/*static*/ const std::string PredefinedAttributes::asset_mode          = "amode";
+/*static*/ int        PredefinedAttributes::asset_mode_mask            = 0777;
+/*static*/ int        PredefinedAttributes::default_asset_mode         = 0666;
 
 Index::Index()
     : self_(Asset::create_id(AssetId::not_calculated))
@@ -359,19 +362,35 @@ std::set<std::string> Index::index_paths() const
     }
 }
 
+/*static*/ std::string PredefinedAttributes::format_asset_mode(int mode)
+{
+    return boost::lexical_cast<std::string>(mode & asset_mode_mask);
+}
+
+/*static*/ int PredefinedAttributes::parse_asset_mode(std::string mode_str, int default_value)
+{
+    try {
+        return boost::lexical_cast<int>(mode_str) & asset_mode_mask;
+    }
+    catch (const boost::bad_lexical_cast&)
+    {
+        return default_value & asset_mode_mask;
+    }
+}
+
 /*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {
     index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
 
-    boost::filesystem::file_status s = boost::filesystem::status(file_path);
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
+    boost::filesystem::file_status s = boost::filesystem::symlink_status(file_path);
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(s.permissions()));
 }
 
 /*static*/ void PredefinedAttributes::fill_symlink_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
 {
     index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
 
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(entry->attributes().mode()));
 }
 
 /*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path)
@@ -379,14 +398,14 @@ std::set<std::string> Index::index_paths() const
     index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
     boost::filesystem::file_status s = boost::filesystem::status(file_path);
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( s.permissions() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(s.permissions()));
 }
 
 /*static*/ void PredefinedAttributes::fill_file_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
 {
     index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, (boost::format( "%1$04o" ) % ( int )( entry->attributes().mode() & 0777 )).str());
+    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(entry->attributes().mode()));
 }
 
 } } // namespace piel::lib

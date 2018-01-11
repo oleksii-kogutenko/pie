@@ -128,6 +128,11 @@ struct PredefinedAttributes {
 
     // Asset mode (unix mode)
     static const std::string asset_mode;
+    static int asset_mode_mask;
+    static int default_asset_mode;
+
+    static std::string format_asset_mode(int mode);
+    static int parse_asset_mode(std::string mode_str, int default_value);
 
     // Fill predefined attributes
     static void fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path);
