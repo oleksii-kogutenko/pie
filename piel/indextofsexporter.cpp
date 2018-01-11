@@ -31,6 +31,8 @@
 
 namespace piel { namespace lib {
 
+namespace fs = boost::filesystem;
+
 IndexToFsExporter::IndexToFsExporter(const Index& index, ExportingPolitic politic)
     : index_(index)
     , politic_(politic)
@@ -41,10 +43,108 @@ IndexToFsExporter::~IndexToFsExporter()
 {
 }
 
+void IndexToFsExporter::create_parent_path(const boost::filesystem::path& item_path)
+{
+    fs::path parent_path    = item_path.parent_path();
+
+    LOG_T << "Export item path: " << item_path << " parent: " << parent_path;
+
+    // Create item parent directory
+    if (fs::exists(parent_path))
+    {
+        if (!fs::is_directory(parent_path))
+        {
+            LOG_T << "Replace parent by directory: " << parent_path;
+
+            fs::remove_all(parent_path);
+
+            fs::create_directories(parent_path);
+        }
+    }
+    else
+    {
+        LOG_T << "Create parent: " << parent_path;
+
+        fs::create_directories(parent_path);
+    }
+
+    if (!fs::exists(parent_path) || !fs::is_directory(parent_path))
+    {
+        LOG_F << "No parent: " << parent_path;
+
+        // No item parent
+        throw errors::unable_to_create_item_parent();
+    }
+}
+
+void IndexToFsExporter::export_asset_to_filesystem(const boost::filesystem::path& item_path,
+        const Index::Content::const_iterator& i)
+{
+    boost::shared_ptr<std::istream> isp = i->second.istream();
+    if (!isp)
+    {
+        LOG_F << "Non readable asset: " << i->second.id().string();
+
+        // Non readable asset
+        throw errors::attempt_to_export_non_readable_asset();
+    }
+
+    create_parent_path(item_path);
+
+    std::string asset_type = index_.get_attr_(i->first,
+            PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+
+    std::string asset_mode_str = index_.get_attr_(i->first, PredefinedAttributes::asset_mode);
+
+    int asset_mode = PredefinedAttributes::parse_asset_mode(asset_mode_str,
+            PredefinedAttributes::default_asset_mode);
+
+    if (asset_type == PredefinedAttributes::asset_type__file)
+    {
+        LOG_T << "Copy data from asset to file.";
+
+        boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
+
+        if (i->second.id().string() != fs::copy_into(osp, isp))
+        {
+            LOG_F << "Corrupted asset data.";
+
+            throw errors::exported_data_is_corrupted();
+        }
+
+        fs::permissions(item_path, (fs::perms)asset_mode);
+    }
+    else if (asset_type == PredefinedAttributes::asset_type__symlink)
+    {
+        LOG_T << "Create symbolic link.";
+
+        std::ostringstream* ossp = new std::ostringstream();
+        boost::shared_ptr<std::ostream> oss(ossp);
+
+        if (i->second.id().string() != fs::copy_into(oss, isp))
+        {
+            LOG_F << "Corrupted asset data.";
+
+            throw errors::exported_data_is_corrupted();
+        }
+
+        std::string symlink_target = ossp->str();
+
+        LOG_T << "Create symbolic link " << item_path << " -> " << symlink_target;
+
+        fs::create_symlink(symlink_target, item_path);
+
+        // TODO: permissions for symlinks
+        //fs::permissions(item_path, fs::perms::symlink_perms|((fs::perms)asset_mode));
+    }
+    else
+    {
+        throw errors::unknown_asset_type();
+    }
+}
+
 void IndexToFsExporter::export_to(const boost::filesystem::path& directory)
 {
-    namespace fs = boost::filesystem;
-
     if (!fs::exists(directory) || !fs::is_directory(directory))
     {
         LOG_F << "Attempt to export data to non existing directory: " << directory;
@@ -54,130 +154,40 @@ void IndexToFsExporter::export_to(const boost::filesystem::path& directory)
 
     for (Index::Content::const_iterator i = index_.content().begin(), end = index_.content().end(); i != end; ++i)
     {
-        boost::shared_ptr<std::istream> isp = i->second.istream();
-        if (isp)
+        fs::path item_path      = directory / i->first;
+
+        if (fs::exists(item_path))
         {
-            fs::path item_path      = directory / i->first;
-            fs::path parent_path    = item_path.parent_path();
-
-            LOG_T << "Export item path: " << item_path << " parent: " << parent_path;
-
-            // Create item parent directory
-            if (fs::exists(parent_path))
+            if (politic_ & ExportPolicy__replace_existing)
             {
-                if (!fs::is_directory(parent_path))
-                {
-                    LOG_T << "Replace parent by directory: " << parent_path;
+                LOG_T << "Replace existing file: " << item_path;
 
-                    fs::remove_all(parent_path);
-
-                    fs::create_directories(parent_path);
-                }
-            }
-            else
-            {
-                LOG_T << "Create parent: " << parent_path;
-
-                fs::create_directories(parent_path);
+                fs::remove_all(item_path);
             }
 
-            if (!fs::exists(parent_path) || !fs::is_directory(parent_path))
+            if (politic_ & ExportPolicy__backup_existing)
             {
-                LOG_F << "No parent: " << parent_path;
+                LOG_T << "Backup existing file: " << item_path;
 
-                // No item parent
-                throw errors::unable_to_create_item_parent();
+                fs::copy_file(item_path, item_path / (std::string(".backup.") + index_.self().id().string()));
             }
 
-            if (fs::exists(item_path))
+            if (politic_ & ExportPolicy__put_new_with_suffix)
             {
-                if (politic_ & ExportPolicy__replace_existing)
-                {
-                    LOG_T << "Replace existing file: " << item_path;
+                item_path /= std::string(".new.") + index_.self().id().string();
 
-                    fs::remove_all(item_path);
-                }
-
-                if (politic_ & ExportPolicy__backup_existing)
-                {
-                    LOG_T << "Backup existing file: " << item_path;
-
-                    fs::copy_file(item_path, item_path / (std::string(".backup.") + index_.self().id().string()));
-                }
-
-                if (politic_ & ExportPolicy__put_new_with_suffix)
-                {
-                    item_path /= std::string(".new.") + index_.self().id().string();
-
-                    LOG_T << "New item path: " << item_path;
-                }
-
-                if ((politic_ & ExportPolicy__keep_existing) && !(politic_ & ExportPolicy__put_new_with_suffix))
-                {
-                    LOG_T << "Keep existing: " << item_path;
-
-                    continue;
-                }
+                LOG_T << "New item path: " << item_path;
             }
 
-            std::string asset_type = index_.get_attr_(i->first,
-                    PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
-
-            std::string asset_mode_str = index_.get_attr_(i->first, PredefinedAttributes::asset_mode);
-
-            int asset_mode = PredefinedAttributes::parse_asset_mode(asset_mode_str,
-                    PredefinedAttributes::default_asset_mode);
-
-            if (asset_type == PredefinedAttributes::asset_type__file)
+            if ((politic_ & ExportPolicy__keep_existing) && !(politic_ & ExportPolicy__put_new_with_suffix))
             {
-                LOG_T << "Copy data from asset to file.";
+                LOG_T << "Keep existing: " << item_path;
 
-                boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
-
-                if (i->second.id().string() != fs::copy_into(osp, isp))
-                {
-                    LOG_F << "Corrupted asset data.";
-
-                    throw errors::exported_data_is_corrupted();
-                }
-
-                fs::permissions(item_path, (fs::perms)asset_mode);
-            }
-            else if (asset_type == PredefinedAttributes::asset_type__symlink)
-            {
-                LOG_T << "Create symbolic link.";
-
-                std::ostringstream* ossp = new std::ostringstream();
-                boost::shared_ptr<std::ostream> oss(ossp);
-
-                if (i->second.id().string() != fs::copy_into(oss, isp))
-                {
-                    LOG_F << "Corrupted asset data.";
-
-                    throw errors::exported_data_is_corrupted();
-                }
-
-                std::string symlink_target = ossp->str();
-
-                LOG_T << "Create symbolic link " << item_path << " -> " << symlink_target;
-
-                fs::create_symlink(symlink_target, item_path);
-
-                // TODO: permissions for symlinks
-                //fs::permissions(item_path, fs::perms::symlink_perms|((fs::perms)asset_mode));
-            }
-            else
-            {
-                throw errors::unknown_asset_type();
+                continue;
             }
         }
-        else
-        {
-            LOG_F << "Non readable asset: " << i->second.id().string();
 
-            // Non readable asset
-            throw errors::attempt_to_export_non_readable_asset();
-        }
+        export_asset_to_filesystem(item_path, i);
     }
 }
 

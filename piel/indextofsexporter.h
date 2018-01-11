@@ -57,6 +57,10 @@ public:
     ~IndexToFsExporter();
 
     void export_to(const boost::filesystem::path& directory);
+    void export_asset_to_filesystem(const boost::filesystem::path& item_path,
+            const Index::Content::const_iterator& i);
+
+    void create_parent_path(const boost::filesystem::path& item_path);
 
 private:
     Index               index_;

@@ -28,6 +28,7 @@
 
 #include <clean.h>
 #include <fsindexer.h>
+#include <indextofsexporter.h>
 #include <indexesdiff.h>
 #include <logging.h>
 
@@ -46,15 +47,23 @@ Clean::~Clean()
 
 std::string Clean::operator()()
 {
-    piel::lib::Index current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+    typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ConstIter;
+    typedef piel::lib::Index::Content::const_iterator ContentIter;
 
-    piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(working_copy()->reference_index(), current_index);
+    piel::lib::Index current_index = piel::lib::FsIndexer::build(
+            working_copy()->working_dir(),
+                working_copy()->metadata_dir());
+
+    piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(
+            working_copy()->reference_index(),
+                current_index);
+
     if (!diff.empty())
     {
-        typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ConstIter;
         for(ConstIter i = diff.content_diff().begin(), end = diff.content_diff().end(); i != end; ++i)
         {
             fs::path item_path = working_copy()->working_dir() / i->first;
+            fs::path parent_path = item_path.parent_path();
 
             switch (i->second.first)
             {
@@ -62,44 +71,31 @@ std::string Clean::operator()()
             break;
             case piel::lib::IndexesDiff::ElementState_removed:
             {
-                boost::optional<piel::lib::Asset> oa = working_copy()->reference_index().asset(i->first);
-                piel::lib::Asset asset = *oa;
+                LOG_T << "Restore removed: " << i->first;
 
-                fs::path item_parent = item_path.parent_path();
+                const piel::lib::Index::Content& reference_content =
+                        working_copy()->reference_index().content();
 
-                fs::create_directories(item_parent);
-
-                LOG_T << "Restore removed file: " << item_path;
-
-                // Create item and copy content into it
-                boost::shared_ptr<std::istream> isp = asset.istream();
-                if (!isp)
+                ContentIter restore_content = reference_content.find(i->first);
+                if (restore_content != reference_content.end())
                 {
-                    LOG_F << "Non readable asset: " << asset.id().string();
+                    piel::lib::IndexToFsExporter exporter(working_copy()->reference_index(),
+                            piel::lib::ExportPolicy__replace_existing);
 
-                    throw errors::non_readable_asset();
-                }
-
-                boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
-
-                if (asset.id().string() != fs::copy_into(osp, isp))
-                {
-                    LOG_F << "Corrupted data.";
-
-                    throw errors::asset_data_is_corrupted();
+                    exporter.export_asset_to_filesystem(item_path, restore_content);
                 }
             }
             break;
             case piel::lib::IndexesDiff::ElementState_added:
             {
-                LOG_T << "Remove added file: " << item_path;
+                LOG_T << "Remove added: " << item_path;
 
                 fs::remove(item_path);
-                if (item_path.parent_path() != working_copy()->working_dir())
+                if (parent_path != working_copy()->working_dir())
                 {
                     // It will be succeesible if directory now empty
                     try {
-                        fs::remove(item_path.parent_path());
+                        fs::remove(parent_path);
                     } catch (const std::runtime_error& e) {}
                 }
             }
@@ -107,7 +103,7 @@ std::string Clean::operator()()
             case piel::lib::IndexesDiff::ElementState_modified:
                 // Keep modifications
 
-                LOG_T << "Keep modifications in file: " << item_path;
+                LOG_T << "Keep modifications for: " << item_path;
 
             break;
             }
