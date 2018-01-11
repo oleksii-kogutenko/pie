@@ -101,6 +101,7 @@ public:
     const ContentDiff& content_diff() const;
     const AttributesDiff& attributes_diff() const;
     const ContentAttributesDiff& content_attributes_diff() const;
+    AttributesDiff content_item_attributes_diff(const ContentAttributesDiff::const_iterator& element) const;
 
     static IndexesDiff diff(const Index& first_index, const Index& second_index);
 

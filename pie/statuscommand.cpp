@@ -26,26 +26,64 @@
  *
  */
 
-#ifndef COMMANDS_STATUS_H_
-#define COMMANDS_STATUS_H_
+#include <statuscommand.h>
+#include <status.h>
 
-#include <workingcopycommand.h>
+namespace pie { namespace app {
 
-namespace piel { namespace cmd {
+namespace po = boost::program_options;
 
-class Status: public WorkingCopyCommand
+StatusCommand::StatusCommand(Application *app, int argc, char **argv)
+    : ICommand(app)
+    , argc_(argc)
+    , argv_(argv)
+    , working_copy_()
 {
-public:
-    static const std::string Status_clean;
-    static const std::string Status_dirty;
+}
 
-    Status(const piel::lib::WorkingCopy::Ptr& working_copy);
-    virtual ~Status();
+StatusCommand::~StatusCommand()
+{
+}
 
-    std::string operator()();
+void StatusCommand::show_command_help_message(const po::options_description& desc)
+{
+    std::cerr << "Usage: status" << std::endl;
+    std::cout << desc;
+}
 
-};
+int StatusCommand::perform()
+{
+    po::options_description desc("Status reference options");
 
-} } // namespace piel::cmd
+    if (show_help(desc, argc_, argv_))
+    {
+        return -1;
+    }
 
-#endif /* COMMANDS_STATUS_H_ */
+    try
+    {
+        working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
+
+        piel::cmd::Status status(working_copy_);
+
+        std::string final_status_str = status();
+
+        std::cout << "Status: "<< final_status_str << std::endl;
+    }
+    catch (const piel::lib::errors::attach_to_non_working_copy& e)
+    {
+        std::cerr << "No working copy detected at " <<  boost::filesystem::current_path() << "!" << std::endl;
+        return -1;
+    }
+
+    if (!working_copy_->is_valid())
+    {
+        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+
+} } // namespace pie::app

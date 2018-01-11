@@ -26,26 +26,33 @@
  *
  */
 
-#ifndef COMMANDS_STATUS_H_
-#define COMMANDS_STATUS_H_
+#ifndef PIE_STATUSCOMMAND_H_
+#define PIE_STATUSCOMMAND_H_
 
-#include <workingcopycommand.h>
+#include <application.h>
+#include <workingcopy.h>
 
-namespace piel { namespace cmd {
+namespace pie { namespace app {
 
-class Status: public WorkingCopyCommand
+class StatusCommand: public ICommand
 {
 public:
-    static const std::string Status_clean;
-    static const std::string Status_dirty;
+    StatusCommand(Application *app, int argc, char **argv);
+    virtual ~StatusCommand();
 
-    Status(const piel::lib::WorkingCopy::Ptr& working_copy);
-    virtual ~Status();
+    int perform();
 
-    std::string operator()();
+protected:
+    void show_command_help_message(const boost::program_options::options_description& desc);
+
+private:
+    int argc_;
+    char **argv_;
+
+    piel::lib::WorkingCopy::Ptr working_copy_;
 
 };
 
-} } // namespace piel::cmd
+} } // namespace pie::app
 
-#endif /* COMMANDS_STATUS_H_ */
+#endif /* PIE_STATUSCOMMAND_H_ */

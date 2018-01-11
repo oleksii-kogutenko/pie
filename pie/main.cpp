@@ -32,6 +32,7 @@
 #include <initworkingcopycommand.h>
 #include <createcommand.h>
 #include <checkoutcommand.h>
+#include <statuscommand.h>
 #include <resetcommand.h>
 #include <commitcommand.h>
 
@@ -43,6 +44,7 @@ int main(int argc, char **argv)
     application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("create", "Create new empty reference."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CheckoutCommand>("checkout", "Checkout reference."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::StatusCommand>("status", "Status."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset to reference."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit."));
 

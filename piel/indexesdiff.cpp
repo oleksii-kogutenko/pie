@@ -200,6 +200,11 @@ namespace fmt {
 
 } // namespace fmt
 
+IndexesDiff::AttributesDiff IndexesDiff::content_item_attributes_diff(const ContentAttributesDiff::const_iterator& element_iter) const
+{
+    return AttributesDiffBuilder::diff(element_iter->second.second.first, element_iter->second.second.second);
+}
+
 std::string IndexesDiff::format() const
 {
     std::ostringstream oss;
@@ -225,7 +230,7 @@ std::string IndexesDiff::format() const
 
         if (element_iter != content_attributes_diff_.end())
         {
-            AttributesDiff content_attributes_diff = AttributesDiffBuilder::diff(element_iter->second.second.first, element_iter->second.second.second);
+            AttributesDiff content_attributes_diff = content_item_attributes_diff(element_iter);
 
             for (AttributesDiff::const_iterator j = content_attributes_diff.begin(), end1 = content_attributes_diff.end(); j != end1; ++j)
             {

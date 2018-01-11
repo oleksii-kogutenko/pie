@@ -26,21 +26,119 @@
  *
  */
 
-#include "status.h"
+#include <status.h>
+#include <logging.h>
+#include <fsindexer.h>
+#include <indexesdiff.h>
 
-namespace piel {
-namespace cmd {
+#include <iostream>
 
-Status::Status()
+namespace piel { namespace cmd {
+
+namespace fmt {
+
+    std::string tab(int count)
+    {
+        std::ostringstream oss;
+        for (int i = 0; i < count; ++i)
+        {
+            oss << "\t";
+        }
+        return oss.str();
+    }
+
+    bool is_printable(piel::lib::IndexesDiff::ElementState s)
+    {
+        switch (s) {
+        case piel::lib::IndexesDiff::ElementState_unmodified:return false;
+        case piel::lib::IndexesDiff::ElementState_removed:   return true;
+        case piel::lib::IndexesDiff::ElementState_added:     return true;
+        case piel::lib::IndexesDiff::ElementState_modified:  return true;
+        }
+        return false;
+    }
+
+    std::string element_state(piel::lib::IndexesDiff::ElementState s)
+    {
+        switch (s) {
+        case piel::lib::IndexesDiff::ElementState_unmodified:return " ";
+        case piel::lib::IndexesDiff::ElementState_removed:   return "D";
+        case piel::lib::IndexesDiff::ElementState_added:     return "A";
+        case piel::lib::IndexesDiff::ElementState_modified:  return "M";
+        }
+        return " ";
+    }
+
+} // namespace fmt
+
+/*static*/ const std::string Status::Status_clean = "clean";
+/*static*/ const std::string Status::Status_dirty = "dirty";
+
+Status::Status(const piel::lib::WorkingCopy::Ptr& working_copy)
+    : WorkingCopyCommand(working_copy)
 {
-    // TODO Auto-generated constructor stub
-
 }
 
 Status::~Status()
 {
-    // TODO Auto-generated destructor stub
 }
 
-} // namespace cmd
-} // namespace piel
+std::string Status::operator()()
+{
+    typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ContentIter;
+    typedef piel::lib::IndexesDiff::ContentAttributesDiff::const_iterator ContentAttrsIter;
+    typedef piel::lib::IndexesDiff::AttributesDiff AttributesDiff;
+    typedef piel::lib::IndexesDiff::AttributesDiff::const_iterator AttrsDiffIter;
+
+    std::string final_status_str = Status_clean;
+
+    piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(
+            working_copy()->reference_index(), working_copy()->current_index());
+
+    for (ContentIter i = diff.content_diff().begin(), end = diff.content_diff().end(); i != end; ++i)
+    {
+        ContentAttrsIter element_iter = diff.content_attributes_diff().find(i->first);
+
+        bool has_attrubutes_changes = element_iter != diff.content_attributes_diff().end();
+
+        if (fmt::is_printable(i->second.first) || has_attrubutes_changes)
+        {
+            if (fmt::is_printable(i->second.first))
+            {
+                std::cout << fmt::element_state(i->second.first) << " " << i->first << std::endl;
+
+                final_status_str = Status_dirty;
+            }
+
+            AttributesDiff content_attributes_diff = diff.content_item_attributes_diff(element_iter);
+
+            for (AttrsDiffIter j = content_attributes_diff.begin(), end1 = content_attributes_diff.end(); j != end1; ++j)
+            {
+                if (fmt::is_printable(j->second.first) && j->second.first != piel::lib::IndexesDiff::ElementState_removed)
+                {
+                    if (!fmt::is_printable(i->second.first))
+                    {
+                        std::cout << fmt::element_state(i->second.first) << " " << i->first << std::endl;
+                    }
+
+                    std::cout << fmt::tab(1)
+                              << "attribute: "
+                              << fmt::element_state(j->second.first)
+                              << " "
+                              << j->first
+                              << " "
+                              << j->second.second.first
+                              << " -> "
+                              << j->second.second.second
+                              << std::endl;
+
+                    final_status_str = Status_dirty;
+                }
+            }
+        }
+    }
+
+    return final_status_str;
+}
+
+} } // namespace piel::cmd
