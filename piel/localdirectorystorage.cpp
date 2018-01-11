@@ -199,7 +199,7 @@ void LocalDirectoryStorage::put(std::set<Asset> assets)
     }
 }
 
-void LocalDirectoryStorage::put(const refs::Ref& ref)
+void LocalDirectoryStorage::update_reference(const refs::Ref& ref)
 {
     refs_[ref.first] = ref.second.string();
     refs_.store(*fs::ostream(references_).get());

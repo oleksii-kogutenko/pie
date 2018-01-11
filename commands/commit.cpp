@@ -107,7 +107,7 @@ std::string Commit::operator()()
 
     // Put changes into local storage
     ls->put(current_index.assets());
-    ls->put(piel::lib::refs::Ref(working_copy()->reference(), current_index.self()));
+    ls->update_reference(piel::lib::refs::Ref(working_copy()->reference(), current_index.self()));
 
     working_copy()->update_reference(working_copy()->reference(), current_index);
     return working_copy()->reference_index().self().id().string();

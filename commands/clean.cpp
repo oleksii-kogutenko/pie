@@ -48,7 +48,7 @@ Clean::~Clean()
 std::string Clean::operator()()
 {
     typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ConstIter;
-    typedef piel::lib::Index::Content::const_iterator ContentIter;
+    typedef piel::lib::Index::Content::const_iterator           ContentIter;
 
     piel::lib::Index current_index = piel::lib::FsIndexer::build(
             working_copy()->working_dir(),
@@ -58,55 +58,55 @@ std::string Clean::operator()()
             working_copy()->reference_index(),
                 current_index);
 
-    if (!diff.empty())
+    ConstIter i     = diff.content_diff().begin();
+    ConstIter end   = diff.content_diff().end();
+
+    for(; i != end; ++i)
     {
-        for(ConstIter i = diff.content_diff().begin(), end = diff.content_diff().end(); i != end; ++i)
+        fs::path item_path = working_copy()->working_dir() / i->first;
+        fs::path parent_path = item_path.parent_path();
+
+        switch (i->second.first)
         {
-            fs::path item_path = working_copy()->working_dir() / i->first;
-            fs::path parent_path = item_path.parent_path();
+        case piel::lib::IndexesDiff::ElementState_unmodified:
+        break;
+        case piel::lib::IndexesDiff::ElementState_removed:
+        {
+            LOG_T << "Restore removed: " << i->first;
 
-            switch (i->second.first)
+            const piel::lib::Index::Content& reference_content =
+                    working_copy()->reference_index().content();
+
+            ContentIter restore_content = reference_content.find(i->first);
+            if (restore_content != reference_content.end())
             {
-            case piel::lib::IndexesDiff::ElementState_unmodified:
-            break;
-            case piel::lib::IndexesDiff::ElementState_removed:
+                piel::lib::IndexToFsExporter exporter(working_copy()->reference_index(),
+                        piel::lib::ExportPolicy__replace_existing);
+
+                exporter.export_asset_to_filesystem(item_path, restore_content);
+            }
+        }
+        break;
+        case piel::lib::IndexesDiff::ElementState_added:
+        {
+            LOG_T << "Remove added: " << item_path;
+
+            fs::remove(item_path);
+            if (parent_path != working_copy()->working_dir())
             {
-                LOG_T << "Restore removed: " << i->first;
-
-                const piel::lib::Index::Content& reference_content =
-                        working_copy()->reference_index().content();
-
-                ContentIter restore_content = reference_content.find(i->first);
-                if (restore_content != reference_content.end())
-                {
-                    piel::lib::IndexToFsExporter exporter(working_copy()->reference_index(),
-                            piel::lib::ExportPolicy__replace_existing);
-
-                    exporter.export_asset_to_filesystem(item_path, restore_content);
-                }
+                // It will be succeesible if directory now empty
+                try {
+                    fs::remove(parent_path);
+                } catch (const std::runtime_error& e) {}
             }
-            break;
-            case piel::lib::IndexesDiff::ElementState_added:
-            {
-                LOG_T << "Remove added: " << item_path;
+        }
+        break;
+        case piel::lib::IndexesDiff::ElementState_modified:
+            // Keep modifications
 
-                fs::remove(item_path);
-                if (parent_path != working_copy()->working_dir())
-                {
-                    // It will be succeesible if directory now empty
-                    try {
-                        fs::remove(parent_path);
-                    } catch (const std::runtime_error& e) {}
-                }
-            }
-            break;
-            case piel::lib::IndexesDiff::ElementState_modified:
-                // Keep modifications
+            LOG_T << "Keep modifications for: " << item_path;
 
-                LOG_T << "Keep modifications for: " << item_path;
-
-            break;
-            }
+        break;
         }
     }
 

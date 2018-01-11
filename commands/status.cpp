@@ -97,9 +97,9 @@ std::string Status::operator()()
 
     for (ContentIter i = diff.content_diff().begin(), end = diff.content_diff().end(); i != end; ++i)
     {
-        ContentAttrsIter element_iter = diff.content_attributes_diff().find(i->first);
+        ContentAttrsIter attributes_element_iter = diff.content_attributes_diff().find(i->first);
 
-        bool has_attrubutes_changes = element_iter != diff.content_attributes_diff().end();
+        bool has_attrubutes_changes = attributes_element_iter != diff.content_attributes_diff().end();
 
         if (fmt::is_printable(i->second.first) || has_attrubutes_changes)
         {
@@ -110,7 +110,7 @@ std::string Status::operator()()
                 final_status_str = Status_dirty;
             }
 
-            AttributesDiff content_attributes_diff = diff.content_item_attributes_diff(element_iter);
+            AttributesDiff content_attributes_diff = diff.content_item_attributes_diff(attributes_element_iter);
 
             for (AttrsDiffIter j = content_attributes_diff.begin(), end1 = content_attributes_diff.end(); j != end1; ++j)
             {

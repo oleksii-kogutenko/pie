@@ -75,7 +75,7 @@ void MemoryObjectsStorage::put(std::set<Asset> assets)
     }
 }
 
-void MemoryObjectsStorage::put(const refs::Ref& ref)
+void MemoryObjectsStorage::update_reference(const refs::Ref& ref)
 {
     refs_.insert(ref);
 }

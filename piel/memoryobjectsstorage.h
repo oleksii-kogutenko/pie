@@ -49,7 +49,7 @@ public:
     // Put readable asset(s) into storage.
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
-    void put(const refs::Ref& ref);
+    void update_reference(const refs::Ref& ref);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;
