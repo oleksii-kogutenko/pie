@@ -27,10 +27,11 @@
  */
 
 #include <checksumsdigestbuilder.hpp>
+#include <commonconstants.h>
 
 namespace piel { namespace lib {
 
-const size_t DigestConstants::buf_size = 640*1024;   //!< Size of the internal IO buffers.
+const size_t DigestConstants::buf_size = piel::lib::CommonConstants::io_buffer_size;       //!< Size of the internal IO buffers.
 
 template<> char const* const DigestTraits<Sha256>::name_    = "SHA-256";
 template<> const int DigestTraits<Sha256>::len_             = SHA256_DIGEST_LENGTH;

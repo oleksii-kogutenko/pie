@@ -36,12 +36,12 @@ namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
 
-/*static*/ const std::string PredefinedAttributes::asset_type          = "atype";
-/*static*/ const std::string PredefinedAttributes::asset_type__symlink = "symlink";
-/*static*/ const std::string PredefinedAttributes::asset_type__file    = "file";
-/*static*/ const std::string PredefinedAttributes::asset_mode          = "amode";
-/*static*/ int        PredefinedAttributes::asset_mode_mask            = 0777;
-/*static*/ int        PredefinedAttributes::default_asset_mode         = 0666;
+/*static*/ const std::string PredefinedAttributes::asset_type           = "atype";
+/*static*/ const std::string PredefinedAttributes::asset_type__symlink  = "symlink";
+/*static*/ const std::string PredefinedAttributes::asset_type__file     = "file";
+/*static*/ const std::string PredefinedAttributes::asset_mode           = "amode";
+/*static*/ const int PredefinedAttributes::asset_mode_mask              = 0777;
+/*static*/ const int PredefinedAttributes::default_asset_mode           = 0666;
 
 Index::Index()
     : self_(Asset::create_id(AssetId::not_calculated))

@@ -128,8 +128,8 @@ struct PredefinedAttributes {
 
     // Asset mode (unix mode)
     static const std::string asset_mode;
-    static int asset_mode_mask;
-    static int default_asset_mode;
+    static const int asset_mode_mask;
+    static const int default_asset_mode;
 
     static std::string format_asset_mode(int mode);
     static int parse_asset_mode(std::string mode_str, int default_value);
