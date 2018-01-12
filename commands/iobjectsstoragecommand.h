@@ -26,33 +26,30 @@
  *
  */
 
-#ifndef COMMANDS_LOG_H_
-#define COMMANDS_LOG_H_
+#ifndef COMMANDS_IOBJECTSSTORAGECOMMAND_H_
+#define COMMANDS_IOBJECTSSTORAGECOMMAND_H_
 
-#include <treeindex.h>
-#include <iobjectsstoragecommand.h>
+#include <command.h>
+#include <iobjectsstorage.h>
 
 namespace piel { namespace cmd {
 
-class Log: public IObjectsStorageCommand
+class IObjectsStorageCommand: public Command
 {
 public:
-    Log(const piel::lib::IObjectsStorage::Ptr& storage,
-            const piel::lib::TreeIndex& ref_index, const piel::lib::refs::Range& range);
+    IObjectsStorageCommand(const piel::lib::IObjectsStorage::Ptr& storage);
+    virtual ~IObjectsStorageCommand();
 
-    virtual ~Log();
-
-    void operator()();
-
-protected:
-    void format_log_element(const piel::lib::TreeIndex& index) const;
+    inline piel::lib::IObjectsStorage::Ptr storage()
+    {
+        return storage_;
+    }
 
 private:
-    piel::lib::refs::Range range_;
-    piel::lib::TreeIndex ref_index_;
+    piel::lib::IObjectsStorage::Ptr storage_;
 
 };
 
 } } // namespace piel::cmd
 
-#endif /* COMMANDS_LOG_H_ */
+#endif /* COMMANDS_IOBJECTSSTORAGECOMMAND_H_ */

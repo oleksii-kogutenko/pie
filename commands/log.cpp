@@ -31,9 +31,11 @@
 
 namespace piel { namespace cmd {
 
-Log::Log(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range)
-    : WorkingCopyCommand(working_copy)
+Log::Log(const piel::lib::IObjectsStorage::Ptr& storage,
+        const piel::lib::TreeIndex& ref_index, const piel::lib::refs::Range& range)
+    : IObjectsStorageCommand(storage)
     , range_(range)
+    , ref_index_(ref_index)
 {
 }
 
@@ -57,28 +59,28 @@ void Log::operator()()
 
     if (!range_.first.empty())
     {
-        piel::lib::AssetId fromId = working_copy()->local_storage()->resolve(range_.first);
+        piel::lib::AssetId fromId = storage()->resolve(range_.first);
         if (piel::lib::AssetId::empty != fromId)
         {
-            from = *piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), range_.first);
+            from = *piel::lib::TreeIndex::from_ref(storage(), range_.first);
         }
     }
 
     if (!range_.second.empty())
     {
-        piel::lib::AssetId toId = working_copy()->local_storage()->resolve(range_.second);
+        piel::lib::AssetId toId = storage()->resolve(range_.second);
         if (piel::lib::AssetId::empty != toId)
         {
-            to = *piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), range_.second);
+            to = *piel::lib::TreeIndex::from_ref(storage(), range_.second);
         }
         else
         {
-            to = working_copy()->reference_index();
+            to = ref_index_;
         }
     }
     else
     {
-        to = working_copy()->reference_index();
+        to = ref_index_;
     }
 
     if (from.self().id() == to.self().id())
@@ -97,7 +99,7 @@ void Log::operator()()
         if (current.parent().id() == piel::lib::AssetId::empty)
             break;
 
-        boost::optional<piel::lib::TreeIndex> opt = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), current.parent().id().string());
+        boost::optional<piel::lib::TreeIndex> opt = piel::lib::TreeIndex::from_ref(storage(), current.parent().id().string());
         if (!opt)
             break;
 
