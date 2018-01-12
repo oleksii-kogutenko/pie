@@ -35,6 +35,7 @@
 #include <statuscommand.h>
 #include <resetcommand.h>
 #include <commitcommand.h>
+#include <logcommand.h>
 
 int main(int argc, char **argv)
 {
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
     application.register_command(new pie::app::CommmandConstructor<pie::app::StatusCommand>("status", "Show working copy status in comparsion to referenced tree."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset working copy content to the tree state."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit tree state into current tree."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::LogCommand>("log", "Show changes log."));
 
     return application.run();
 }

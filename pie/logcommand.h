@@ -26,29 +26,34 @@
  *
  */
 
-#ifndef COMMANDS_LOG_H_
-#define COMMANDS_LOG_H_
+#ifndef PIE_LOGCOMMAND_H_
+#define PIE_LOGCOMMAND_H_
 
-#include <workingcopycommand.h>
+#include <application.h>
+#include <workingcopy.h>
 
-namespace piel { namespace cmd {
+namespace pie { namespace app {
 
-class Log: public WorkingCopyCommand
+class LogCommand: public ICommand
 {
 public:
-    Log(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range);
-    virtual ~Log();
+    LogCommand(Application *app, int argc, char **argv);
+    virtual ~LogCommand();
 
-    void operator()();
+    int perform();
 
 protected:
-    void format_log_element(const piel::lib::TreeIndex& index) const;
+    void show_command_help_message(const boost::program_options::options_description& desc);
 
 private:
-    piel::lib::refs::Range range_;
+    int argc_;
+    char **argv_;
+
+    piel::lib::WorkingCopy::Ptr working_copy_;
+    std::string                 range_spec_;
 
 };
 
-} } // namespace piel::cmd
+} } // namespace pie::app
 
-#endif /* COMMANDS_LOG_H_ */
+#endif /* PIE_LOGCOMMAND_H_ */

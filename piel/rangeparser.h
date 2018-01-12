@@ -26,29 +26,22 @@
  *
  */
 
-#ifndef COMMANDS_LOG_H_
-#define COMMANDS_LOG_H_
+#ifndef PIEL_RANGEPARSER_H_
+#define PIEL_RANGEPARSER_H_
 
-#include <workingcopycommand.h>
+#include <iobjectsstorage.h>
 
-namespace piel { namespace cmd {
+namespace piel { namespace lib {
 
-class Log: public WorkingCopyCommand
+class RangeParser
 {
 public:
-    Log(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range);
-    virtual ~Log();
+    RangeParser();
+    ~RangeParser();
 
-    void operator()();
-
-protected:
-    void format_log_element(const piel::lib::TreeIndex& index) const;
-
-private:
-    piel::lib::refs::Range range_;
-
+    static refs::Range parse(const std::string& spec);
 };
 
-} } // namespace piel::cmd
+} } // namespace piel::lib
 
-#endif /* COMMANDS_LOG_H_ */
+#endif /* PIEL_RANGERARSER_H_ */
