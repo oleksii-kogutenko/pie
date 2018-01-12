@@ -26,20 +26,33 @@
  *
  */
 
-#ifndef COMMANDS_ADD_H_
-#define COMMANDS_ADD_H_
+#ifndef PIE_TREECOMMAND_H_
+#define PIE_TREECOMMAND_H_
 
-namespace piel {
-namespace cmd {
+#include <application.h>
+#include <workingcopy.h>
 
-class Add
+namespace pie { namespace app {
+
+class TreeCommand: public ICommand
 {
 public:
-    Add();
-    virtual ~Add();
+    TreeCommand(Application *app, int argc, char **argv);
+    virtual ~TreeCommand();
+
+    int perform();
+
+protected:
+    void show_command_help_message(const boost::program_options::options_description& desc);
+
+private:
+    int argc_;
+    char **argv_;
+
+    piel::lib::WorkingCopy::Ptr working_copy_;
+
 };
 
-} // namespace cmd
-} // namespace piel
+} } // namespace pie::app
 
-#endif /* COMMANDS_ADD_H_ */
+#endif /* PIE_TREECOMMAND_H_ */

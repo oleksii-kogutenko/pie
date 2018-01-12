@@ -26,21 +26,61 @@
  *
  */
 
-#include "add.h"
+#include <tree.h>
 
-namespace piel {
-namespace cmd {
+namespace piel { namespace cmd {
 
-Add::Add()
+Tree::Tree(const piel::lib::WorkingCopy::Ptr& working_copy)
+    : WorkingCopyCommand(working_copy)
+    , show_all_(false)
+    , verbose_(false)
 {
-    // TODO Auto-generated constructor stub
-
 }
 
-Add::~Add()
+Tree::~Tree()
 {
-    // TODO Auto-generated destructor stub
 }
 
-} // namespace cmd
-} // namespace piel
+const Tree* Tree::set_show_all(bool flag)
+{
+    show_all_ = flag;
+    return this;
+}
+
+const Tree* Tree::set_verbose(bool flag)
+{
+    verbose_ = flag;
+    return this;
+}
+
+void Tree::operator()()
+{
+    if (!show_all_)
+    {
+        std::cout << working_copy()->reference() << std::endl;
+
+        if (verbose_)
+            std::cout << ":" << working_copy()->reference_index().self().id().string();
+
+        std::cout << std::endl;
+
+        return;
+    }
+
+    std::set<piel::lib::refs::Ref> all_refs = working_copy()->local_storage()->references();
+
+    for(std::set<piel::lib::refs::Ref>::const_iterator i = all_refs.begin(), end = all_refs.end(); i != end; ++i)
+    {
+        if (working_copy()->reference() == i->first)
+            std::cout << "*" << i->first;
+        else
+            std::cout << " " << i->first;
+
+        if (verbose_)
+            std::cout << ":" << i->second.string();
+
+        std::cout << std::endl;
+    }
+}
+
+} } // namespace piel::cmd
