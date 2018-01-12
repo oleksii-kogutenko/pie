@@ -26,28 +26,29 @@
  *
  */
 
-#include <indextofsexporter.h>
+#include <assetsextractor.h>
+
 #include <logging.h>
 
 namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
 
-IndexToFsExporter::IndexToFsExporter(const Index& index, ExportingPolitic politic)
+AssetsExtractor::AssetsExtractor(const TreeIndex& index, ExtractPolitic politic)
     : index_(index)
     , politic_(politic)
 {
 }
 
-IndexToFsExporter::~IndexToFsExporter()
+AssetsExtractor::~AssetsExtractor()
 {
 }
 
-void IndexToFsExporter::create_parent_path(const boost::filesystem::path& item_path)
+void AssetsExtractor::create_parent_path(const boost::filesystem::path& item_path)
 {
     fs::path parent_path    = item_path.parent_path();
 
-    LOG_T << "Export item path: " << item_path << " parent: " << parent_path;
+    LOG_T << "Extract item: " << item_path << " parent: " << parent_path;
 
     // Create item parent directory
     if (fs::exists(parent_path))
@@ -77,8 +78,8 @@ void IndexToFsExporter::create_parent_path(const boost::filesystem::path& item_p
     }
 }
 
-void IndexToFsExporter::export_asset_to_filesystem(const boost::filesystem::path& item_path,
-        const Index::Content::const_iterator& i)
+void AssetsExtractor::extract_asset_into(const boost::filesystem::path& item_path,
+        const TreeIndex::Content::const_iterator& i)
 {
     boost::shared_ptr<std::istream> isp = i->second.istream();
     if (!isp)
@@ -143,43 +144,43 @@ void IndexToFsExporter::export_asset_to_filesystem(const boost::filesystem::path
     }
 }
 
-void IndexToFsExporter::export_to(const boost::filesystem::path& directory)
+void AssetsExtractor::extract_into(const boost::filesystem::path& directory)
 {
     if (!fs::exists(directory) || !fs::is_directory(directory))
     {
-        LOG_F << "Attempt to export data to non existing directory: " << directory;
+        LOG_F << "Attempt to extract data to non existing directory: " << directory;
 
         throw errors::attempt_to_export_to_non_existing_directory();
     }
 
-    for (Index::Content::const_iterator i = index_.content().begin(), end = index_.content().end(); i != end; ++i)
+    for (TreeIndex::Content::const_iterator i = index_.content().begin(), end = index_.content().end(); i != end; ++i)
     {
         fs::path item_path      = directory / i->first;
 
         if (fs::exists(item_path))
         {
-            if (politic_ & ExportPolicy__replace_existing)
+            if (politic_ & ExtractPolicy__replace_existing)
             {
                 LOG_T << "Replace existing file: " << item_path;
 
                 fs::remove_all(item_path);
             }
 
-            if (politic_ & ExportPolicy__backup_existing)
+            if (politic_ & ExtractPolicy__backup_existing)
             {
                 LOG_T << "Backup existing file: " << item_path;
 
                 fs::copy_file(item_path, item_path / (std::string(".backup.") + index_.self().id().string()));
             }
 
-            if (politic_ & ExportPolicy__put_new_with_suffix)
+            if (politic_ & ExtractPolicy__put_new_with_suffix)
             {
                 item_path /= std::string(".new.") + index_.self().id().string();
 
                 LOG_T << "New item path: " << item_path;
             }
 
-            if ((politic_ & ExportPolicy__keep_existing) && !(politic_ & ExportPolicy__put_new_with_suffix))
+            if ((politic_ & ExtractPolicy__keep_existing) && !(politic_ & ExtractPolicy__put_new_with_suffix))
             {
                 LOG_T << "Keep existing: " << item_path;
 
@@ -187,7 +188,7 @@ void IndexToFsExporter::export_to(const boost::filesystem::path& directory)
             }
         }
 
-        export_asset_to_filesystem(item_path, i);
+        extract_asset_into(item_path, i);
     }
 }
 

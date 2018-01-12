@@ -29,8 +29,8 @@
 #ifndef FSINDEXER_H
 #define FSINDEXER_H
 
-#include <index.h>
 #include <boost/filesystem.hpp>
+#include <treeindex.h>
 
 namespace piel { namespace lib {
 
@@ -48,7 +48,7 @@ public:
     //! \param dir indexed directory.
     //! \param exclude sub directory what will be skipped on indexing.
     //! \return an index.
-    static Index build(const boost::filesystem::path& dir, const boost::filesystem::path& exclude = boost::filesystem::path());
+    static TreeIndex build(const boost::filesystem::path& dir, const boost::filesystem::path& exclude = boost::filesystem::path());
 
 };
 

@@ -29,7 +29,7 @@
 #ifndef PIEL_INDEXESDIFF_H_
 #define PIEL_INDEXESDIFF_H_
 
-#include <index.h>
+#include <treeindex.h>
 
 namespace piel { namespace lib {
 
@@ -45,8 +45,8 @@ public:
     };
 
     typedef std::pair<
-            Index::Content::value_type::second_type,
-            Index::Content::value_type::second_type
+            TreeIndex::Content::value_type::second_type,
+            TreeIndex::Content::value_type::second_type
             > ContentDiffValueType;
 
     typedef std::pair<
@@ -55,13 +55,13 @@ public:
             > ContentDiffElement;
 
     typedef std::map<
-            Index::Content::value_type::first_type,
+            TreeIndex::Content::value_type::first_type,
             ContentDiffElement
             > ContentDiff;
 
     typedef std::pair<
-            Index::Attributes::value_type::second_type,
-            Index::Attributes::value_type::second_type
+            TreeIndex::Attributes::value_type::second_type,
+            TreeIndex::Attributes::value_type::second_type
             > AttributesDiffValueType;
 
     typedef std::pair<
@@ -70,13 +70,13 @@ public:
             > AttributesDiffElement;
 
     typedef std::map<
-            Index::Attributes::value_type::first_type,
+            TreeIndex::Attributes::value_type::first_type,
             AttributesDiffElement
             > AttributesDiff;
 
     typedef std::pair<
-            Index::ContentAttributes::value_type::second_type,
-            Index::ContentAttributes::value_type::second_type
+            TreeIndex::ContentAttributes::value_type::second_type,
+            TreeIndex::ContentAttributes::value_type::second_type
             > ContentAttributesDiffValueType;
 
     typedef std::pair<
@@ -85,7 +85,7 @@ public:
             > ContentAttributesDiffElement;
 
     typedef std::map<
-            Index::ContentAttributes::value_type::first_type,
+            TreeIndex::ContentAttributes::value_type::first_type,
             ContentAttributesDiffElement
             > ContentAttributesDiff;
 
@@ -103,7 +103,7 @@ public:
     const ContentAttributesDiff& content_attributes_diff() const;
     AttributesDiff content_item_attributes_diff(const ContentAttributesDiff::const_iterator& element) const;
 
-    static IndexesDiff diff(const Index& first_index, const Index& second_index);
+    static IndexesDiff diff(const TreeIndex& first_index, const TreeIndex& second_index);
 
     std::string format() const;
 

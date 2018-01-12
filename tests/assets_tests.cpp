@@ -33,7 +33,7 @@
 #include <checksumsdigestbuilder.hpp>
 
 #include <asset.h>
-#include <index.h>
+#include <treeindex.h>
 
 //#include <indexesdiff.h>
 //#include <memoryobjectsstorage.h>
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(files_assets)
 
 BOOST_AUTO_TEST_CASE(index_content_insert_contains_replace_remove)
 {
-    Index index;
+    TreeIndex index;
 
     std::string index_path;
     Asset asset_0  = Asset::create_for(test_utils::generate_random_string());
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(index_content_insert_contains_replace_remove)
 
 BOOST_AUTO_TEST_CASE(index_attributes)
 {
-    Index index;
+    TreeIndex index;
 
     for (int i = 0; i < 100; ++i)
     {
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(index_attributes)
 
 BOOST_AUTO_TEST_CASE(index_content)
 {
-    Index index;
+    TreeIndex index;
     std::map<std::string, test_utils::TempFileHolder::Ptr> temp_files_holder;
 
     // Initial state
@@ -241,8 +241,8 @@ BOOST_AUTO_TEST_CASE(index_content)
     std::istringstream iss(index_stored_data);
 
     // These 2 indexes contains non readable assets
-    Index index_loaded_from_asset = Index::load(Asset::create_for(index_stored_data));
-    Index index_loaded_from_stream = Index::load(iss);
+    TreeIndex index_loaded_from_asset = TreeIndex::load(Asset::create_for(index_stored_data));
+    TreeIndex index_loaded_from_stream = TreeIndex::load(iss);
 
     BOOST_CHECK(index_loaded_from_asset.self() == index_loaded_from_stream.self());
 

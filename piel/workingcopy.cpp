@@ -28,11 +28,11 @@
 
 #include <workingcopy.h>
 #include <fsindexer.h>
-#include <indextofsexporter.h>
 #include <boost_filesystem_ext.hpp>
 #include <logging.h>
 
 #include <checkout.h>
+#include "assetsextractor.h"
 
 namespace piel { namespace lib {
 
@@ -161,7 +161,7 @@ void WorkingCopy::attach_filesystem()
     // Load reference index
     if (fs::exists(reference_index_file_))
     {
-        reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
+        reference_index_ = TreeIndex::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
     }
 }
 
@@ -195,12 +195,12 @@ WorkingCopy::Storages& WorkingCopy::storages()
     return storages_;
 }
 
-const Index& WorkingCopy::reference_index() const
+const TreeIndex& WorkingCopy::reference_index() const
 {
     return reference_index_;
 }
 
-Index WorkingCopy::current_index() const
+TreeIndex WorkingCopy::current_index() const
 {
     return FsIndexer::build(working_dir_, metadata_dir_);
 }
@@ -235,10 +235,10 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
     return config_.get(name, default_value);
 }
 
-void WorkingCopy::set_reference_index(const Index& new_reference_index)
+void WorkingCopy::set_reference_index(const TreeIndex& new_reference_index)
 {
     new_reference_index.store(*boost::filesystem::ostream(reference_index_file_));
-    reference_index_ = Index::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
+    reference_index_ = TreeIndex::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
 }
 
 std::string WorkingCopy::reference() const
@@ -263,7 +263,7 @@ void WorkingCopy::set_reference(const std::string& new_reference)
     }
 }
 
-void WorkingCopy::update_reference(const std::string& new_reference, const Index& new_reference_index)
+void WorkingCopy::update_reference(const std::string& new_reference, const TreeIndex& new_reference_index)
 {
     set_reference(new_reference);
     set_reference_index(new_reference_index);

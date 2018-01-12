@@ -26,11 +26,11 @@
  *
  */
 
-#ifndef PIEL_INDEXTOFSEXPORTER_H_
-#define PIEL_INDEXTOFSEXPORTER_H_
+#ifndef PIEL_ASSETSEXTRACTOR_H_
+#define PIEL_ASSETSEXTRACTOR_H_
 
-#include <index.h>
 #include <boost_filesystem_ext.hpp>
+#include <treeindex.h>
 
 namespace piel { namespace lib {
 
@@ -42,32 +42,33 @@ namespace errors {
     struct unknown_asset_type {};
 };
 
-enum ExportingPolitic
+enum ExtractPolitic
 {
-    ExportPolicy__keep_existing         = 0x01,
-    ExportPolicy__replace_existing      = 0x02,
-    ExportPolicy__backup_existing       = 0x04,
-    ExportPolicy__put_new_with_suffix   = 0x08,
+    ExtractPolicy__keep_existing         = 0x01,
+    ExtractPolicy__replace_existing      = 0x02,
+    ExtractPolicy__backup_existing       = 0x04,
+    ExtractPolicy__put_new_with_suffix   = 0x08,
 };
 
-class IndexToFsExporter
+class AssetsExtractor
 {
 public:
-    IndexToFsExporter(const Index& index, ExportingPolitic politic = ExportPolicy__replace_existing);
-    ~IndexToFsExporter();
+    AssetsExtractor(const TreeIndex& index, ExtractPolitic politic = ExtractPolicy__replace_existing);
+    ~AssetsExtractor();
 
-    void export_to(const boost::filesystem::path& directory);
-    void export_asset_to_filesystem(const boost::filesystem::path& item_path,
-            const Index::Content::const_iterator& i);
+    void extract_into(const boost::filesystem::path& directory);
+    void extract_asset_into(const boost::filesystem::path& item_path,
+            const TreeIndex::Content::const_iterator& i);
 
+private:
     void create_parent_path(const boost::filesystem::path& item_path);
 
 private:
-    Index               index_;
-    ExportingPolitic    politic_;
+    TreeIndex               index_;
+    ExtractPolitic          politic_;
 
 };
 
 } } // namespace piel
 
-#endif /* PIEL_INDEXTOFSEXPORTER_H_ */
+#endif /* PIEL_ASSETSEXTRACTOR_H_ */

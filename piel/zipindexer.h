@@ -29,8 +29,8 @@
 #ifndef ZIPINDEXER_H
 #define ZIPINDEXER_H
 
-#include <index.h>
 #include <boost/filesystem.hpp>
+#include <treeindex.h>
 
 namespace piel { namespace lib {
 
@@ -47,7 +47,7 @@ public:
     //! Build zip file index.
     //! \param zip_archive indexed archive.
     //! \return an index.
-    static Index build(const boost::filesystem::path& zip_file);
+    static TreeIndex build(const boost::filesystem::path& zip_file);
 
 };
 

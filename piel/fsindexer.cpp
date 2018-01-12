@@ -46,14 +46,14 @@ FsIndexer::~FsIndexer()
 {
 }
 
-/*static*/ Index FsIndexer::build(const fs::path& dir, const fs::path& exclude)
+/*static*/ TreeIndex FsIndexer::build(const fs::path& dir, const fs::path& exclude)
 {
     if (!is_directory(dir)) {
         LOG_F << dir << " is not a directory!";
-        return Index();
+        return TreeIndex();
     }
 
-    Index                   result;
+    TreeIndex                   result;
     std::queue<fs::path>    directories;
 
     directories.push( dir );

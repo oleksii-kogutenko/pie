@@ -32,7 +32,7 @@
 #include <test_utils.hpp>
 
 #include <workingcopy.h>
-#include <indextofsexporter.h>
+#include <assetsextractor.h>
 
 #include <commit.h>
 #include <create.h>

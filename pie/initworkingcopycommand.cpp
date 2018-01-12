@@ -49,19 +49,19 @@ InitWorkingCopyCommand::~InitWorkingCopyCommand()
 
 void InitWorkingCopyCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: init <ref>" << std::endl;
+    std::cerr << "Usage: init <tree>" << std::endl;
     std::cout << desc;
 }
 
 int InitWorkingCopyCommand::perform()
 {
-    po::options_description desc("Initializing options");
+    po::options_description desc("Initialize working copy");
     desc.add_options()
-        ("ref",         po::value<std::string>(&ref_)->required(),     "Reference name to create.");
+        ("tree", po::value<std::string>(&ref_)->required(), "Name for tree what will be created on working copy initialization.");
         ;
 
     po::positional_options_description pos_desc;
-    pos_desc.add("ref", -1);
+    pos_desc.add("tree", -1);
 
     if (show_help(desc, argc_, argv_))
     {
@@ -77,8 +77,10 @@ int InitWorkingCopyCommand::perform()
     try
     {
         working_copy_ = piel::lib::WorkingCopy::init(boost::filesystem::current_path(), ref_);
+
+        std::cout << ref_ << std::endl;
     }
-    catch (piel::lib::errors::init_existing_working_copy e)
+    catch (const piel::lib::errors::init_existing_working_copy& e)
     {
         std::cerr << "Attempt to initialize already initialized working copy!" << std::endl;
         return -1;

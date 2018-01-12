@@ -119,9 +119,9 @@ struct FindChangedElement {
 
 };
 
-typedef MapDiffBuilder<IndexesDiff::ContentDiff,Index::Content>                     ContentDiffBuilder;
-typedef MapDiffBuilder<IndexesDiff::AttributesDiff,Index::Attributes>               AttributesDiffBuilder;
-typedef MapDiffBuilder<IndexesDiff::ContentAttributesDiff,Index::ContentAttributes> ContentAttributesDiffBuilder;
+typedef MapDiffBuilder<IndexesDiff::ContentDiff,TreeIndex::Content>                     ContentDiffBuilder;
+typedef MapDiffBuilder<IndexesDiff::AttributesDiff,TreeIndex::Attributes>               AttributesDiffBuilder;
+typedef MapDiffBuilder<IndexesDiff::ContentAttributesDiff,TreeIndex::ContentAttributes> ContentAttributesDiffBuilder;
 
 IndexesDiff::IndexesDiff()
     : content_diff_()
@@ -246,7 +246,7 @@ std::string IndexesDiff::format() const
     return oss.str();
 }
 
-/*static*/ IndexesDiff IndexesDiff::diff(const Index& first_index, const Index& second_index)
+/*static*/ IndexesDiff IndexesDiff::diff(const TreeIndex& first_index, const TreeIndex& second_index)
 {
     IndexesDiff result;
 

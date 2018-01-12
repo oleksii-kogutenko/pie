@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef PIEL_INDEX_H_
-#define PIEL_INDEX_H_
+#ifndef PIEL_TREEINDEX_H_
+#define PIEL_TREEINDEX_H_
 
 #include <iobjectsstorage.h>
 #include <boost/format.hpp>
@@ -46,15 +46,15 @@ namespace errors {
 
 class IndexesDiff;
 
-class Index
+class TreeIndex
 {
 public:
     typedef std::map<std::string, Asset> Content;
     typedef std::map<std::string, std::string> Attributes;
     typedef std::map<std::string, Attributes> ContentAttributes;
 
-    Index();
-    ~Index();
+    TreeIndex();
+    ~TreeIndex();
 
     bool insert_path(const std::string& index_path, const Asset& asset);
     void replace_path(const std::string& index_path, const Asset& asset);
@@ -91,8 +91,8 @@ public:
 
     // Serialization methods.
     void store(std::ostream& os) const;
-    static Index load(std::istream& is, IObjectsStorage *storage = 0);
-    static Index load(const Asset& asset, IObjectsStorage *storage = 0);
+    static TreeIndex load(std::istream& is, IObjectsStorage *storage = 0);
+    static TreeIndex load(const Asset& asset, IObjectsStorage *storage = 0);
 
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;
@@ -106,7 +106,7 @@ public:
     // Check if index is empty
     bool empty() const;
 
-    static boost::optional<Index> from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
+    static boost::optional<TreeIndex> from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
 
 private:
     friend class        IndexesDiff;
@@ -135,13 +135,13 @@ struct PredefinedAttributes {
     static int parse_asset_mode(std::string mode_str, int default_value);
 
     // Fill predefined attributes
-    static void fill_symlink_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path);
-    static void fill_symlink_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
-    static void fill_file_attrs(Index& index, const std::string& index_path, const boost::filesystem::path& file_path);
-    static void fill_file_attrs(Index& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
+    static void fill_symlink_attrs(TreeIndex& index, const std::string& index_path, const boost::filesystem::path& file_path);
+    static void fill_symlink_attrs(TreeIndex& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
+    static void fill_file_attrs(TreeIndex& index, const std::string& index_path, const boost::filesystem::path& file_path);
+    static void fill_file_attrs(TreeIndex& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
 
 };
 
 } } // namespace piel::lib
 
-#endif /* PIEL_INDEX_H_ */
+#endif /* PIEL_TREEINDEX_H_ */

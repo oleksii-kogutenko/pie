@@ -30,10 +30,24 @@
 #define PIEL_WORKINGCOPY_H_
 
 #include <properties.h>
-#include <index.h>
 #include <indexesdiff.h>
 #include <localdirectorystorage.h>
 #include <boost/weak_ptr.hpp>
+#include <treeindex.h>
+
+/*
+ * Abstract:
+ *
+ * "Asset"          - abstract any size data block (object).
+ * "AssetId"        - unique hash of the asset data.
+ * "Tree"           - structured set of the "Asset"s (FE filesystem directory).
+ * "TreeIndex"      - data structure what contains information about particular "Tree" state.
+ * "Pie"            - ordered, one way linked list of the "Tree index"es.
+ *
+ * "ObjectsStorage" - abstract "Asset"s storage. Contains "Assets"s itself and collection of the "Pie"s heads what available in.
+ * "Working copy"   - directory used for the manipulation related to "Pie"s.
+ *
+ */
 
 namespace piel { namespace lib {
 
@@ -70,18 +84,18 @@ public:
     Storages& storages();
 
     std::string reference() const;
-    const Index& reference_index() const;
+    const TreeIndex& reference_index() const;
 
-    void update_reference(const std::string& new_reference, const Index& new_reference_index);
+    void update_reference(const std::string& new_reference, const TreeIndex& new_reference_index);
 
-    Index current_index() const;
+    TreeIndex current_index() const;
 
 protected:
     WorkingCopy();
     WorkingCopy(const boost::filesystem::path& working_dir);
 
     void set_reference(const std::string& new_reference);
-    void set_reference_index(const Index& new_reference_index);
+    void set_reference_index(const TreeIndex& new_reference_index);
 
 private:
     void init_filesystem(const std::string reference);
@@ -90,16 +104,16 @@ private:
     void attach_storages();
 
 private:
-    boost::filesystem::path working_dir_;
-    boost::filesystem::path metadata_dir_;
-    boost::filesystem::path storage_dir_;
-    boost::filesystem::path reference_file_;
-    boost::filesystem::path reference_index_file_;
-    boost::filesystem::path config_file_;
-    Properties              config_;                             //!< Working copy configuration parameters
-    Storages                storages_;                           //!< Local storages collection
-    std::string             reference_;                          //!< Reference name.
-    Index                   reference_index_;                    //!< Original index what checkouted into working copy
+    boost::filesystem::path working_dir_;                       //!< Working copy filesystem directory.
+    boost::filesystem::path metadata_dir_;                      //!< Metadata subdirectory.
+    boost::filesystem::path storage_dir_;                       //!< Local "ObjectsStorage" directory.
+    boost::filesystem::path reference_file_;                    //!< Metadata file what contains working copy current "Pie" name.
+    boost::filesystem::path reference_index_file_;              //!< Metadata file what contains working copy current "Pie" tree index.
+    boost::filesystem::path config_file_;                       //!< Working copy specific pie configuration parameters file.
+    Properties              config_;                            //!< Working copy specific pie configuration parameters.
+    Storages                storages_;                          //!< "ObjectStorage"s collection.
+    std::string             reference_;                         //!< Working copy current "Pie" name.
+    TreeIndex               reference_index_;                   //!< working copy current "Pie" tree index.
 };
 
 struct PredefinedConfigs {

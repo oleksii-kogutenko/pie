@@ -28,9 +28,9 @@
 
 #include <clean.h>
 #include <fsindexer.h>
-#include <indextofsexporter.h>
 #include <indexesdiff.h>
 #include <logging.h>
+#include <assetsextractor.h>
 
 namespace piel { namespace cmd {
 
@@ -48,9 +48,9 @@ Clean::~Clean()
 std::string Clean::operator()()
 {
     typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ConstIter;
-    typedef piel::lib::Index::Content::const_iterator           ContentIter;
+    typedef piel::lib::TreeIndex::Content::const_iterator           ContentIter;
 
-    piel::lib::Index current_index = piel::lib::FsIndexer::build(
+    piel::lib::TreeIndex current_index = piel::lib::FsIndexer::build(
             working_copy()->working_dir(),
                 working_copy()->metadata_dir());
 
@@ -74,16 +74,16 @@ std::string Clean::operator()()
         {
             LOG_T << "Restore removed: " << i->first;
 
-            const piel::lib::Index::Content& reference_content =
+            const piel::lib::TreeIndex::Content& reference_content =
                     working_copy()->reference_index().content();
 
             ContentIter restore_content = reference_content.find(i->first);
             if (restore_content != reference_content.end())
             {
-                piel::lib::IndexToFsExporter exporter(working_copy()->reference_index(),
-                        piel::lib::ExportPolicy__replace_existing);
+                piel::lib::AssetsExtractor exporter(working_copy()->reference_index(),
+                        piel::lib::ExtractPolicy__replace_existing);
 
-                exporter.export_asset_to_filesystem(item_path, restore_content);
+                exporter.extract_asset_into(item_path, restore_content);
             }
         }
         break;

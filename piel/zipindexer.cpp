@@ -46,9 +46,9 @@ ZipIndexer::~ZipIndexer()
 
 }
 
-/*static*/ Index ZipIndexer::build(const fs::path& zip_file)
+/*static*/ TreeIndex ZipIndexer::build(const fs::path& zip_file)
 {
-    Index                   result;
+    TreeIndex                   result;
     ZipFile                 zip( zip_file.native() );
 
     for (zip_int64_t i = 0; i < zip.num_entries(); i++)

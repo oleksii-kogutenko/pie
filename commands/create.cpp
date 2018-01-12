@@ -50,7 +50,7 @@ void Create::operator()()
         throw errors::non_empty_reference_already_exists();
     }
 
-    piel::lib::Index empty_index;
+    piel::lib::TreeIndex empty_index;
 
     working_copy()->local_storage()->put(empty_index.assets());
     working_copy()->local_storage()->update_reference(piel::lib::refs::Ref(new_ref_, piel::lib::Asset()));

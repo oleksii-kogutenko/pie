@@ -58,13 +58,13 @@ void ResetCommand::show_command_help_message(const po::options_description& desc
 
 int ResetCommand::perform()
 {
-    po::options_description desc("Reset to reference options");
+    po::options_description desc("Reset to tree");
     desc.add_options()
-        ("ref",         po::value<std::string>(&ref_)->required(),     "Content will be reset to.");
+        ("tree",         po::value<std::string>(&ref_)->required(),     "Tree name.");
         ;
 
     po::positional_options_description pos_desc;
-    pos_desc.add("ref", -1);
+    pos_desc.add("tree", -1);
 
     if (show_help(desc, argc_, argv_))
     {
@@ -84,7 +84,7 @@ int ResetCommand::perform()
         piel::cmd::Reset reset(working_copy_, ref_);
         std::string reset_result = reset();
 
-        std::cout << "Reset reference: " << ref_ << " hash: " << reset_result << std::endl;
+        std::cout << ref_ << ":" << reset_result << std::endl;
     }
     catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {

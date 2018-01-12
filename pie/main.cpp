@@ -42,11 +42,12 @@ int main(int argc, char **argv)
 
     application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("create", "Create new empty reference."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CheckoutCommand>("checkout", "Checkout reference."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::StatusCommand>("status", "Status."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset to reference."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("create", "Create new tree."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("destroy", "Destroy tree."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::CheckoutCommand>("checkout", "Checkout tree state into working copy."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::StatusCommand>("status", "Show working copy status in comparsion to referenced tree."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset working copy content to the tree state."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit tree state into current tree."));
 
     return application.run();
 }

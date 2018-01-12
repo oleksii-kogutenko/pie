@@ -56,13 +56,13 @@ void CreateCommand::show_command_help_message(const po::options_description& des
 
 int CreateCommand::perform()
 {
-    po::options_description desc("Create reference options");
+    po::options_description desc("Create tree options");
     desc.add_options()
-        ("ref",         po::value<std::string>(&ref_)->required(),     "Reference name to create.");
+        ("tree",         po::value<std::string>(&ref_)->required(),     "New tree name.");
         ;
 
     po::positional_options_description pos_desc;
-    pos_desc.add("ref", -1);
+    pos_desc.add("tree", -1);
 
     if (show_help(desc, argc_, argv_))
     {
@@ -82,7 +82,7 @@ int CreateCommand::perform()
         piel::cmd::Create create(working_copy_, ref_);
         create();
 
-        std::cout << "Created new reference: " << ref_ <<  std::endl;
+        std::cout << ref_ <<  std::endl;
     }
     catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {

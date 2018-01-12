@@ -29,8 +29,8 @@
 #include <checkout.h>
 #include <fsindexer.h>
 #include <logging.h>
-#include <indextofsexporter.h>
 #include <boost_filesystem_ext.hpp>
+#include <assetsextractor.h>
 
 namespace piel { namespace cmd {
 
@@ -53,14 +53,14 @@ const Checkout* Checkout::set_force(bool force)
 
 std::string Checkout::operator()()
 {
-    piel::lib::Index reference_index = working_copy()->reference_index();
+    piel::lib::TreeIndex reference_index = working_copy()->reference_index();
 
     if (piel::lib::AssetId::empty != working_copy()->local_storage()->resolve(ref_to_))
     {
         if (!force_)
         {
             // Check for non commit changes
-            piel::lib::Index current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+            piel::lib::TreeIndex current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
 
             piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
             if (!diff.empty())
@@ -74,11 +74,11 @@ std::string Checkout::operator()()
         boost::filesystem::remove_directory_content(working_copy()->working_dir(), working_copy()->metadata_dir());
 
         // Export data from index
-        boost::optional<piel::lib::Index> ref_index = piel::lib::Index::from_ref(working_copy()->local_storage(), ref_to_);
+        boost::optional<piel::lib::TreeIndex> ref_index = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), ref_to_);
         reference_index = *ref_index;
 
-        piel::lib::IndexToFsExporter index_exporter(reference_index, piel::lib::ExportPolicy__replace_existing);
-        index_exporter.export_to(working_copy()->working_dir());
+        piel::lib::AssetsExtractor index_exporter(reference_index, piel::lib::ExtractPolicy__replace_existing);
+        index_exporter.extract_into(working_copy()->working_dir());
     }
     else
     {

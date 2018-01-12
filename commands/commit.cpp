@@ -59,7 +59,7 @@ const Commit* Commit::set_message(const std::string& message)
     return this;
 }
 
-piel::lib::IndexesDiff Commit::diff(const piel::lib::Index& current_index) const
+piel::lib::IndexesDiff Commit::diff(const piel::lib::TreeIndex& current_index) const
 {
     LOG_T << "Calculate diff " << working_copy()->reference_index().self().id().string() << " <-> CDIR";
     return piel::lib::IndexesDiff::diff(working_copy()->reference_index(), current_index);
@@ -68,7 +68,7 @@ piel::lib::IndexesDiff Commit::diff(const piel::lib::Index& current_index) const
 std::string Commit::operator()()
 {
     piel::lib::IObjectsStorage::Ptr ls  = working_copy()->local_storage();
-    piel::lib::Index current_index      = working_copy()->current_index();
+    piel::lib::TreeIndex current_index  = working_copy()->current_index();
 
     piel::lib::IndexesDiff indexes_diff = diff(current_index);
     if (indexes_diff.empty())
@@ -83,9 +83,9 @@ std::string Commit::operator()()
 
     LOG_T << "Continue commit.";
 
-    piel::lib::Index reference_index    = working_copy()->reference_index();
+    piel::lib::TreeIndex reference_index    = working_copy()->reference_index();
 
-    boost::optional<piel::lib::Index> ref_index = piel::lib::Index::from_ref(ls, working_copy()->reference());
+    boost::optional<piel::lib::TreeIndex> ref_index = piel::lib::TreeIndex::from_ref(ls, working_copy()->reference());
     if (ref_index)
     {
         reference_index = *ref_index;

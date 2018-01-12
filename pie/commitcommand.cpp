@@ -74,31 +74,28 @@ int CommitCommand::perform()
     try
     {
         working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
+
+        piel::cmd::Commit commit(working_copy_);
+
+        commit.set_message(message_);
+
+        std::string hash = commit();
+        std::cout << working_copy_->reference() << ":" << hash << std::endl;
     }
-    catch (piel::lib::errors::attach_to_non_working_copy e)
+    catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {
         std::cerr << "Attempt to perform operation outside of working copy!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::nothing_to_commit& e)
+    {
+        std::cerr << "No changes!" << std::endl;
         return -1;
     }
 
     if (!working_copy_->is_valid())
     {
         std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
-        return -1;
-    }
-
-    try
-    {
-        piel::cmd::Commit commit(working_copy_);
-
-        commit.set_message(message_);
-
-        std::string hash = commit();
-        std::cout << "Commited hash: " << hash << " reference: " << working_copy_->reference() << std::endl;
-    }
-    catch (piel::cmd::errors::nothing_to_commit e)
-    {
-        std::cerr << "No changes!" << std::endl;
         return -1;
     }
 

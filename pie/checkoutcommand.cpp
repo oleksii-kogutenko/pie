@@ -82,7 +82,7 @@ int CheckoutCommand::perform()
         piel::cmd::Checkout checkout(working_copy_, ref_);
         std::string checkout_result = checkout();
 
-        std::cout << "Checkout reference: " << ref_ <<  " hash: " << checkout_result << std::endl;
+        std::cout << ref_ <<  ":" << checkout_result << std::endl;
     }
     catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {

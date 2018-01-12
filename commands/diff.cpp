@@ -42,7 +42,7 @@ Diff::~Diff()
 
 void Diff::operator()()
 {
-    piel::lib::Index from, to;
+    piel::lib::TreeIndex from, to;
 
     if (range_.first.empty())
     {

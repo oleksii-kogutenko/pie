@@ -53,7 +53,7 @@ void StatusCommand::show_command_help_message(const po::options_description& des
 
 int StatusCommand::perform()
 {
-    po::options_description desc("Status reference options");
+    po::options_description desc("Tree status");
 
     if (show_help(desc, argc_, argv_))
     {
@@ -68,7 +68,7 @@ int StatusCommand::perform()
 
         std::string final_status_str = status();
 
-        std::cout << "Status: "<< final_status_str << std::endl;
+        std::cout << final_status_str << std::endl;
     }
     catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {
