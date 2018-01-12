@@ -55,7 +55,7 @@ void Log::format_log_element(const piel::lib::TreeIndex& index) const
 
 void Log::operator()()
 {
-    piel::lib::TreeIndex from, to, current;
+    piel::lib::TreeIndex from, to = ref_index_, current;
 
     if (!range_.first.empty())
     {
@@ -73,14 +73,6 @@ void Log::operator()()
         {
             to = *piel::lib::TreeIndex::from_ref(storage(), range_.second);
         }
-        else
-        {
-            to = ref_index_;
-        }
-    }
-    else
-    {
-        to = ref_index_;
     }
 
     if (from.self().id() == to.self().id())
