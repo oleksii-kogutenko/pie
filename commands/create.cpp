@@ -35,12 +35,10 @@ Create::Create(const piel::lib::WorkingCopy::Ptr& working_copy, const std::strin
     : WorkingCopyCommand(working_copy)
     , new_ref_(new_ref)
 {
-
 }
 
 Create::~Create()
 {
-
 }
 
 void Create::operator()()

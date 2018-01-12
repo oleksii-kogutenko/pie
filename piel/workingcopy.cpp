@@ -214,8 +214,40 @@ TreeIndex WorkingCopy::current_index() const
 
 /*static*/ WorkingCopy::Ptr WorkingCopy::attach(const boost::filesystem::path& working_dir)
 {
-    WorkingCopy::Ptr result(new WorkingCopy(working_dir));
-    result->attach_filesystem();
+    boost::filesystem::path current_dir = working_dir;
+    WorkingCopy::Ptr result;
+
+    bool have_error = false;
+    do
+    {
+        LOG_T << "Attempt to attach to " << current_dir;
+
+        try {
+            result = WorkingCopy::Ptr(new WorkingCopy(current_dir));
+            result->attach_filesystem();
+            have_error = false;
+        }
+        catch (const errors::attach_to_non_working_copy& e)
+        {
+            LOG_T << "Attaching to " << current_dir << " failed!";
+            have_error = true;
+        }
+        catch (const errors::unable_to_find_reference_file& e)
+        {
+            LOG_T << "Attaching to " << current_dir << " failed! No reference file.";
+            have_error = true;
+        }
+
+        current_dir = current_dir.parent_path();
+    }
+    while (!current_dir.empty() && have_error);
+
+    if (have_error)
+    {
+        LOG_T << "Throw attaching exception!";
+        throw errors::attach_to_non_working_copy();
+    }
+
     return result;
 }
 
