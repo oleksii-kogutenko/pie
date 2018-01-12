@@ -62,8 +62,8 @@ namespace range_spec {
             using qi::_val;
             using qi::as_string;
 
-            _first      = as_string[ +( char_ - RangeSpecConstants::sepa) ] [ _val = _1 ];
-            _second     = as_string[ +( char_ ) ]                           [ _val = _1 ];
+            _first      = as_string[ +( char_ - RangeSpecConstants::sepa) ];
+            _second     = as_string[ +( char_ ) ];
             _data       = -_first > RangeSpecConstants::sepa > -_second;
         }
 

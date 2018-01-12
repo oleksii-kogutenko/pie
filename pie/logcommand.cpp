@@ -29,6 +29,7 @@
 #include <logcommand.h>
 #include <log.h>
 #include <rangeparser.h>
+#include <boost/spirit/include/qi.hpp>
 
 namespace pie { namespace app {
 
@@ -57,7 +58,7 @@ int LogCommand::perform()
 {
     po::options_description desc("Log options");
     desc.add_options()
-        ("range",        po::value<std::string>(&range_spec_),   "Range specification.");
+        ("range",        po::value<std::string>(&range_spec_),   "Log range specification in format <ref_from>:<ref_to>.");
         ;
 
     po::positional_options_description pos_desc;
@@ -89,6 +90,11 @@ int LogCommand::perform()
     catch (const piel::lib::errors::unable_to_find_reference_file& e)
     {
         std::cerr << "Unable to find reference file at working copy!" << std::endl;
+        return -1;
+    }
+    catch (const boost::spirit::qi::expectation_failure<std::string::const_iterator>& e)
+    {
+        std::cerr << "Unknown log range specification format! Expected format <ref_from>:<ref_to>." << std::endl;
         return -1;
     }
 
