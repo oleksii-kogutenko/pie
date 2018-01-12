@@ -29,7 +29,7 @@
 #define BOOST_TEST_MODULE AssetsTests
 #include <boost/test/unit_test.hpp>
 
-#include <test_utils.hpp>
+#include "test_utils.hpp"
 #include <checksumsdigestbuilder.hpp>
 
 #include <asset.h>

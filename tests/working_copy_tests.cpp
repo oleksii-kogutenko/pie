@@ -29,7 +29,7 @@
 #define BOOST_TEST_MODULE WorkingCopyTests
 #include <boost/test/unit_test.hpp>
 
-#include <test_utils.hpp>
+#include "test_utils.hpp"
 
 #include <workingcopy.h>
 #include <assetsextractor.h>
