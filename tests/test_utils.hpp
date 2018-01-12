@@ -12,6 +12,15 @@
 namespace piel { namespace lib { namespace test_utils {
 
 // Test utils
+inline std::string file_content(const boost::filesystem::path& path)
+{
+    boost::shared_ptr<std::istream> ifsp = boost::filesystem::istream(path);
+    std::ostringstream *oss = new std::ostringstream();
+    boost::shared_ptr<std::ostream> ossp(oss);
+    boost::filesystem::copy_into(ossp, ifsp);
+    return oss->str();
+}
+
 inline std::string generate_random_string()
 {
     boost::random::random_device rng;
@@ -177,11 +186,7 @@ inline DirState get_directory_state(const boost::filesystem::path& dir, const bo
 
             if ( fs::is_regular_file( e.path() ) )
             {
-                boost::shared_ptr<std::istream> ifsp = fs::istream(e.path());
-                std::ostringstream *oss = new std::ostringstream();
-                boost::shared_ptr<std::ostream> ossp(oss);
-                fs::copy_into(ossp, ifsp);
-                result.insert(DirStateElement(name, oss->str()));
+                result.insert(DirStateElement(name, file_content(e.path())));
             }
             else if ( fs::is_directory(e.path()) )
             {

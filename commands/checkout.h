@@ -35,6 +35,7 @@ namespace piel { namespace cmd {
 
 namespace errors {
     struct there_are_non_commited_changes {};
+    struct no_such_reference {};
 }
 
 class Checkout: public WorkingCopyCommand
@@ -45,10 +46,12 @@ public:
 
     std::string operator()();
     const Checkout* set_force(bool force);
+    const Checkout* create_new_branch(bool create_new_branch);
 
 private:
     std::string ref_to_;
     bool force_;
+    bool create_new_branch_;
 
 };
 

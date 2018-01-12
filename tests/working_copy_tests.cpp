@@ -42,6 +42,7 @@
 
 namespace cmd=piel::cmd;
 namespace lib=piel::lib;
+namespace fs=boost::filesystem;
 
 std::string ref_name_1 = "test_reference_1";
 std::string ref_name_2 = "test_reference_2";
@@ -102,6 +103,23 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
 
     cmd::Clean clean(wc);
     clean();
+}
+
+BOOST_AUTO_TEST_CASE(checkout_tests)
+{
+    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir(100);
+
+    lib::WorkingCopy::Ptr wc = lib::WorkingCopy::init(wc_path->first, ref_name_1);
+
+    cmd::Commit commit_1(wc);
+    commit_1.set_message("Initial commit to " + ref_name_1);
+    commit_1();
+
+    cmd::Checkout checkout(wc, ref_name_2);
+    BOOST_CHECK_THROW(checkout(), cmd::errors::no_such_reference);
+
+    checkout.create_new_branch(true);
+    checkout();
 }
 
 BOOST_AUTO_TEST_CASE(reset_workspace)

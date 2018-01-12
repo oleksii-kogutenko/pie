@@ -38,6 +38,7 @@ Checkout::Checkout(const piel::lib::WorkingCopy::Ptr& working_copy, const std::s
     : WorkingCopyCommand(working_copy)
     , ref_to_(ref_to)
     , force_(false)
+    , create_new_branch_(false)
 {
 }
 
@@ -48,6 +49,12 @@ Checkout::~Checkout()
 const Checkout* Checkout::set_force(bool force)
 {
     force_ = force;
+    return this;
+}
+
+const Checkout* Checkout::create_new_branch(bool create_new_branch)
+{
+    create_new_branch_ = create_new_branch;
     return this;
 }
 
@@ -83,6 +90,14 @@ std::string Checkout::operator()()
     else
     {
         LOG_T << "Resolved empty reference: " << ref_to_;
+
+        if (!create_new_branch_)
+        {
+            throw errors::no_such_reference();
+        }
+
+        working_copy()->local_storage()->put(reference_index.assets());
+        working_copy()->local_storage()->update_reference(piel::lib::refs::Ref(ref_to_, reference_index.self()));
     }
 
     // Update working copy reference

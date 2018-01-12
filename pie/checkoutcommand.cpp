@@ -50,19 +50,24 @@ CheckoutCommand::~CheckoutCommand()
 
 void CheckoutCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: checkout <ref>" << std::endl;
+    std::cerr << "Usage: checkout [--create] <ref>" << std::endl;
     std::cout << desc;
 }
 
 int CheckoutCommand::perform()
 {
-    po::options_description desc("Checkout reference options");
-    desc.add_options()
-        ("ref",         po::value<std::string>(&ref_)->required(),     "Reference name to checkout.");
+    po::options_description ref_opts;
+    ref_opts.add_options()
+        ("ref",         po::value<std::string>(&ref_),    "Reference name to checkout.");
         ;
 
-    po::positional_options_description pos_desc;
-    pos_desc.add("ref", -1);
+    po::options_description opts;
+    opts.add_options()
+        ("create,b",    po::value<std::string>(&ref_),    "Create new tree based on current state.");
+        ;
+
+    po::options_description desc("Checkout reference options");
+    desc.add(ref_opts).add(opts);
 
     if (show_help(desc, argc_, argv_))
     {
@@ -70,16 +75,29 @@ int CheckoutCommand::perform()
     }
 
     po::variables_map vm;
-    po::parsed_options parsed =
-        po::command_line_parser(argc_, argv_).options(desc).positional(pos_desc).allow_unregistered().run();
+    po::parsed_options parsed
+        = po::command_line_parser(argc_, argv_).options(opts).allow_unregistered().run();
     po::store(parsed, vm);
     po::notify(vm);
+
+    if (!vm.count("create"))
+    {
+        po::positional_options_description pos_desc;
+        pos_desc.add("ref",     1);
+
+        parsed = po::command_line_parser(argc_, argv_).options(ref_opts).positional(pos_desc).allow_unregistered().run();
+        po::store(parsed, vm);
+        po::notify(vm);
+    }
 
     try
     {
         working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
 
         piel::cmd::Checkout checkout(working_copy_, ref_);
+
+        checkout.create_new_branch(vm.count("create"));
+
         std::string checkout_result = checkout();
 
         std::cout << ref_ <<  ":" << checkout_result << std::endl;
@@ -92,6 +110,11 @@ int CheckoutCommand::perform()
     catch (const piel::lib::errors::unable_to_find_reference_file& e)
     {
         std::cerr << "Unable to find reference file at working copy!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::no_such_reference& e)
+    {
+        std::cerr << "Can't find reference " << ref_ << " for checkout! Please use -b option if you want to create new tree based on current state." << std::endl;
         return -1;
     }
     catch (const piel::cmd::errors::there_are_non_commited_changes& e)
