@@ -69,7 +69,11 @@ public:
     void set_parent(const Asset& parent);
 
     void set_(const std::string& attribute, const std::string& value);
+    bool contains_(const std::string& attribute) const;
     std::string get_(const std::string& attribute, const std::string& default_value = std::string()) const;
+
+    bool is_initial_index() const;
+    void initial_for(const std::string& new_ref_name);
 
 #define Index_DECLARE_ATTRIBUTE(x) \
     inline void set_ ## x ## _(const std::string& value)     { set_( #x , value); } \
@@ -80,7 +84,6 @@ public:
     Index_DECLARE_ATTRIBUTE(email)
     Index_DECLARE_ATTRIBUTE(commiter)
     Index_DECLARE_ATTRIBUTE(commiter_email)
-    Index_DECLARE_ATTRIBUTE(tree_name)
 
 #undef Index_DECLARE_ATTRIBUTE
 

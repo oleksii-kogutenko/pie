@@ -52,6 +52,7 @@ int main(int argc, char **argv)
     application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset working copy content to the tree state."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit tree state into current tree."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::TreeCommand>("tree", "Show tree names."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::LogCommand>("log", "Show tree log."));
 
     return application.run();
 }

@@ -50,7 +50,7 @@ void Create::operator()()
 
     piel::lib::TreeIndex initial_tree_index;
 
-    initial_tree_index.set_tree_name_(new_ref_);
+    initial_tree_index.initial_for(new_ref_);
     working_copy()->local_storage()->put(initial_tree_index.assets());
 
     piel::lib::AssetId new_tree_id = initial_tree_index.self().id();

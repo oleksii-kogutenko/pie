@@ -86,7 +86,11 @@ void Log::operator()()
     current = to;
     do
     {
-        format_log_element(current);
+        if (!current.is_initial_index())
+        {
+            // Do not show initial tree elements
+            format_log_element(current);
+        }
 
         if (current.parent().id() == piel::lib::AssetId::empty)
             break;

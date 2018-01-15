@@ -31,6 +31,7 @@
 #include <logging.h>
 #include <boost_filesystem_ext.hpp>
 #include <assetsextractor.h>
+#include <create.h>
 
 namespace piel { namespace cmd {
 
@@ -86,6 +87,9 @@ std::string Checkout::operator()()
 
         piel::lib::AssetsExtractor index_exporter(reference_index, piel::lib::ExtractPolicy__replace_existing);
         index_exporter.extract_into(working_copy()->working_dir());
+
+        // Update working copy reference
+        working_copy()->setup_current_tree(ref_to_, reference_index);
     }
     else
     {
@@ -96,12 +100,11 @@ std::string Checkout::operator()()
             throw errors::no_such_reference();
         }
 
-        working_copy()->local_storage()->put(reference_index.assets());
-        working_copy()->local_storage()->create_reference(piel::lib::refs::Ref(ref_to_, reference_index.self()));
+        // Create new tree
+        Create create(working_copy(), ref_to_);
+        create();
     }
 
-    // Update working copy reference
-    working_copy()->setup_current_tree(ref_to_, reference_index);
     return working_copy()->current_tree_index().self().id().string();
 }
 

@@ -37,6 +37,14 @@ namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
 
+namespace constants {
+    struct C {
+        static const std::string initial_for;
+    };
+
+    /*static*/ const std::string C::initial_for = "initial_for";
+};
+
 /*static*/ const std::string PredefinedAttributes::asset_type           = "atype";
 /*static*/ const std::string PredefinedAttributes::asset_type__symlink  = "symlink";
 /*static*/ const std::string PredefinedAttributes::asset_type__file     = "file";
@@ -127,6 +135,21 @@ void TreeIndex::set_parent(const Asset& parent)
 void TreeIndex::set_(const std::string& attribute, const std::string& value)
 {
     attributes_[attribute] = value;
+}
+
+bool TreeIndex::contains_(const std::string& attribute) const
+{
+    return attributes_.find(attribute) != attributes_.end();
+}
+
+bool TreeIndex::is_initial_index() const
+{
+    return contains_(constants::C::initial_for);
+}
+
+void TreeIndex::initial_for(const std::string& new_ref_name)
+{
+    return set_(constants::C::initial_for, new_ref_name);
 }
 
 std::string TreeIndex::get_(const std::string& attribute, const std::string& default_value) const

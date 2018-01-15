@@ -102,12 +102,17 @@ bool WorkingCopy::is_valid() const
 
 void WorkingCopy::init_storages(const std::string reference)
 {
-    storages_[local_storage_index] = IObjectsStorage::Ptr(new LocalDirectoryStorage(storage_dir_));
-    storages_[local_storage_index]->put(current_tree_index_.assets());
-    storages_[local_storage_index]->create_reference(refs::Ref(reference, current_tree_index_.self().id()));
+    init_local_storage();
+    local_storage()->put(current_tree_index_.assets());
+    local_storage()->create_reference(refs::Ref(reference, current_tree_index_.self().id()));
 }
 
 void WorkingCopy::attach_storages()
+{
+    init_local_storage();
+}
+
+void WorkingCopy::init_local_storage()
 {
     storages_[local_storage_index] = IObjectsStorage::Ptr(new LocalDirectoryStorage(storage_dir_));
 }
@@ -129,7 +134,7 @@ void WorkingCopy::init_filesystem(const std::string reference)
         throw errors::init_existing_working_copy();
     }
 
-    current_tree_index_.set_tree_name_(reference);
+    current_tree_index_.initial_for(reference);
     setup_current_tree(reference, current_tree_index_);
 
     init_storages(reference);

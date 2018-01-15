@@ -75,6 +75,7 @@ public:
     void set_config(const std::string& name, const std::string& value);
     std::string get_config(const std::string& name, const std::string& default_value = std::string());
 
+    void init_local_storage();
     IObjectsStorage::Ptr local_storage() const;
     boost::filesystem::path working_dir() const;
     boost::filesystem::path metadata_dir() const;
