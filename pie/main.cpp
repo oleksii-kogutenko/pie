@@ -31,6 +31,7 @@
 
 #include <initworkingcopycommand.h>
 #include <createcommand.h>
+#include <destroycommand.h>
 #include <checkoutcommand.h>
 #include <statuscommand.h>
 #include <resetcommand.h>
@@ -45,7 +46,7 @@ int main(int argc, char **argv)
     application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("create", "Create new tree."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("destroy", "Destroy tree."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::DestroyCommand>("destroy", "Destroy tree."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::CheckoutCommand>("checkout", "Checkout tree state into working copy."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::StatusCommand>("status", "Show working copy status in comparsion to referenced tree."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset working copy content to the tree state."));
