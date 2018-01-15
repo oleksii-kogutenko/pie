@@ -50,7 +50,7 @@ DestroyCommand::~DestroyCommand()
 
 void DestroyCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: destroy <ref>" << std::endl;
+    std::cerr << "Usage: destroy [--tree] <ref>" << std::endl;
     std::cout << desc;
 }
 
@@ -92,6 +92,11 @@ int DestroyCommand::perform()
     catch (const piel::lib::errors::unable_to_find_reference_file& e)
     {
         std::cerr << "Unable to find reference file at working copy!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::attempt_to_destroy_current_tree& e)
+    {
+        std::cerr << "Can't destroy current working tree!" << std::endl;
         return -1;
     }
 

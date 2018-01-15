@@ -205,6 +205,13 @@ void LocalDirectoryStorage::update_reference(const refs::Ref& ref)
     refs_.store(*fs::ostream(references_).get());
 }
 
+void LocalDirectoryStorage::remove_reference(const refs::Ref::first_type& ref_name)
+{
+    refs_.data().erase(ref_name);
+    refs_.store(*fs::ostream(references_).get());
+}
+
+
 // Check if readable asset available in storage.
 bool LocalDirectoryStorage::contains(const AssetId& id) const
 {

@@ -83,10 +83,10 @@ public:
     Properties& config();
     Storages& storages();
 
-    std::string reference() const;
-    const TreeIndex& reference_index() const;
+    std::string current_tree_name() const;
+    const TreeIndex& current_tree_index() const;
 
-    void update_reference(const std::string& new_reference, const TreeIndex& new_reference_index);
+    void setup_current_tree(const std::string& new_reference, const TreeIndex& new_reference_index);
 
     TreeIndex current_index() const;
 
@@ -94,8 +94,8 @@ protected:
     WorkingCopy();
     WorkingCopy(const boost::filesystem::path& working_dir);
 
-    void set_reference(const std::string& new_reference);
-    void set_reference_index(const TreeIndex& new_reference_index);
+    void set_current_tree(const std::string& new_tree_name);
+    void set_current_tree_index(const TreeIndex& new_tree_index);
 
 private:
     void init_filesystem(const std::string reference);
@@ -107,13 +107,13 @@ private:
     boost::filesystem::path working_dir_;                       //!< Working copy filesystem directory.
     boost::filesystem::path metadata_dir_;                      //!< Metadata subdirectory.
     boost::filesystem::path storage_dir_;                       //!< Local "ObjectsStorage" directory.
-    boost::filesystem::path reference_file_;                    //!< Metadata file what contains working copy current "Pie" name.
-    boost::filesystem::path reference_index_file_;              //!< Metadata file what contains working copy current "Pie" tree index.
+    boost::filesystem::path current_tree_file_;                 //!< Metadata file what contains working copy current "Pie" name.
+    boost::filesystem::path current_tree_index_file_;           //!< Metadata file what contains working copy current "Pie" tree index.
     boost::filesystem::path config_file_;                       //!< Working copy specific pie configuration parameters file.
     Properties              config_;                            //!< Working copy specific pie configuration parameters.
     Storages                storages_;                          //!< "ObjectStorage"s collection.
-    std::string             reference_;                         //!< Working copy current "Pie" name.
-    TreeIndex               reference_index_;                   //!< working copy current "Pie" tree index.
+    std::string             current_tree_name_;                 //!< Working copy current "Tree" name.
+    TreeIndex               current_tree_index_;                //!< working copy current "Tree" tree index.
 };
 
 struct PredefinedConfigs {

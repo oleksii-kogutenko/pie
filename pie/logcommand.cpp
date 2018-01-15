@@ -80,7 +80,7 @@ int LogCommand::perform()
         working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
 
         piel::cmd::Log log(working_copy_->local_storage(),
-                working_copy_->reference_index(), piel::lib::RangeParser::parse(range_spec_));
+                working_copy_->current_tree_index(), piel::lib::RangeParser::parse(range_spec_));
 
         log();
     }

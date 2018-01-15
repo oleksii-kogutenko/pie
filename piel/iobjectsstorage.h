@@ -74,6 +74,8 @@ public:
     //typedef std::pair<std::string, AssetId> Ref;
 
     virtual void update_reference(const refs::Ref& ref) = 0;
+    virtual void remove_reference(const refs::Ref::first_type& ref_name) = 0;
+
     virtual AssetId resolve(const std::string& refName) const = 0;
     virtual std::set<refs::Ref> references() const = 0;
 

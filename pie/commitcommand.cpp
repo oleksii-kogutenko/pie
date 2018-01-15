@@ -80,7 +80,7 @@ int CommitCommand::perform()
         commit.set_message(message_);
 
         std::string hash = commit();
-        std::cout << working_copy_->reference() << ":" << hash << std::endl;
+        std::cout << working_copy_->current_tree_name() << ":" << hash << std::endl;
     }
     catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {

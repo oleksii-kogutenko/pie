@@ -48,13 +48,16 @@ void Create::operator()()
         throw errors::non_empty_reference_already_exists();
     }
 
-    piel::lib::TreeIndex empty_index;
+    piel::lib::TreeIndex initial_tree_index;
 
-    working_copy()->local_storage()->put(empty_index.assets());
-    working_copy()->local_storage()->update_reference(piel::lib::refs::Ref(new_ref_, piel::lib::Asset()));
-    working_copy()->update_reference(new_ref_, empty_index);
+    initial_tree_index.set_tree_name_(new_ref_);
+    working_copy()->local_storage()->put(initial_tree_index.assets());
 
-    LOG_T << "Created new empty reference: " << new_ref_;
+    piel::lib::AssetId new_tree_id = initial_tree_index.self().id();
+    working_copy()->local_storage()->update_reference(piel::lib::refs::Ref(new_ref_, new_tree_id));
+    working_copy()->setup_current_tree(new_ref_, initial_tree_index);
+
+    LOG_T << "Created new tree: " << new_ref_  << ":" << new_tree_id.string();
 }
 
 } } // namespace piel::cmd

@@ -50,6 +50,7 @@ public:
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
     void update_reference(const refs::Ref& ref);
+    void remove_reference(const refs::Ref::first_type& ref_name);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;

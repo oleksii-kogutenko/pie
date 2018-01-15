@@ -57,10 +57,10 @@ void Tree::operator()()
 {
     if (!show_all_)
     {
-        std::cout << working_copy()->reference() << std::endl;
+        std::cout << working_copy()->current_tree_name() << std::endl;
 
         if (verbose_)
-            std::cout << ":" << working_copy()->reference_index().self().id().string();
+            std::cout << ":" << working_copy()->current_tree_index().self().id().string();
 
         std::cout << std::endl;
 
@@ -71,7 +71,7 @@ void Tree::operator()()
 
     for(std::set<piel::lib::refs::Ref>::const_iterator i = all_refs.begin(), end = all_refs.end(); i != end; ++i)
     {
-        if (working_copy()->reference() == i->first)
+        if (working_copy()->current_tree_name() == i->first)
             std::cout << "*" << i->first;
         else
             std::cout << " " << i->first;

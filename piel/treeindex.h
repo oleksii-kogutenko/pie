@@ -80,6 +80,7 @@ public:
     Index_DECLARE_ATTRIBUTE(email)
     Index_DECLARE_ATTRIBUTE(commiter)
     Index_DECLARE_ATTRIBUTE(commiter_email)
+    Index_DECLARE_ATTRIBUTE(tree_name)
 
 #undef Index_DECLARE_ATTRIBUTE
 

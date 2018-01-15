@@ -34,18 +34,19 @@
 namespace piel { namespace cmd {
 
 namespace errors {
+    struct attempt_to_destroy_current_tree {};
 };
 
 class Destroy: public WorkingCopyCommand
 {
 public:
-    Destroy(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& new_ref);
+    Destroy(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& ref_to_destroy);
     virtual ~Destroy();
 
     void operator()();
 
 private:
-    std::string new_ref_;
+    std::string ref_to_destroy_;
 
 };
 

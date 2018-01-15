@@ -50,7 +50,7 @@ CreateCommand::~CreateCommand()
 
 void CreateCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: create <ref>" << std::endl;
+    std::cerr << "Usage: create [--tree] <ref>" << std::endl;
     std::cout << desc;
 }
 

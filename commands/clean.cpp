@@ -55,7 +55,7 @@ std::string Clean::operator()()
                 working_copy()->metadata_dir());
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(
-            working_copy()->reference_index(),
+            working_copy()->current_tree_index(),
                 current_index);
 
     ConstIter i     = diff.content_diff().begin();
@@ -75,12 +75,12 @@ std::string Clean::operator()()
             LOG_T << "Restore removed: " << i->first;
 
             const piel::lib::TreeIndex::Content& reference_content =
-                    working_copy()->reference_index().content();
+                    working_copy()->current_tree_index().content();
 
             ContentIter restore_content = reference_content.find(i->first);
             if (restore_content != reference_content.end())
             {
-                piel::lib::AssetsExtractor exporter(working_copy()->reference_index(),
+                piel::lib::AssetsExtractor exporter(working_copy()->current_tree_index(),
                         piel::lib::ExtractPolicy__replace_existing);
 
                 exporter.extract_asset_into(item_path, restore_content);
@@ -110,7 +110,7 @@ std::string Clean::operator()()
         }
     }
 
-    return working_copy()->reference_index().self().id().string();
+    return working_copy()->current_tree_index().self().id().string();
 }
 
 } } // namespace piel::cmd

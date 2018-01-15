@@ -80,6 +80,11 @@ void MemoryObjectsStorage::update_reference(const refs::Ref& ref)
     refs_.insert(ref);
 }
 
+void MemoryObjectsStorage::remove_reference(const refs::Ref::first_type& ref_name)
+{
+    refs_.erase(ref_name);
+}
+
 // Check if readable asset available in storage.
 bool MemoryObjectsStorage::contains(const AssetId& id) const
 {

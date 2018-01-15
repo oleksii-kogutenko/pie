@@ -43,15 +43,15 @@ namespace layout {
     struct L {
         static const std::string metadata_dir;
         static const std::string storage_dir;
-        static const std::string reference_file;
-        static const std::string reference_index_file;
+        static const std::string current_tre_file;
+        static const std::string current_tree_index_file;
         static const std::string config_file;
     };
 
     /*static*/ const std::string L::metadata_dir            = ".pie";
     /*static*/ const std::string L::storage_dir             = "storage";
-    /*static*/ const std::string L::reference_file          = "reference";
-    /*static*/ const std::string L::reference_index_file    = "index.json";
+    /*static*/ const std::string L::current_tre_file        = "reference";
+    /*static*/ const std::string L::current_tree_index_file = "index.json";
     /*static*/ const std::string L::config_file             = "config.properties";
 
 };
@@ -73,21 +73,21 @@ namespace layout {
 WorkingCopy::WorkingCopy()
     : working_dir_()
     , storages_(local_storage_index + 1)
-    , reference_()
-    , reference_index_()
+    , current_tree_name_()
+    , current_tree_index_()
 {
 }
 
 WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     : working_dir_(working_dir)
     , storages_(local_storage_index + 1)
-    , reference_()
-    , reference_index_()
+    , current_tree_name_()
+    , current_tree_index_()
 {
     metadata_dir_           = working_dir_  / layout::L::metadata_dir;
     storage_dir_            = metadata_dir_ / layout::L::storage_dir;
-    reference_file_         = metadata_dir_ / layout::L::reference_file;
-    reference_index_file_   = metadata_dir_ / layout::L::reference_index_file;
+    current_tree_file_      = metadata_dir_ / layout::L::current_tre_file;
+    current_tree_index_file_= metadata_dir_ / layout::L::current_tree_index_file;
     config_file_            = metadata_dir_ / layout::L::config_file;
 }
 
@@ -123,12 +123,12 @@ void WorkingCopy::init_filesystem(const std::string reference)
         throw errors::init_existing_working_copy();
     }
 
-    if (fs::exists(reference_file_) || fs::exists(reference_index_file_) || fs::exists(config_file_))
+    if (fs::exists(current_tree_file_) || fs::exists(current_tree_index_file_) || fs::exists(config_file_))
     {
         throw errors::init_existing_working_copy();
     }
 
-    set_reference(reference);
+    set_current_tree(reference);
     init_storages(reference);
 }
 
@@ -140,10 +140,10 @@ void WorkingCopy::attach_filesystem()
     }
 
     // Load reference
-    if (fs::exists(reference_file_))
+    if (fs::exists(current_tree_file_))
     {
-        boost::shared_ptr<std::istream> pifs = boost::filesystem::istream(reference_file_);
-        std::getline((*pifs), reference_);
+        boost::shared_ptr<std::istream> pifs = boost::filesystem::istream(current_tree_file_);
+        std::getline((*pifs), current_tree_name_);
     }
     else
     {
@@ -159,9 +159,9 @@ void WorkingCopy::attach_filesystem()
     attach_storages();
 
     // Load reference index
-    if (fs::exists(reference_index_file_))
+    if (fs::exists(current_tree_index_file_))
     {
-        reference_index_ = TreeIndex::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
+        current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage().get());
     }
 }
 
@@ -195,9 +195,9 @@ WorkingCopy::Storages& WorkingCopy::storages()
     return storages_;
 }
 
-const TreeIndex& WorkingCopy::reference_index() const
+const TreeIndex& WorkingCopy::current_tree_index() const
 {
-    return reference_index_;
+    return current_tree_index_;
 }
 
 TreeIndex WorkingCopy::current_index() const
@@ -267,38 +267,38 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
     return config_.get(name, default_value);
 }
 
-void WorkingCopy::set_reference_index(const TreeIndex& new_reference_index)
+void WorkingCopy::set_current_tree_index(const TreeIndex& new_current_tree_index)
 {
-    new_reference_index.store(*boost::filesystem::ostream(reference_index_file_));
-    reference_index_ = TreeIndex::load(*boost::filesystem::istream(reference_index_file_), local_storage().get());
+    new_current_tree_index.store(*boost::filesystem::ostream(current_tree_index_file_));
+    current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage().get());
 }
 
-std::string WorkingCopy::reference() const
+std::string WorkingCopy::current_tree_name() const
 {
-    return reference_;
+    return current_tree_name_;
 }
 
-void WorkingCopy::set_reference(const std::string& new_reference)
+void WorkingCopy::set_current_tree(const std::string& new_current_tree)
 {
-    if (new_reference == reference_) return;
+    if (new_current_tree == current_tree_name_) return;
 
     // Store
     {
-        boost::shared_ptr<std::ostream> pofs = boost::filesystem::ostream(reference_file_);
-        (*pofs) << new_reference << std::endl;
+        boost::shared_ptr<std::ostream> pofs = boost::filesystem::ostream(current_tree_file_);
+        (*pofs) << new_current_tree << std::endl;
     }
 
     // Load
     {
-        boost::shared_ptr<std::istream> pifs = boost::filesystem::istream(reference_file_);
-        std::getline((*pifs), reference_);
+        boost::shared_ptr<std::istream> pifs = boost::filesystem::istream(current_tree_file_);
+        std::getline((*pifs), current_tree_name_);
     }
 }
 
-void WorkingCopy::update_reference(const std::string& new_reference, const TreeIndex& new_reference_index)
+void WorkingCopy::setup_current_tree(const std::string& new_reference, const TreeIndex& new_reference_index)
 {
-    set_reference(new_reference);
-    set_reference_index(new_reference_index);
+    set_current_tree(new_reference);
+    set_current_tree_index(new_reference_index);
 }
 
 } } // namespace piel::lib

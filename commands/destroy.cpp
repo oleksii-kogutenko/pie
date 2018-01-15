@@ -31,9 +31,9 @@
 
 namespace piel { namespace cmd {
 
-Destroy::Destroy(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& new_ref)
+Destroy::Destroy(const piel::lib::WorkingCopy::Ptr& working_copy, const std::string& ref_to_destroy)
     : WorkingCopyCommand(working_copy)
-    , new_ref_(new_ref)
+    , ref_to_destroy_(ref_to_destroy)
 {
 }
 
@@ -43,6 +43,12 @@ Destroy::~Destroy()
 
 void Destroy::operator()()
 {
+    if (working_copy()->current_tree_name() == ref_to_destroy_)
+    {
+        throw errors::attempt_to_destroy_current_tree();
+    }
+
+    working_copy()->local_storage()->remove_reference(ref_to_destroy_);
 }
 
 } } // namespace piel::cmd
