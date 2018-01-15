@@ -54,7 +54,7 @@ void Create::operator()()
     working_copy()->local_storage()->put(initial_tree_index.assets());
 
     piel::lib::AssetId new_tree_id = initial_tree_index.self().id();
-    working_copy()->local_storage()->update_reference(piel::lib::refs::Ref(new_ref_, new_tree_id));
+    working_copy()->local_storage()->create_reference(piel::lib::refs::Ref(new_ref_, new_tree_id));
     working_copy()->setup_current_tree(new_ref_, initial_tree_index);
 
     LOG_T << "Created new tree: " << new_ref_  << ":" << new_tree_id.string();

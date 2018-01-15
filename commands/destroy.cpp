@@ -48,7 +48,7 @@ void Destroy::operator()()
         throw errors::attempt_to_destroy_current_tree();
     }
 
-    working_copy()->local_storage()->remove_reference(ref_to_destroy_);
+    working_copy()->local_storage()->destroy_reference(ref_to_destroy_);
 }
 
 } } // namespace piel::cmd

@@ -26,10 +26,20 @@
  *
  */
 
-#include <boost/interprocess/streams/vectorstream.hpp>
 #include <memoryobjectsstorage.h>
 
+#include <boost/interprocess/streams/vectorstream.hpp>
+#include <boost/algorithm/string.hpp>
+
 namespace piel { namespace lib {
+
+namespace constants {
+    struct C {
+        static const std::string ref_ids_delimiter;
+    };
+
+    /*static*/ const std::string C::ref_ids_delimiter = ",";
+};
 
 typedef boost::interprocess::basic_ivectorstream<MemoryObjectsStorage::Object> ivectorstream;
 typedef boost::interprocess::basic_ovectorstream<MemoryObjectsStorage::Object> ovectorstream;
@@ -75,14 +85,23 @@ void MemoryObjectsStorage::put(std::set<Asset> assets)
     }
 }
 
-void MemoryObjectsStorage::update_reference(const refs::Ref& ref)
+void MemoryObjectsStorage::create_reference(const refs::Ref& ref)
 {
-    refs_.insert(ref);
+    if (!refs_.insert(std::make_pair(ref.first, ref.second.string())).second)
+    {
+        throw errors::unable_to_insert_new_reference();
+    }
 }
 
-void MemoryObjectsStorage::remove_reference(const refs::Ref::first_type& ref_name)
+void MemoryObjectsStorage::destroy_reference(const refs::Ref::first_type& ref_name)
 {
     refs_.erase(ref_name);
+}
+
+void MemoryObjectsStorage::update_reference(const refs::Ref& ref)
+{
+    std::string prev_value = refs_.at(ref.first);
+    refs_[ref.first] = ref.second.string() + constants::C::ref_ids_delimiter + prev_value;
 }
 
 // Check if readable asset available in storage.
@@ -122,7 +141,12 @@ AssetId MemoryObjectsStorage::resolve(const std::string& ref) const
 {
     if (refs_.find(ref) != refs_.end())
     {
-        return refs_.at(ref);
+        std::string ref_indexes_list = refs_.at(ref);
+
+        std::vector<std::string> ids;
+        boost::split(ids, ref_indexes_list, boost::is_any_of(constants::C::ref_ids_delimiter));
+
+        return AssetId::create(ids[0]);
     }
     else if (ref.length() == AssetId::str_digest_len)
     {

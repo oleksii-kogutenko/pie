@@ -41,6 +41,7 @@ namespace piel { namespace lib {
 namespace errors {
     // Common put error
     struct attempt_to_put_non_readable_asset {};
+    struct unable_to_insert_new_reference {};
 }
 
 namespace refs {
@@ -72,9 +73,9 @@ public:
 
     // References related API
     //typedef std::pair<std::string, AssetId> Ref;
-
+    virtual void create_reference(const refs::Ref& ref) = 0;
+    virtual void destroy_reference(const refs::Ref::first_type& ref_name) = 0;
     virtual void update_reference(const refs::Ref& ref) = 0;
-    virtual void remove_reference(const refs::Ref::first_type& ref_name) = 0;
 
     virtual AssetId resolve(const std::string& refName) const = 0;
     virtual std::set<refs::Ref> references() const = 0;

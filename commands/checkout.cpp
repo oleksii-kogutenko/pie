@@ -97,7 +97,7 @@ std::string Checkout::operator()()
         }
 
         working_copy()->local_storage()->put(reference_index.assets());
-        working_copy()->local_storage()->update_reference(piel::lib::refs::Ref(ref_to_, reference_index.self()));
+        working_copy()->local_storage()->create_reference(piel::lib::refs::Ref(ref_to_, reference_index.self()));
     }
 
     // Update working copy reference

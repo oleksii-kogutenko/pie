@@ -48,8 +48,9 @@ public:
     // Put readable asset(s) into storage.
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
+    void create_reference(const refs::Ref& ref);
+    void destroy_reference(const refs::Ref::first_type& ref_name);
     void update_reference(const refs::Ref& ref);
-    void remove_reference(const refs::Ref::first_type& ref_name);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;

@@ -28,6 +28,7 @@
 
 #include <localdirectorystorage.h>
 #include <logging.h>
+#include <boost/algorithm/string.hpp>
 
 #include <fstream>
 
@@ -44,10 +45,10 @@ namespace layout {
         static const unsigned objects_subdirs_names_length;
     };
 
-    const std::string   L::objects                        = "objects";
-    const std::string   L::references                     = "references.properties";
-    const unsigned      L::objects_storage_depth          = 3;
-    const unsigned      L::objects_subdirs_names_length   = 2;
+    /*static*/ const std::string   L::objects                        = "objects";
+    /*static*/ const std::string   L::references                     = "references.properties";
+    /*static*/ const unsigned      L::objects_storage_depth          = 3;
+    /*static*/ const unsigned      L::objects_subdirs_names_length   = 2;
 
     std::vector<std::string> storage_dir_parts_for(const AssetId& asset_id)
     {
@@ -101,6 +102,14 @@ namespace layout {
         return asset_path(root_dir, asset.id());
     }
 
+};
+
+namespace constants {
+    struct C {
+        static const std::string ref_ids_delimiter;
+    };
+
+    /*static*/ const std::string C::ref_ids_delimiter = ",";
 };
 
 LocalDirectoryStorage::LocalDirectoryStorage(const boost::filesystem::path& root_dir)
@@ -199,18 +208,27 @@ void LocalDirectoryStorage::put(std::set<Asset> assets)
     }
 }
 
-void LocalDirectoryStorage::update_reference(const refs::Ref& ref)
+void LocalDirectoryStorage::create_reference(const refs::Ref& ref)
 {
-    refs_[ref.first] = ref.second.string();
+    if (!refs_.data().insert(std::make_pair(ref.first, ref.second.string())).second)
+    {
+        throw errors::unable_to_insert_new_reference();
+    }
     refs_.store(*fs::ostream(references_).get());
 }
 
-void LocalDirectoryStorage::remove_reference(const refs::Ref::first_type& ref_name)
+void LocalDirectoryStorage::destroy_reference(const refs::Ref::first_type& ref_name)
 {
     refs_.data().erase(ref_name);
     refs_.store(*fs::ostream(references_).get());
 }
 
+void LocalDirectoryStorage::update_reference(const refs::Ref& ref)
+{
+    std::string prev_value = refs_.data().at(ref.first);
+    refs_.data()[ref.first] = ref.second.string() + constants::C::ref_ids_delimiter + prev_value;
+    refs_.store(*fs::ostream(references_).get());
+}
 
 // Check if readable asset available in storage.
 bool LocalDirectoryStorage::contains(const AssetId& id) const
@@ -252,8 +270,14 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
     Properties::MapType::const_iterator i = refs_.data().find(ref);
     if (i != refs_.data().end())
     {
-        LOG_T << "Ref: " << ref << " resolved to id: " << i->second;
-        return AssetId::create(i->second);
+        std::string ref_indexes_list = i->second;
+
+        std::vector<std::string> ids;
+        boost::split(ids, ref_indexes_list, boost::is_any_of(constants::C::ref_ids_delimiter));
+
+        LOG_T << "Ref: " << ref << " resolved to id: " << ids[0];
+
+        return AssetId::create(ids[0]);
     }
     else if (ref.length() == AssetId::str_digest_len)
     {

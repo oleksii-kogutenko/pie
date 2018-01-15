@@ -103,7 +103,7 @@ bool WorkingCopy::is_valid() const
 void WorkingCopy::init_storages(const std::string reference)
 {
     storages_[local_storage_index] = IObjectsStorage::Ptr(new LocalDirectoryStorage(storage_dir_));
-    storages_[local_storage_index]->update_reference(refs::Ref(reference, Asset()));
+    storages_[local_storage_index]->create_reference(refs::Ref(reference, Asset()));
 }
 
 void WorkingCopy::attach_storages()
