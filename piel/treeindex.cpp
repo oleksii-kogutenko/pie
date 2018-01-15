@@ -26,7 +26,7 @@
  *
  */
 
-#include "treeindex.h"
+#include <treeindex.h>
 
 #include <logging.h>
 #include <boost_property_tree_ext.hpp>

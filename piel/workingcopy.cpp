@@ -32,7 +32,7 @@
 #include <logging.h>
 
 #include <checkout.h>
-#include "assetsextractor.h"
+#include <assetsextractor.h>
 
 namespace piel { namespace lib {
 
