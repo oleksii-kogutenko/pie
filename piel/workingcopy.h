@@ -84,7 +84,7 @@ public:
     Storages& storages();
 
     std::string current_tree_name() const;
-    TreeIndex::Ptr current_tree_index() const;
+    TreeIndex::Ptr current_tree_state() const;
 
     void setup_current_tree(const std::string& new_reference, const TreeIndex::Ptr& new_reference_index);
 
@@ -95,7 +95,7 @@ protected:
     WorkingCopy(const boost::filesystem::path& working_dir);
 
     void set_current_tree(const std::string& new_tree_name);
-    void set_current_tree_index(const TreeIndex::Ptr& new_tree_index);
+    void set_current_tree_state(const TreeIndex::Ptr& new_tree_index);
 
 private:
     void init_filesystem(const std::string reference);

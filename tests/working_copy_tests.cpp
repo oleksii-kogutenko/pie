@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(enumerator_test)
     commit.set_message("Initial commit to " + ref_name_1);
     std::string initial_state_id = commit();
 
-    lib::TreeEnumerator treeEnumerator(wc->local_storage(), wc->current_tree_index());
+    lib::TreeEnumerator treeEnumerator(wc->local_storage(), wc->current_tree_state());
     while (treeEnumerator.next())
     {
         lib::TreeIndexEnumerator enumerator(treeEnumerator.index);

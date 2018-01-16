@@ -61,8 +61,8 @@ const Commit* Commit::set_message(const std::string& message)
 
 piel::lib::IndexesDiff Commit::diff(const piel::lib::TreeIndex::Ptr& current_index) const
 {
-    LOG_T << "Calculate diff " << working_copy()->current_tree_index()->self().id().string() << " <-> CDIR";
-    return piel::lib::IndexesDiff::diff(working_copy()->current_tree_index(), current_index);
+    LOG_T << "Calculate diff " << working_copy()->current_tree_state()->self().id().string() << " <-> CDIR";
+    return piel::lib::IndexesDiff::diff(working_copy()->current_tree_state(), current_index);
 }
 
 std::string Commit::operator()()
@@ -83,7 +83,7 @@ std::string Commit::operator()()
 
     LOG_T << "Continue commit.";
 
-    piel::lib::TreeIndex::Ptr reference_index    = working_copy()->current_tree_index();
+    piel::lib::TreeIndex::Ptr reference_index    = working_copy()->current_tree_state();
 
     piel::lib::TreeIndex::Ptr ref_index = piel::lib::TreeIndex::from_ref(ls, working_copy()->current_tree_name());
     if (ref_index)
@@ -110,7 +110,7 @@ std::string Commit::operator()()
     ls->update_reference(piel::lib::refs::Ref(working_copy()->current_tree_name(), current_index->self()));
 
     working_copy()->setup_current_tree(working_copy()->current_tree_name(), current_index);
-    return working_copy()->current_tree_index()->self().id().string();
+    return working_copy()->current_tree_state()->self().id().string();
 }
 
 } } // namespace piel::cmd

@@ -203,7 +203,7 @@ WorkingCopy::Storages& WorkingCopy::storages()
     return storages_;
 }
 
-TreeIndex::Ptr WorkingCopy::current_tree_index() const
+TreeIndex::Ptr WorkingCopy::current_tree_state() const
 {
     return current_tree_index_;
 }
@@ -275,7 +275,7 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
     return config_.get(name, default_value);
 }
 
-void WorkingCopy::set_current_tree_index(const TreeIndex::Ptr& new_current_tree_index)
+void WorkingCopy::set_current_tree_state(const TreeIndex::Ptr& new_current_tree_index)
 {
     new_current_tree_index->store(*boost::filesystem::ostream(current_tree_index_file_));
     current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage());
@@ -306,7 +306,7 @@ void WorkingCopy::set_current_tree(const std::string& new_current_tree)
 void WorkingCopy::setup_current_tree(const std::string& new_reference, const TreeIndex::Ptr& new_reference_index)
 {
     set_current_tree(new_reference);
-    set_current_tree_index(new_reference_index);
+    set_current_tree_state(new_reference_index);
 }
 
 } } // namespace piel::lib

@@ -61,7 +61,7 @@ const Checkout* Checkout::create_new_branch(bool create_new_branch)
 
 std::string Checkout::operator()()
 {
-    piel::lib::TreeIndex::Ptr reference_index = working_copy()->current_tree_index();
+    piel::lib::TreeIndex::Ptr reference_index = working_copy()->current_tree_state();
 
     if (piel::lib::AssetId::empty != working_copy()->local_storage()->resolve(ref_to_))
     {
@@ -104,7 +104,7 @@ std::string Checkout::operator()()
         create();
     }
 
-    return working_copy()->current_tree_index()->self().id().string();
+    return working_copy()->current_tree_state()->self().id().string();
 }
 
 } } // namespace piel::cmd
