@@ -246,13 +246,13 @@ std::string IndexesDiff::format() const
     return oss.str();
 }
 
-/*static*/ IndexesDiff IndexesDiff::diff(const TreeIndex& first_index, const TreeIndex& second_index)
+/*static*/ IndexesDiff IndexesDiff::diff(const TreeIndex::Ptr& first_index, const TreeIndex::Ptr& second_index)
 {
     IndexesDiff result;
 
-    result.content_diff_            = ContentDiffBuilder::diff(first_index.content_, second_index.content_);
-    result.attributes_diff_         = AttributesDiffBuilder::diff(first_index.attributes_, second_index.attributes_);
-    result.content_attributes_diff_ = ContentAttributesDiffBuilder::diff(first_index.content_attributes_, second_index.content_attributes_);
+    result.content_diff_            = ContentDiffBuilder::diff(first_index->content_, second_index->content_);
+    result.attributes_diff_         = AttributesDiffBuilder::diff(first_index->attributes_, second_index->attributes_);
+    result.content_attributes_diff_ = ContentAttributesDiffBuilder::diff(first_index->content_attributes_, second_index->content_attributes_);
 
     return result;
 }

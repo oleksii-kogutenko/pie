@@ -280,29 +280,29 @@ void TreeIndex::store(std::ostream& os) const
     tree.add_child(SerializationConstants::content,             content);
     tree.add_child(SerializationConstants::content_attributes,  objects_attributes);
 
-    //pt::write_json(os, tree, false);
-    pt::write_json(os, tree, true);
+    pt::write_json(os, tree, false);
+    //pt::write_json(os, tree, true);
 }
 
-/*static*/ TreeIndex TreeIndex::load(std::istream& is, IObjectsStorage *storage)
+/*static*/ TreeIndex::Ptr TreeIndex::load(std::istream& is, IObjectsStorage *storage)
 {
-    TreeIndex result;
+    TreeIndex::Ptr result(new TreeIndex());
 
     pt::ptree tree;
 
     pt::read_json(is, tree);
 
-    result.parent_ = Asset::load(tree.get_child(SerializationConstants::parent), storage);
+    result->parent_ = Asset::load(tree.get_child(SerializationConstants::parent), storage);
 
     pt::ptree attributes = tree.get_child(SerializationConstants::attributes);
     for(pt::ptree::const_iterator i = attributes.begin(), end = attributes.end(); i != end; ++i) {
-        result.attributes_.insert(std::make_pair(i->first, i->second.data()));
+        result->attributes_.insert(std::make_pair(i->first, i->second.data()));
     }
 
     pt::ptree content = tree.get_child(SerializationConstants::content);
     for(pt::ptree::const_iterator i = content.begin(), end = content.end(); i != end; ++i) {
         pt::ptree item = i->second;
-        result.content_.insert(std::make_pair(i->first, Asset::load(item, storage)));
+        result->content_.insert(std::make_pair(i->first, Asset::load(item, storage)));
     }
 
     pt::ptree objects_attributes = tree.get_child(SerializationConstants::content_attributes);
@@ -312,13 +312,13 @@ void TreeIndex::store(std::ostream& os) const
         for(pt::ptree::const_iterator j = obj_attrs_tree.begin(), end2 = obj_attrs_tree.end(); j != end2; ++j) {
             obj_attrs.insert(std::make_pair(j->first, j->second.data()));
         }
-        result.set_attrs_(i->first, obj_attrs);
+        result->set_attrs_(i->first, obj_attrs);
     }
 
     return result;
 }
 
-/*static*/ TreeIndex TreeIndex::load(const Asset& asset, IObjectsStorage *storage)
+/*static*/ TreeIndex::Ptr TreeIndex::load(const Asset& asset, IObjectsStorage *storage)
 {
     boost::shared_ptr<std::istream> pis = asset.istream();
     if (pis)
@@ -327,9 +327,24 @@ void TreeIndex::store(std::ostream& os) const
     }
     else
     {
-        return TreeIndex();
+        return TreeIndex::Ptr(new TreeIndex());
     }
 }
+
+/*static*/ TreeIndex::Ptr TreeIndex::from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref)
+{
+    AssetId ref_to_asset_id = storage->resolve(ref);
+    if (ref_to_asset_id != AssetId::empty)
+    {
+        Asset ref_to_asset = storage->asset(ref_to_asset_id);
+        return TreeIndex::load(ref_to_asset, storage.get());
+    }
+    else
+    {
+        return TreeIndex::Ptr();
+    }
+}
+
 
 // Get all assets including Index asset. Method will be used by storage.
 std::set<Asset> TreeIndex::assets() const
@@ -372,20 +387,6 @@ std::set<std::string> TreeIndex::index_paths() const
     return result;
 }
 
-/*static*/ boost::optional<TreeIndex> TreeIndex::from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref)
-{
-    AssetId ref_to_asset_id = storage->resolve(ref);
-    if (ref_to_asset_id != AssetId::empty)
-    {
-        Asset ref_to_asset = storage->asset(ref_to_asset_id);
-        return TreeIndex::load(ref_to_asset, storage.get());
-    }
-    else
-    {
-        return boost::none;
-    }
-}
-
 /*static*/ std::string PredefinedAttributes::format_asset_mode(int mode)
 {
     return boost::lexical_cast<std::string>(mode & asset_mode_mask);
@@ -402,34 +403,34 @@ std::set<std::string> TreeIndex::index_paths() const
     }
 }
 
-/*static*/ void PredefinedAttributes::fill_symlink_attrs(TreeIndex& index, const std::string& index_path, const boost::filesystem::path& file_path)
+/*static*/ void PredefinedAttributes::fill_symlink_attrs(TreeIndex::Ptr& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {
-    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
+    index->set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
 
     boost::filesystem::file_status s = boost::filesystem::symlink_status(file_path);
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(s.permissions()));
+    index->set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(s.permissions()));
 }
 
-/*static*/ void PredefinedAttributes::fill_symlink_attrs(TreeIndex& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
+/*static*/ void PredefinedAttributes::fill_symlink_attrs(TreeIndex::Ptr& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
 {
-    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
+    index->set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__symlink);
 
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(entry->attributes().mode()));
+    index->set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(entry->attributes().mode()));
 }
 
-/*static*/ void PredefinedAttributes::fill_file_attrs(TreeIndex& index, const std::string& index_path, const boost::filesystem::path& file_path)
+/*static*/ void PredefinedAttributes::fill_file_attrs(TreeIndex::Ptr& index, const std::string& index_path, const boost::filesystem::path& file_path)
 {
-    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+    index->set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
     boost::filesystem::file_status s = boost::filesystem::status(file_path);
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(s.permissions()));
+    index->set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(s.permissions()));
 }
 
-/*static*/ void PredefinedAttributes::fill_file_attrs(TreeIndex& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
+/*static*/ void PredefinedAttributes::fill_file_attrs(TreeIndex::Ptr& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry)
 {
-    index.set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
+    index->set_attr_(index_path, PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
-    index.set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(entry->attributes().mode()));
+    index->set_attr_(index_path, PredefinedAttributes::asset_mode, format_asset_mode(entry->attributes().mode()));
 }
 
 } } // namespace piel::lib

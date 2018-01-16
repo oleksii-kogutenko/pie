@@ -34,7 +34,7 @@ namespace piel { namespace lib {
 
 namespace fs = boost::filesystem;
 
-AssetsExtractor::AssetsExtractor(const TreeIndex& index, ExtractPolitic politic)
+AssetsExtractor::AssetsExtractor(const TreeIndex::Ptr& index, ExtractPolitic politic)
     : index_(index)
     , politic_(politic)
 {
@@ -92,10 +92,10 @@ void AssetsExtractor::extract_asset_into(const boost::filesystem::path& item_pat
 
     create_parent_path(item_path);
 
-    std::string asset_type = index_.get_attr_(i->first,
+    std::string asset_type = index_->get_attr_(i->first,
             PredefinedAttributes::asset_type, PredefinedAttributes::asset_type__file);
 
-    std::string asset_mode_str = index_.get_attr_(i->first, PredefinedAttributes::asset_mode);
+    std::string asset_mode_str = index_->get_attr_(i->first, PredefinedAttributes::asset_mode);
 
     int asset_mode = PredefinedAttributes::parse_asset_mode(asset_mode_str,
             PredefinedAttributes::default_asset_mode);
@@ -153,7 +153,7 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory)
         throw errors::attempt_to_export_to_non_existing_directory();
     }
 
-    for (TreeIndex::Content::const_iterator i = index_.content().begin(), end = index_.content().end(); i != end; ++i)
+    for (TreeIndex::Content::const_iterator i = index_->content().begin(), end = index_->content().end(); i != end; ++i)
     {
         fs::path item_path      = directory / i->first;
 
@@ -170,12 +170,12 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory)
             {
                 LOG_T << "Backup existing file: " << item_path;
 
-                fs::copy_file(item_path, item_path / (std::string(".backup.") + index_.self().id().string()));
+                fs::copy_file(item_path, item_path / (std::string(".backup.") + index_->self().id().string()));
             }
 
             if (politic_ & ExtractPolicy__put_new_with_suffix)
             {
-                item_path /= std::string(".new.") + index_.self().id().string();
+                item_path /= std::string(".new.") + index_->self().id().string();
 
                 LOG_T << "New item path: " << item_path;
             }

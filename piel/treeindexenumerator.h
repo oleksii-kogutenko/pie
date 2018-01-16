@@ -26,33 +26,71 @@
  *
  */
 
-#ifndef COMMANDS_LOG_H_
-#define COMMANDS_LOG_H_
+#ifndef PIEL_TREEINDEXENUMERATOR_H_
+#define PIEL_TREEINDEXENUMERATOR_H_
 
 #include <treeindex.h>
-#include <iobjectsstoragecommand.h>
 
-namespace piel { namespace cmd {
+namespace piel { namespace lib {
 
-class Log: public IObjectsStorageCommand
+class TreeIndexEnumerator
 {
 public:
-    Log(const piel::lib::IObjectsStorage::Ptr& storage,
-            const piel::lib::TreeIndex::Ptr& ref_index, const piel::lib::refs::Range& range);
+    std::string                                 path;
+    TreeIndex::Content::value_type::second_type asset;
+    boost::optional<TreeIndex::Attributes>      attributes;
 
-    virtual ~Log();
+    TreeIndexEnumerator(const TreeIndex::Ptr &index)
+        : path()
+        , asset()
+        , attributes(boost::none)
+        , index_(index)
+    {
+        iterator_   = index_->content().begin();
+        end_        = index_->content().end();
+    }
 
-    void operator()();
+    bool next()
+    {
+        bool ret = is_valid();
+        if (ret)
+        {
+            update_values();
+            ++iterator_;
+        }
+        return ret;
+    }
 
 protected:
-    void format_log_element(const piel::lib::TreeIndex::Ptr& index) const;
+
+    bool is_valid() const
+    {
+        return iterator_ != end_;
+    }
+
+    void update_values()
+    {
+        if (is_valid())
+        {
+            path        = iterator_->first;
+            asset       = index_->content().at(iterator_->first);
+            attributes  = index_->get_attrs_(iterator_->first);
+        }
+        else
+        {
+            path        = TreeIndex::Content::value_type::first_type();
+            asset       = Asset();
+            attributes  = boost::none;
+        }
+    }
 
 private:
-    piel::lib::refs::Range range_;
-    piel::lib::TreeIndex::Ptr ref_index_;
+    TreeIndex::Ptr                                          index_;
+    TreeIndex::Content::const_iterator                      iterator_;
+    TreeIndex::Content::const_iterator                      end_;
 
 };
 
-} } // namespace piel::cmd
+} } // namespace piel::lib
 
-#endif /* COMMANDS_LOG_H_ */
+#endif /* PIEL_TREEINDEXENUMERATOR_H_ */

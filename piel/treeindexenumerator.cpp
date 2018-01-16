@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,49 +26,20 @@
  *
  */
 
-#ifndef PIEL_ASSETSEXTRACTOR_H_
-#define PIEL_ASSETSEXTRACTOR_H_
-
-#include <boost_filesystem_ext.hpp>
-#include <treeindex.h>
+#include <treeindexenumerator.h>
 
 namespace piel { namespace lib {
 
-namespace errors {
-    struct attempt_to_export_to_non_existing_directory {};
-    struct attempt_to_export_non_readable_asset {};
-    struct unable_to_create_item_parent {};
-    struct exported_data_is_corrupted {};
-    struct unknown_asset_type {};
-};
-
-enum ExtractPolitic
+/*
+TreeIndexEnumerator::TreeIndexEnumerator()
 {
-    ExtractPolicy__keep_existing         = 0x01,
-    ExtractPolicy__replace_existing      = 0x02,
-    ExtractPolicy__backup_existing       = 0x04,
-    ExtractPolicy__put_new_with_suffix   = 0x08,
-};
 
-class AssetsExtractor
+}
+
+TreeIndexEnumerator::~TreeIndexEnumerator()
 {
-public:
-    AssetsExtractor(const TreeIndex::Ptr& index, ExtractPolitic politic = ExtractPolicy__replace_existing);
-    ~AssetsExtractor();
 
-    void extract_into(const boost::filesystem::path& directory);
-    void extract_asset_into(const boost::filesystem::path& item_path,
-            const TreeIndex::Content::const_iterator& i);
+}
+*/
 
-private:
-    void create_parent_path(const boost::filesystem::path& item_path);
-
-private:
-    TreeIndex::Ptr          index_;
-    ExtractPolitic          politic_;
-
-};
-
-} } // namespace piel
-
-#endif /* PIEL_ASSETSEXTRACTOR_H_ */
+} } // namespace piel::lib

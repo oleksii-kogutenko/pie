@@ -47,7 +47,7 @@ public:
     //! Build zip file index.
     //! \param zip_archive indexed archive.
     //! \return an index.
-    static TreeIndex build(const boost::filesystem::path& zip_file);
+    static TreeIndex::Ptr build(const boost::filesystem::path& zip_file);
 
 };
 

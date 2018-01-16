@@ -74,7 +74,7 @@ WorkingCopy::WorkingCopy()
     : working_dir_()
     , storages_(local_storage_index + 1)
     , current_tree_name_()
-    , current_tree_index_()
+    , current_tree_index_(new TreeIndex())
 {
 }
 
@@ -82,7 +82,7 @@ WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     : working_dir_(working_dir)
     , storages_(local_storage_index + 1)
     , current_tree_name_()
-    , current_tree_index_()
+    , current_tree_index_(new TreeIndex())
 {
     metadata_dir_           = working_dir_  / layout::L::metadata_dir;
     storage_dir_            = metadata_dir_ / layout::L::storage_dir;
@@ -103,8 +103,8 @@ bool WorkingCopy::is_valid() const
 void WorkingCopy::init_storages(const std::string reference)
 {
     init_local_storage();
-    local_storage()->put(current_tree_index_.assets());
-    local_storage()->create_reference(refs::Ref(reference, current_tree_index_.self().id()));
+    local_storage()->put(current_tree_index_->assets());
+    local_storage()->create_reference(refs::Ref(reference, current_tree_index_->self().id()));
 }
 
 void WorkingCopy::attach_storages()
@@ -134,7 +134,7 @@ void WorkingCopy::init_filesystem(const std::string reference)
         throw errors::init_existing_working_copy();
     }
 
-    current_tree_index_.initial_for(reference);
+    current_tree_index_->initial_for(reference);
     setup_current_tree(reference, current_tree_index_);
 
     init_storages(reference);
@@ -203,12 +203,12 @@ WorkingCopy::Storages& WorkingCopy::storages()
     return storages_;
 }
 
-const TreeIndex& WorkingCopy::current_tree_index() const
+TreeIndex::Ptr WorkingCopy::current_tree_index() const
 {
     return current_tree_index_;
 }
 
-TreeIndex WorkingCopy::current_index() const
+TreeIndex::Ptr WorkingCopy::current_index() const
 {
     return FsIndexer::build(working_dir_, metadata_dir_);
 }
@@ -275,9 +275,9 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
     return config_.get(name, default_value);
 }
 
-void WorkingCopy::set_current_tree_index(const TreeIndex& new_current_tree_index)
+void WorkingCopy::set_current_tree_index(const TreeIndex::Ptr& new_current_tree_index)
 {
-    new_current_tree_index.store(*boost::filesystem::ostream(current_tree_index_file_));
+    new_current_tree_index->store(*boost::filesystem::ostream(current_tree_index_file_));
     current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage().get());
 }
 
@@ -303,7 +303,7 @@ void WorkingCopy::set_current_tree(const std::string& new_current_tree)
     }
 }
 
-void WorkingCopy::setup_current_tree(const std::string& new_reference, const TreeIndex& new_reference_index)
+void WorkingCopy::setup_current_tree(const std::string& new_reference, const TreeIndex::Ptr& new_reference_index)
 {
     set_current_tree(new_reference);
     set_current_tree_index(new_reference_index);

@@ -61,14 +61,14 @@ const Checkout* Checkout::create_new_branch(bool create_new_branch)
 
 std::string Checkout::operator()()
 {
-    piel::lib::TreeIndex reference_index = working_copy()->current_tree_index();
+    piel::lib::TreeIndex::Ptr reference_index = working_copy()->current_tree_index();
 
     if (piel::lib::AssetId::empty != working_copy()->local_storage()->resolve(ref_to_))
     {
         if (!force_)
         {
             // Check for non commit changes
-            piel::lib::TreeIndex current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+            piel::lib::TreeIndex::Ptr current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
 
             piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
             if (!diff.empty())
@@ -82,8 +82,7 @@ std::string Checkout::operator()()
         boost::filesystem::remove_directory_content(working_copy()->working_dir(), working_copy()->metadata_dir());
 
         // Export data from index
-        boost::optional<piel::lib::TreeIndex> ref_index = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), ref_to_);
-        reference_index = *ref_index;
+        reference_index = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), ref_to_);
 
         piel::lib::AssetsExtractor index_exporter(reference_index, piel::lib::ExtractPolicy__replace_existing);
         index_exporter.extract_into(working_copy()->working_dir());
@@ -105,7 +104,7 @@ std::string Checkout::operator()()
         create();
     }
 
-    return working_copy()->current_tree_index().self().id().string();
+    return working_copy()->current_tree_index()->self().id().string();
 }
 
 } } // namespace piel::cmd

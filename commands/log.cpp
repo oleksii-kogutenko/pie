@@ -32,7 +32,7 @@
 namespace piel { namespace cmd {
 
 Log::Log(const piel::lib::IObjectsStorage::Ptr& storage,
-        const piel::lib::TreeIndex& ref_index, const piel::lib::refs::Range& range)
+        const piel::lib::TreeIndex::Ptr& ref_index, const piel::lib::refs::Range& range)
     : IObjectsStorageCommand(storage)
     , range_(range)
     , ref_index_(ref_index)
@@ -43,26 +43,26 @@ Log::~Log()
 {
 }
 
-void Log::format_log_element(const piel::lib::TreeIndex& index) const
+void Log::format_log_element(const piel::lib::TreeIndex::Ptr& index) const
 {
     std::cout << "--------------------------------------------------------------------------------" << std::endl;
-    std::cout << "author: " << index.get_author_()                                                  << std::endl;
-    std::cout << "email: " << index.get_email_()                                                    << std::endl;
-    std::cout << "id: "<< index.self().id().string()                                                << std::endl;
+    std::cout << "author: " << index->get_author_()                                                 << std::endl;
+    std::cout << "email: " << index->get_email_()                                                   << std::endl;
+    std::cout << "id: "<< index->self().id().string()                                               << std::endl;
     std::cout                                                                                       << std::endl;
-    std::cout << index.get_message_()                                                               << std::endl;
+    std::cout << index->get_message_()                                                              << std::endl;
 }
 
 void Log::operator()()
 {
-    piel::lib::TreeIndex from, to = ref_index_, current;
+    piel::lib::TreeIndex::Ptr from, to = ref_index_, current;
 
     if (!range_.first.empty())
     {
         piel::lib::AssetId fromId = storage()->resolve(range_.first);
         if (piel::lib::AssetId::empty != fromId)
         {
-            from = *piel::lib::TreeIndex::from_ref(storage(), range_.first);
+            from = piel::lib::TreeIndex::from_ref(storage(), range_.first);
         }
     }
 
@@ -71,37 +71,37 @@ void Log::operator()()
         piel::lib::AssetId toId = storage()->resolve(range_.second);
         if (piel::lib::AssetId::empty != toId)
         {
-            to = *piel::lib::TreeIndex::from_ref(storage(), range_.second);
+            to = piel::lib::TreeIndex::from_ref(storage(), range_.second);
         }
     }
 
-    if (from.self().id() == to.self().id())
+    if (from->self().id() == to->self().id())
     {
         return;
     }
 
-    LOG_T << "from: " << from.self().id().string()
-        << " to: " << to.self().id().string();
+    LOG_T << "from: " << from->self().id().string()
+        << " to: " << to->self().id().string();
 
     current = to;
     do
     {
-        if (!current.is_initial_index())
+        if (!current->is_initial_index())
         {
             // Do not show initial tree elements
             format_log_element(current);
         }
 
-        if (current.parent().id() == piel::lib::AssetId::empty)
+        if (current->parent().id() == piel::lib::AssetId::empty)
             break;
 
-        boost::optional<piel::lib::TreeIndex> opt = piel::lib::TreeIndex::from_ref(storage(), current.parent().id().string());
-        if (!opt)
+        piel::lib::TreeIndex::Ptr index = piel::lib::TreeIndex::from_ref(storage(), current->parent().id().string());
+        if (!index)
             break;
 
-        current = *opt;
+        current = index;
     }
-    while (current.self().id() != from.self().id());
+    while (current->self().id() != from->self().id());
 }
 
 } } // namespace piel::cmd

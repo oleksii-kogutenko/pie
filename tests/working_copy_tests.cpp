@@ -40,6 +40,8 @@
 #include <checkout.h>
 #include <reset.h>
 
+#include <treeindexenumerator.h>
+
 namespace cmd=piel::cmd;
 namespace lib=piel::lib;
 namespace fs=boost::filesystem;
@@ -122,6 +124,34 @@ BOOST_AUTO_TEST_CASE(checkout_tests)
     checkout();
 }
 
+BOOST_AUTO_TEST_CASE(enumerator_test)
+{
+    lib::test_utils::DirState init_state;
+    init_state["test_file_1"] = "test file 1 content 1";
+    init_state["test_file_2"] = "test file 1 content 2";
+    init_state["test_file_3"] = "test file 1 content 3";
+    init_state["test_file_4"] = "test file 1 content 4";
+    init_state["dir1/test_file_4"] = "test file 1 content 4";
+    init_state["dir2/test_file_4"] = "test file 1 content 4";
+    init_state["dir3/test_file_4"] = "test file 1 content 4";
+
+    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir();
+
+    // Init workspace
+    lib::WorkingCopy::Ptr wc = lib::WorkingCopy::init(wc_path->first, ref_name_1);
+    lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), init_state);
+
+    cmd::Commit commit(wc);
+    commit.set_message("Initial commit to " + ref_name_1);
+    std::string initial_state_id = commit();
+
+    lib::TreeIndexEnumerator enumerator(wc->current_tree_index());
+    while (enumerator.next()) {
+        std::cout << enumerator.path << ":"
+                  << enumerator.asset.id().string() << std::endl;
+    }
+}
+
 BOOST_AUTO_TEST_CASE(reset_workspace)
 {
     lib::test_utils::DirState init_state;
@@ -192,4 +222,6 @@ BOOST_AUTO_TEST_CASE(reset_workspace)
     after_reset_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
 
     BOOST_CHECK(init_state == after_reset_state);
+
+
 }

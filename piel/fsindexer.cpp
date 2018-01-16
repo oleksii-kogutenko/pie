@@ -46,14 +46,14 @@ FsIndexer::~FsIndexer()
 {
 }
 
-/*static*/ TreeIndex FsIndexer::build(const fs::path& dir, const fs::path& exclude)
+/*static*/ TreeIndex::Ptr FsIndexer::build(const fs::path& dir, const fs::path& exclude)
 {
     if (!is_directory(dir)) {
         LOG_F << dir << " is not a directory!";
-        return TreeIndex();
+        return TreeIndex::Ptr(new TreeIndex());
     }
 
-    TreeIndex                   result;
+    TreeIndex::Ptr          result(new TreeIndex());
     std::queue<fs::path>    directories;
 
     directories.push( dir );
@@ -77,7 +77,7 @@ FsIndexer::~FsIndexer()
 
                 LOG_T << "s " << name;
 
-                if (result.insert_path(name, Asset::create_for(target)))
+                if (result->insert_path(name, Asset::create_for(target)))
                 {
                     PredefinedAttributes::fill_symlink_attrs(result, name, e.path());
                 }
@@ -90,7 +90,7 @@ FsIndexer::~FsIndexer()
             {
                 LOG_T << "f " << name;
 
-                if (result.insert_path(name, Asset::create_for(e.path())))
+                if (result->insert_path(name, Asset::create_for(e.path())))
                 {
                     PredefinedAttributes::fill_file_attrs(result, name, e.path());
                 }

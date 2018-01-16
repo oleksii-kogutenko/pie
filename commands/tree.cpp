@@ -60,7 +60,7 @@ void Tree::operator()()
         std::cout << working_copy()->current_tree_name() << std::endl;
 
         if (verbose_)
-            std::cout << ":" << working_copy()->current_tree_index().self().id().string();
+            std::cout << ":" << working_copy()->current_tree_index()->self().id().string();
 
         std::cout << std::endl;
 

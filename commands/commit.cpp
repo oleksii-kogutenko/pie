@@ -59,16 +59,16 @@ const Commit* Commit::set_message(const std::string& message)
     return this;
 }
 
-piel::lib::IndexesDiff Commit::diff(const piel::lib::TreeIndex& current_index) const
+piel::lib::IndexesDiff Commit::diff(const piel::lib::TreeIndex::Ptr& current_index) const
 {
-    LOG_T << "Calculate diff " << working_copy()->current_tree_index().self().id().string() << " <-> CDIR";
+    LOG_T << "Calculate diff " << working_copy()->current_tree_index()->self().id().string() << " <-> CDIR";
     return piel::lib::IndexesDiff::diff(working_copy()->current_tree_index(), current_index);
 }
 
 std::string Commit::operator()()
 {
     piel::lib::IObjectsStorage::Ptr ls  = working_copy()->local_storage();
-    piel::lib::TreeIndex current_index  = working_copy()->current_index();
+    piel::lib::TreeIndex::Ptr current_index  = working_copy()->current_index();
 
     piel::lib::IndexesDiff indexes_diff = diff(current_index);
     if (indexes_diff.empty())
@@ -83,34 +83,34 @@ std::string Commit::operator()()
 
     LOG_T << "Continue commit.";
 
-    piel::lib::TreeIndex reference_index    = working_copy()->current_tree_index();
+    piel::lib::TreeIndex::Ptr reference_index    = working_copy()->current_tree_index();
 
-    boost::optional<piel::lib::TreeIndex> ref_index = piel::lib::TreeIndex::from_ref(ls, working_copy()->current_tree_name());
+    piel::lib::TreeIndex::Ptr ref_index = piel::lib::TreeIndex::from_ref(ls, working_copy()->current_tree_name());
     if (ref_index)
     {
-        reference_index = *ref_index;
+        reference_index = ref_index;
     }
 
-    if (!reference_index.empty())
+    if (!reference_index->empty())
     {
-        current_index.set_parent(reference_index.self());
+        current_index->set_parent(reference_index->self());
     }
 
     // Fill from config
-    current_index.set_author_(         working_copy()->config().get(PredefinedConfigs::author).value());
-    current_index.set_email_(          working_copy()->config().get(PredefinedConfigs::email).value());
-    current_index.set_commiter_(       working_copy()->config().get(PredefinedConfigs::commiter).value());
-    current_index.set_commiter_email_( working_copy()->config().get(PredefinedConfigs::commiter_email).value());
+    current_index->set_author_(         working_copy()->config().get(PredefinedConfigs::author).value());
+    current_index->set_email_(          working_copy()->config().get(PredefinedConfigs::email).value());
+    current_index->set_commiter_(       working_copy()->config().get(PredefinedConfigs::commiter).value());
+    current_index->set_commiter_email_( working_copy()->config().get(PredefinedConfigs::commiter_email).value());
 
     // Set message
-    current_index.set_message_(message_);
+    current_index->set_message_(message_);
 
     // Put changes into local storage
-    ls->put(current_index.assets());
-    ls->update_reference(piel::lib::refs::Ref(working_copy()->current_tree_name(), current_index.self()));
+    ls->put(current_index->assets());
+    ls->update_reference(piel::lib::refs::Ref(working_copy()->current_tree_name(), current_index->self()));
 
     working_copy()->setup_current_tree(working_copy()->current_tree_name(), current_index);
-    return working_copy()->current_tree_index().self().id().string();
+    return working_copy()->current_tree_index()->self().id().string();
 }
 
 } } // namespace piel::cmd

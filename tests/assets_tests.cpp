@@ -241,19 +241,19 @@ BOOST_AUTO_TEST_CASE(index_content)
     std::istringstream iss(index_stored_data);
 
     // These 2 indexes contains non readable assets
-    TreeIndex index_loaded_from_asset = TreeIndex::load(Asset::create_for(index_stored_data));
-    TreeIndex index_loaded_from_stream = TreeIndex::load(iss);
+    TreeIndex::Ptr index_loaded_from_asset = TreeIndex::load(Asset::create_for(index_stored_data));
+    TreeIndex::Ptr index_loaded_from_stream = TreeIndex::load(iss);
 
-    BOOST_CHECK(index_loaded_from_asset.self() == index_loaded_from_stream.self());
+    BOOST_CHECK(index_loaded_from_asset->self() == index_loaded_from_stream->self());
 
     for (std::set<std::string>::const_iterator i = added_paths.begin(), end = added_paths.end(); i != end; ++i)
     {
-        BOOST_CHECK(index_loaded_from_asset.contains_path(*i));
-        BOOST_CHECK(index_loaded_from_asset.asset(*i));
-        BOOST_CHECK(!index_loaded_from_asset.asset(*i)->istream());
+        BOOST_CHECK(index_loaded_from_asset->contains_path(*i));
+        BOOST_CHECK(index_loaded_from_asset->asset(*i));
+        BOOST_CHECK(!index_loaded_from_asset->asset(*i)->istream());
 
-        BOOST_CHECK(index_loaded_from_stream.contains_path(*i));
-        BOOST_CHECK(index_loaded_from_stream.asset(*i));
-        BOOST_CHECK(!index_loaded_from_stream.asset(*i)->istream());
+        BOOST_CHECK(index_loaded_from_stream->contains_path(*i));
+        BOOST_CHECK(index_loaded_from_stream->asset(*i));
+        BOOST_CHECK(!index_loaded_from_stream->asset(*i)->istream());
     }
 }

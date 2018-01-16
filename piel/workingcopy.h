@@ -85,18 +85,18 @@ public:
     Storages& storages();
 
     std::string current_tree_name() const;
-    const TreeIndex& current_tree_index() const;
+    TreeIndex::Ptr current_tree_index() const;
 
-    void setup_current_tree(const std::string& new_reference, const TreeIndex& new_reference_index);
+    void setup_current_tree(const std::string& new_reference, const TreeIndex::Ptr& new_reference_index);
 
-    TreeIndex current_index() const;
+    TreeIndex::Ptr current_index() const;
 
 protected:
     WorkingCopy();
     WorkingCopy(const boost::filesystem::path& working_dir);
 
     void set_current_tree(const std::string& new_tree_name);
-    void set_current_tree_index(const TreeIndex& new_tree_index);
+    void set_current_tree_index(const TreeIndex::Ptr& new_tree_index);
 
 private:
     void init_filesystem(const std::string reference);
@@ -114,7 +114,7 @@ private:
     Properties              config_;                            //!< Working copy specific pie configuration parameters.
     Storages                storages_;                          //!< "ObjectStorage"s collection.
     std::string             current_tree_name_;                 //!< Working copy current "Tree" name.
-    TreeIndex               current_tree_index_;                //!< working copy current "Tree" tree index.
+    TreeIndex::Ptr          current_tree_index_;                //!< working copy current "Tree" tree index.
 };
 
 struct PredefinedConfigs {

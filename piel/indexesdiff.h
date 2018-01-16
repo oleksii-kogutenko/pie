@@ -103,7 +103,7 @@ public:
     const ContentAttributesDiff& content_attributes_diff() const;
     AttributesDiff content_item_attributes_diff(const ContentAttributesDiff::const_iterator& element) const;
 
-    static IndexesDiff diff(const TreeIndex& first_index, const TreeIndex& second_index);
+    static IndexesDiff diff(const TreeIndex::Ptr& first_index, const TreeIndex::Ptr& second_index);
 
     std::string format() const;
 

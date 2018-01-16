@@ -49,7 +49,7 @@ public:
     const Commit* set_message(const std::string& message);
 
 protected:
-    piel::lib::IndexesDiff diff(const piel::lib::TreeIndex& current_index) const;
+    piel::lib::IndexesDiff diff(const piel::lib::TreeIndex::Ptr& current_index) const;
 
 private:
     std::string message_;

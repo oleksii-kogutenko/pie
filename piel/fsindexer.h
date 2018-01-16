@@ -48,7 +48,7 @@ public:
     //! \param dir indexed directory.
     //! \param exclude sub directory what will be skipped on indexing.
     //! \return an index.
-    static TreeIndex build(const boost::filesystem::path& dir, const boost::filesystem::path& exclude = boost::filesystem::path());
+    static TreeIndex::Ptr build(const boost::filesystem::path& dir, const boost::filesystem::path& exclude = boost::filesystem::path());
 
 };
 

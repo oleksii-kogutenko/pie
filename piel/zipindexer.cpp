@@ -46,9 +46,9 @@ ZipIndexer::~ZipIndexer()
 
 }
 
-/*static*/ TreeIndex ZipIndexer::build(const fs::path& zip_file)
+/*static*/ TreeIndex::Ptr ZipIndexer::build(const fs::path& zip_file)
 {
-    TreeIndex                   result;
+    TreeIndex::Ptr          result(new TreeIndex());
     ZipFile                 zip( zip_file.native() );
 
     for (zip_int64_t i = 0; i < zip.num_entries(); i++)
@@ -65,7 +65,7 @@ ZipIndexer::~ZipIndexer()
                 << " mode: "
                 << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 );
 
-        if (result.insert_path( entry->name(), Asset::create_for(entry) ))
+        if (result->insert_path( entry->name(), Asset::create_for(entry) ))
         {
             if (entry->symlink())
             {

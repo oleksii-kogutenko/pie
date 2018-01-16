@@ -45,10 +45,12 @@ namespace errors {
 };
 
 class IndexesDiff;
+class TreeIndexEnumerator;
 
 class TreeIndex
 {
 public:
+    typedef boost::shared_ptr<TreeIndex> Ptr;
     typedef std::map<std::string, Asset> Content;
     typedef std::map<std::string, std::string> Attributes;
     typedef std::map<std::string, Attributes> ContentAttributes;
@@ -93,11 +95,6 @@ public:
     void set_attrs_(const std::string& index_path, const Attributes& attrs);
     boost::optional<Attributes> get_attrs_(const std::string& index_path) const;
 
-    // Serialization methods.
-    void store(std::ostream& os) const;
-    static TreeIndex load(std::istream& is, IObjectsStorage *storage = 0);
-    static TreeIndex load(const Asset& asset, IObjectsStorage *storage = 0);
-
     // Get all assets including Index asset. Method will be used by storage.
     std::set<Asset> assets() const;
 
@@ -110,10 +107,15 @@ public:
     // Check if index is empty
     bool empty() const;
 
-    static boost::optional<TreeIndex> from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
+    // Serialization methods.
+    void store(std::ostream& os) const;
+    static TreeIndex::Ptr load(std::istream& is, IObjectsStorage *storage = 0);
+    static TreeIndex::Ptr load(const Asset& asset, IObjectsStorage *storage = 0);
+    static TreeIndex::Ptr from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
 
 private:
     friend class        IndexesDiff;
+    friend class        TreeIndexEnumerator;
 
     mutable Asset       self_;
     Asset               parent_;
@@ -139,10 +141,10 @@ struct PredefinedAttributes {
     static int parse_asset_mode(std::string mode_str, int default_value);
 
     // Fill predefined attributes
-    static void fill_symlink_attrs(TreeIndex& index, const std::string& index_path, const boost::filesystem::path& file_path);
-    static void fill_symlink_attrs(TreeIndex& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
-    static void fill_file_attrs(TreeIndex& index, const std::string& index_path, const boost::filesystem::path& file_path);
-    static void fill_file_attrs(TreeIndex& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
+    static void fill_symlink_attrs(TreeIndex::Ptr& index, const std::string& index_path, const boost::filesystem::path& file_path);
+    static void fill_symlink_attrs(TreeIndex::Ptr& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
+    static void fill_file_attrs(TreeIndex::Ptr& index, const std::string& index_path, const boost::filesystem::path& file_path);
+    static void fill_file_attrs(TreeIndex::Ptr& index, const std::string& index_path, boost::shared_ptr<ZipEntry> entry);
 
 };
 
