@@ -29,6 +29,8 @@
 #include <log.h>
 #include <logging.h>
 
+#include <treeenumerator.h>
+
 namespace piel { namespace cmd {
 
 Log::Log(const piel::lib::IObjectsStorage::Ptr& storage,
@@ -55,7 +57,7 @@ void Log::format_log_element(const piel::lib::TreeIndex::Ptr& index) const
 
 void Log::operator()()
 {
-    piel::lib::TreeIndex::Ptr from, to = ref_index_, current;
+    piel::lib::TreeIndex::Ptr from(new piel::lib::TreeIndex()), to = ref_index_;
 
     if (!range_.first.empty())
     {
@@ -83,25 +85,16 @@ void Log::operator()()
     LOG_T << "from: " << from->self().id().string()
         << " to: " << to->self().id().string();
 
-    current = to;
-    do
+    piel::lib::TreeEnumerator tree_enumerator(storage(), to);
+    while (tree_enumerator.next())
     {
-        if (!current->is_initial_index())
+        if (tree_enumerator.index->self().id() == from->self().id() || tree_enumerator.index->is_initial_index())
         {
-            // Do not show initial tree elements
-            format_log_element(current);
+            break;
         }
 
-        if (current->parent().id() == piel::lib::AssetId::empty)
-            break;
-
-        piel::lib::TreeIndex::Ptr index = piel::lib::TreeIndex::from_ref(storage(), current->parent().id().string());
-        if (!index)
-            break;
-
-        current = index;
+        format_log_element(tree_enumerator.index);
     }
-    while (current->self().id() != from->self().id());
 }
 
 } } // namespace piel::cmd
