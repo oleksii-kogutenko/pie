@@ -29,10 +29,10 @@
 #include <asset.h>
 #include <logging.h>
 
+#include <iobjectsstorage.h>
+
 #include <fstream>
 #include <sstream>
-
-#include <iobjectsstorage.h>
 
 namespace piel { namespace lib {
 
@@ -86,7 +86,7 @@ public:
     virtual AssetImpl *clone() const = 0;
 
 protected:
-    AssetId                                  id_;
+    AssetId id_;
 };
 
 // Non readable asset.
@@ -212,7 +212,7 @@ public:
     {
     }
 
-    StorageImpl(const IObjectsStorage *storage, const AssetId& id)
+    StorageImpl(const IObjectsStorage::Ptr& storage, const AssetId& id)
         : AssetImpl(id)
         , storage_(storage)
     {
@@ -229,10 +229,39 @@ public:
     }
 
 private:
-    const IObjectsStorage *storage_;
+    IObjectsStorage::Ptr storage_;
 
 };
 
+// Readable asset what points to asset in objects storage.
+class WeakStorageImpl: public AssetImpl {
+public:
+    WeakStorageImpl(const WeakStorageImpl& src)
+        : AssetImpl(src.id_)
+        , storage_(src.storage_)
+    {
+    }
+
+    WeakStorageImpl(const IObjectsStorage* storage, const AssetId& id)
+        : AssetImpl(id)
+        , storage_(storage)
+    {
+    }
+
+    boost::shared_ptr<std::istream> istream() const
+    {
+        return storage_->istream_for(id_);
+    }
+
+    AssetImpl *clone() const
+    {
+        return new WeakStorageImpl(*this);
+    }
+
+private:
+    const IObjectsStorage* storage_;
+
+};
 
 Asset::Asset()
     : impl_(new IdImpl(AssetId::empty))
@@ -296,9 +325,14 @@ boost::shared_ptr<std::istream> Asset::istream() const
     return Asset(new IdImpl(id));
 }
 
-/*static*/ Asset Asset::create_for(const IObjectsStorage *storage, const AssetId& id)
+/*static*/ Asset Asset::create_for(const IObjectsStorage::Ptr& storage, const AssetId& id)
 {
     return Asset(new StorageImpl(storage, id));
+}
+
+/*static*/ Asset Asset::create_for(const IObjectsStorage* storage, const AssetId& id)
+{
+    return Asset(new WeakStorageImpl(storage, id));
 }
 
 /*static*/ Asset Asset::create_for(const std::string& str_data)
@@ -327,10 +361,10 @@ const std::string SerializationConstants::id = "id";
     tree.add(SerializationConstants::id, asset.id().string());
 }
 
-/*static*/ Asset Asset::load(const boost::property_tree::ptree& tree, IObjectsStorage *storage)
+/*static*/ Asset Asset::load(const boost::property_tree::ptree& tree, const IObjectsStorage::Ptr& storage)
 {
     std::string id = tree.get<std::string>(SerializationConstants::id);
-    if (storage != 0)
+    if (storage.get() != 0)
     {
         return Asset::create_for(storage, AssetId::create(id));
     }

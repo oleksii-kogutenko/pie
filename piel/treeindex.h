@@ -109,8 +109,8 @@ public:
 
     // Serialization methods.
     void store(std::ostream& os) const;
-    static TreeIndex::Ptr load(std::istream& is, IObjectsStorage *storage = 0);
-    static TreeIndex::Ptr load(const Asset& asset, IObjectsStorage *storage = 0);
+    static TreeIndex::Ptr load(std::istream& is, IObjectsStorage::Ptr storage = IObjectsStorage::Ptr());
+    static TreeIndex::Ptr load(const Asset& asset, IObjectsStorage::Ptr storage = IObjectsStorage::Ptr());
     static TreeIndex::Ptr from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
 
 private:

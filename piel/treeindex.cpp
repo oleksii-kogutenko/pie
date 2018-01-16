@@ -284,7 +284,7 @@ void TreeIndex::store(std::ostream& os) const
     //pt::write_json(os, tree, true);
 }
 
-/*static*/ TreeIndex::Ptr TreeIndex::load(std::istream& is, IObjectsStorage *storage)
+/*static*/ TreeIndex::Ptr TreeIndex::load(std::istream& is, IObjectsStorage::Ptr storage)
 {
     TreeIndex::Ptr result(new TreeIndex());
 
@@ -318,7 +318,7 @@ void TreeIndex::store(std::ostream& os) const
     return result;
 }
 
-/*static*/ TreeIndex::Ptr TreeIndex::load(const Asset& asset, IObjectsStorage *storage)
+/*static*/ TreeIndex::Ptr TreeIndex::load(const Asset& asset, IObjectsStorage::Ptr storage)
 {
     boost::shared_ptr<std::istream> pis = asset.istream();
     if (pis)
@@ -337,7 +337,7 @@ void TreeIndex::store(std::ostream& os) const
     if (ref_to_asset_id != AssetId::empty)
     {
         Asset ref_to_asset = storage->asset(ref_to_asset_id);
-        return TreeIndex::load(ref_to_asset, storage.get());
+        return TreeIndex::load(ref_to_asset, storage);
     }
     else
     {

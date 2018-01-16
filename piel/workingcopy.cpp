@@ -169,7 +169,7 @@ void WorkingCopy::attach_filesystem()
     // Load reference index
     if (fs::exists(current_tree_index_file_))
     {
-        current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage().get());
+        current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage());
     }
 }
 
@@ -278,7 +278,7 @@ std::string WorkingCopy::get_config(const std::string& name, const std::string& 
 void WorkingCopy::set_current_tree_index(const TreeIndex::Ptr& new_current_tree_index)
 {
     new_current_tree_index->store(*boost::filesystem::ostream(current_tree_index_file_));
-    current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage().get());
+    current_tree_index_ = TreeIndex::load(*boost::filesystem::istream(current_tree_index_file_), local_storage());
 }
 
 std::string WorkingCopy::current_tree_name() const

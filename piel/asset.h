@@ -63,13 +63,14 @@ public:
 
     static Asset create_id(const AssetId& id);
 
-    static Asset create_for(const IObjectsStorage *storage, const AssetId& id);
+    static Asset create_for(const boost::shared_ptr<IObjectsStorage>& storage, const AssetId& id);
+    static Asset create_for(const IObjectsStorage* storage, const AssetId& id);
     static Asset create_for(const std::string& str_data);
     static Asset create_for(const boost::filesystem::path& file_path);
     static Asset create_for(boost::shared_ptr<ZipEntry> entry);
 
     static void store(boost::property_tree::ptree& tree, const Asset& asset);
-    static Asset load(const boost::property_tree::ptree& tree, IObjectsStorage *storage);
+    static Asset load(const boost::property_tree::ptree& tree, const boost::shared_ptr<IObjectsStorage>& storage);
 
 private:
     AssetImpl *impl_;

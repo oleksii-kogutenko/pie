@@ -40,6 +40,7 @@
 #include <checkout.h>
 #include <reset.h>
 
+#include <treeenumerator.h>
 #include <treeindexenumerator.h>
 
 namespace cmd=piel::cmd;
@@ -145,10 +146,16 @@ BOOST_AUTO_TEST_CASE(enumerator_test)
     commit.set_message("Initial commit to " + ref_name_1);
     std::string initial_state_id = commit();
 
-    lib::TreeIndexEnumerator enumerator(wc->current_tree_index());
-    while (enumerator.next()) {
-        std::cout << enumerator.path << ":"
-                  << enumerator.asset.id().string() << std::endl;
+    lib::TreeEnumerator treeEnumerator(wc->local_storage(), wc->current_tree_index());
+    while (treeEnumerator.next())
+    {
+        lib::TreeIndexEnumerator enumerator(treeEnumerator.index);
+        std::cout << treeEnumerator.index->self().id().string() << std::endl;
+        while (enumerator.next())
+        {
+            std::cout << "\t" << enumerator.path << ":"
+                    << enumerator.asset.id().string() << std::endl;
+        }
     }
 }
 
@@ -222,6 +229,4 @@ BOOST_AUTO_TEST_CASE(reset_workspace)
     after_reset_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
 
     BOOST_CHECK(init_state == after_reset_state);
-
-
 }

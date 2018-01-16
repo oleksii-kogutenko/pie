@@ -40,54 +40,19 @@ public:
     TreeIndex::Content::value_type::second_type asset;
     boost::optional<TreeIndex::Attributes>      attributes;
 
-    TreeIndexEnumerator(const TreeIndex::Ptr &index)
-        : path()
-        , asset()
-        , attributes(boost::none)
-        , index_(index)
-    {
-        iterator_   = index_->content().begin();
-        end_        = index_->content().end();
-    }
+    TreeIndexEnumerator(const TreeIndex::Ptr &index);
+    ~TreeIndexEnumerator();
 
-    bool next()
-    {
-        bool ret = is_valid();
-        if (ret)
-        {
-            update_values();
-            ++iterator_;
-        }
-        return ret;
-    }
+    bool next();
 
 protected:
-
-    bool is_valid() const
-    {
-        return iterator_ != end_;
-    }
-
-    void update_values()
-    {
-        if (is_valid())
-        {
-            path        = iterator_->first;
-            asset       = index_->content().at(iterator_->first);
-            attributes  = index_->get_attrs_(iterator_->first);
-        }
-        else
-        {
-            path        = TreeIndex::Content::value_type::first_type();
-            asset       = Asset();
-            attributes  = boost::none;
-        }
-    }
+    bool is_valid() const;
+    void update_values();
 
 private:
-    TreeIndex::Ptr                                          index_;
-    TreeIndex::Content::const_iterator                      iterator_;
-    TreeIndex::Content::const_iterator                      end_;
+    TreeIndex::Ptr                      index_;
+    TreeIndex::Content::const_iterator  iterator_;
+    TreeIndex::Content::const_iterator  end_;
 
 };
 

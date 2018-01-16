@@ -26,55 +26,29 @@
  *
  */
 
-#include <treeindexenumerator.h>
+#ifndef PIEL_TREEENUMERATOR_H_
+#define PIEL_TREEENUMERATOR_H_
+
+#include <treeindex.h>
 
 namespace piel { namespace lib {
 
-TreeIndexEnumerator::TreeIndexEnumerator(const TreeIndex::Ptr &index)
-    : path()
-    , asset()
-    , attributes(boost::none)
-    , index_(index)
+class TreeEnumerator
 {
-    iterator_   = index_->content().begin();
-    end_        = index_->content().end();
-}
+public:
+    TreeIndex::Ptr index;
 
-TreeIndexEnumerator::~TreeIndexEnumerator()
-{
+    TreeEnumerator(const IObjectsStorage::Ptr& storage, const TreeIndex::Ptr& head);
+    ~TreeEnumerator();
 
-}
+    bool next();
 
-bool TreeIndexEnumerator::next()
-{
-    bool ret = is_valid();
-    if (ret)
-    {
-        update_values();
-        ++iterator_;
-    }
-    return ret;
-}
+private:
+    IObjectsStorage::Ptr storage_;
+    TreeIndex::Ptr next_;
 
-bool TreeIndexEnumerator::is_valid() const
-{
-    return iterator_ != end_;
-}
-
-void TreeIndexEnumerator::update_values()
-{
-    if (is_valid())
-    {
-        path        = iterator_->first;
-        asset       = index_->content().at(iterator_->first);
-        attributes  = index_->get_attrs_(iterator_->first);
-    }
-    else
-    {
-        path        = TreeIndex::Content::value_type::first_type();
-        asset       = Asset();
-        attributes  = boost::none;
-    }
-}
+};
 
 } } // namespace piel::lib
+
+#endif /* PIEL_TREEENUMERATOR_H_ */
