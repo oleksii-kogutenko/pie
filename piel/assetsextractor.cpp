@@ -27,8 +27,8 @@
  */
 
 #include <assetsextractor.h>
-
 #include <logging.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace piel { namespace lib {
 
@@ -144,7 +144,7 @@ void AssetsExtractor::extract_asset_into(const boost::filesystem::path& item_pat
     }
 }
 
-void AssetsExtractor::extract_into(const boost::filesystem::path& directory)
+void AssetsExtractor::extract_into(const boost::filesystem::path& directory, const std::string& prefix_only)
 {
     if (!fs::exists(directory) || !fs::is_directory(directory))
     {
@@ -155,6 +155,16 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory)
 
     for (TreeIndex::Content::const_iterator i = index_->content().begin(), end = index_->content().end(); i != end; ++i)
     {
+        if (!prefix_only.empty())
+        {
+            if (!boost::starts_with(std::make_pair(i->first.begin(),i->first.end()),
+                    std::make_pair(prefix_only.begin(),prefix_only.end())))
+            {
+                LOG_T << "Skip: " << i->first << " because of prefix: " << prefix_only;
+                continue;
+            }
+        }
+
         fs::path item_path      = directory / i->first;
 
         if (fs::exists(item_path))

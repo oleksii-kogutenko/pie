@@ -56,7 +56,7 @@ public:
     AssetsExtractor(const TreeIndex::Ptr& index, ExtractPolitic politic = ExtractPolicy__replace_existing);
     ~AssetsExtractor();
 
-    void extract_into(const boost::filesystem::path& directory);
+    void extract_into(const boost::filesystem::path& directory, const std::string& prefix_only = std::string());
     void extract_asset_into(const boost::filesystem::path& item_path,
             const TreeIndex::Content::const_iterator& i);
 
