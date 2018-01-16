@@ -68,7 +68,7 @@ std::string Checkout::operator()()
         if (!force_)
         {
             // Check for non commit changes
-            piel::lib::TreeIndex::Ptr current_index = piel::lib::FsIndexer::build(working_copy()->working_dir(), working_copy()->metadata_dir());
+            piel::lib::TreeIndex::Ptr current_index = working_copy()->working_dir_state();
 
             piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
             if (!diff.empty())

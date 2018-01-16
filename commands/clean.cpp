@@ -50,9 +50,7 @@ std::string Clean::operator()()
     typedef piel::lib::IndexesDiff::ContentDiff::const_iterator ConstIter;
     typedef piel::lib::TreeIndex::Content::const_iterator       ContentIter;
 
-    piel::lib::TreeIndex::Ptr current_index = piel::lib::FsIndexer::build(
-            working_copy()->working_dir(),
-                working_copy()->metadata_dir());
+    piel::lib::TreeIndex::Ptr current_index = working_copy()->working_dir_state();
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(
             working_copy()->current_tree_index(),
