@@ -336,7 +336,7 @@ void TreeIndex::store(std::ostream& os) const
     AssetId ref_to_asset_id = storage->resolve(ref);
     if (ref_to_asset_id != AssetId::empty)
     {
-        Asset ref_to_asset = storage->asset(ref_to_asset_id);
+        Asset ref_to_asset = storage->asset(storage, ref_to_asset_id);
         return TreeIndex::load(ref_to_asset, storage);
     }
     else

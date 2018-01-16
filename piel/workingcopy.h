@@ -32,7 +32,6 @@
 #include <properties.h>
 #include <indexesdiff.h>
 #include <localdirectorystorage.h>
-#include <boost/weak_ptr.hpp>
 #include <treeindex.h>
 
 /*
@@ -89,7 +88,7 @@ public:
 
     void setup_current_tree(const std::string& new_reference, const TreeIndex::Ptr& new_reference_index);
 
-    TreeIndex::Ptr current_index() const;
+    TreeIndex::Ptr working_dir_state() const;
 
 protected:
     WorkingCopy();

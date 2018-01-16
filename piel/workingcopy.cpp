@@ -208,7 +208,7 @@ TreeIndex::Ptr WorkingCopy::current_tree_index() const
     return current_tree_index_;
 }
 
-TreeIndex::Ptr WorkingCopy::current_index() const
+TreeIndex::Ptr WorkingCopy::working_dir_state() const
 {
     return FsIndexer::build(working_dir_, metadata_dir_);
 }

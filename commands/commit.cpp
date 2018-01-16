@@ -68,7 +68,7 @@ piel::lib::IndexesDiff Commit::diff(const piel::lib::TreeIndex::Ptr& current_ind
 std::string Commit::operator()()
 {
     piel::lib::IObjectsStorage::Ptr ls  = working_copy()->local_storage();
-    piel::lib::TreeIndex::Ptr current_index  = working_copy()->current_index();
+    piel::lib::TreeIndex::Ptr current_index  = working_copy()->working_dir_state();
 
     piel::lib::IndexesDiff indexes_diff = diff(current_index);
     if (indexes_diff.empty())

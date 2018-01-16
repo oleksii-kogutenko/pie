@@ -233,35 +233,35 @@ private:
 
 };
 
-// Readable asset what points to asset in objects storage.
-class WeakStorageImpl: public AssetImpl {
-public:
-    WeakStorageImpl(const WeakStorageImpl& src)
-        : AssetImpl(src.id_)
-        , storage_(src.storage_)
-    {
-    }
-
-    WeakStorageImpl(const IObjectsStorage* storage, const AssetId& id)
-        : AssetImpl(id)
-        , storage_(storage)
-    {
-    }
-
-    boost::shared_ptr<std::istream> istream() const
-    {
-        return storage_->istream_for(id_);
-    }
-
-    AssetImpl *clone() const
-    {
-        return new WeakStorageImpl(*this);
-    }
-
-private:
-    const IObjectsStorage* storage_;
-
-};
+//// Readable asset what points to asset in objects storage.
+//class WeakStorageImpl: public AssetImpl {
+//public:
+//    WeakStorageImpl(const WeakStorageImpl& src)
+//        : AssetImpl(src.id_)
+//        , storage_(src.storage_)
+//    {
+//    }
+//
+//    WeakStorageImpl(const IObjectsStorage* storage, const AssetId& id)
+//        : AssetImpl(id)
+//        , storage_(storage)
+//    {
+//    }
+//
+//    boost::shared_ptr<std::istream> istream() const
+//    {
+//        return storage_->istream_for(id_);
+//    }
+//
+//    AssetImpl *clone() const
+//    {
+//        return new WeakStorageImpl(*this);
+//    }
+//
+//private:
+//    const IObjectsStorage* storage_;
+//
+//};
 
 Asset::Asset()
     : impl_(new IdImpl(AssetId::empty))
@@ -330,10 +330,10 @@ boost::shared_ptr<std::istream> Asset::istream() const
     return Asset(new StorageImpl(storage, id));
 }
 
-/*static*/ Asset Asset::create_for(const IObjectsStorage* storage, const AssetId& id)
-{
-    return Asset(new WeakStorageImpl(storage, id));
-}
+///*static*/ Asset Asset::create_for(const IObjectsStorage* storage, const AssetId& id)
+//{
+//    return Asset(new WeakStorageImpl(storage, id));
+//}
 
 /*static*/ Asset Asset::create_for(const std::string& str_data)
 {

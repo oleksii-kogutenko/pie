@@ -237,7 +237,7 @@ bool LocalDirectoryStorage::contains(const AssetId& id) const
 }
 
 // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-Asset LocalDirectoryStorage::asset(const AssetId& id) const
+Asset LocalDirectoryStorage::asset(const IObjectsStorage::Ptr& storage, const AssetId& id) const
 {
     fs::path asset_path = layout::asset_path(objects_, id);
     if (fs::exists(asset_path))

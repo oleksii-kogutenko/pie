@@ -56,7 +56,7 @@ public:
     bool contains(const AssetId& id) const;
 
     // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    Asset asset(const AssetId& id) const;
+    Asset asset(const IObjectsStorage::Ptr& storage, const AssetId& id) const;
 
     // Get input stream for reading asset data. Low level API used by Asset implementation.
     //External code must use get().istream() call sequense.

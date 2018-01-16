@@ -111,11 +111,11 @@ bool MemoryObjectsStorage::contains(const AssetId& id) const
 }
 
 //// Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-Asset MemoryObjectsStorage::asset(const AssetId& id) const
+Asset MemoryObjectsStorage::asset(const IObjectsStorage::Ptr& storage, const AssetId& id) const
 {
     if (contains(id))
     {
-        return Asset::create_for(this, id);
+        return Asset::create_for(storage, id);
     }
     else
     {

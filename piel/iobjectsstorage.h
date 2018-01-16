@@ -65,7 +65,7 @@ public:
     virtual bool contains(const AssetId& id) const = 0;
 
     // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    virtual Asset asset(const AssetId& id) const = 0;
+    virtual Asset asset(const Ptr& storage, const AssetId& id) const = 0;
 
     // Get input stream for reading asset data. Low level API used by Asset implementation.
     //External code must use get().istream() call sequense.

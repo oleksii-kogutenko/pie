@@ -93,7 +93,7 @@ std::string Status::operator()()
     std::string final_status_str = Status_clean;
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(
-            working_copy()->current_tree_index(), working_copy()->current_index());
+            working_copy()->current_tree_index(), working_copy()->working_dir_state());
 
     for (ContentIter i = diff.content_diff().begin(), end = diff.content_diff().end(); i != end; ++i)
     {
