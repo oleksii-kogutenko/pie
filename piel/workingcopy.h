@@ -116,13 +116,6 @@ private:
     TreeIndex::Ptr          current_tree_index_;                //!< working copy current "Tree" tree index.
 };
 
-struct PredefinedConfigs {
-    static Properties::DefaultFromEnv author;
-    static Properties::DefaultFromEnv email;
-    static Properties::DefaultFromEnv commiter;
-    static Properties::DefaultFromEnv commiter_email;
-};
-
 } } // namespace piel::lib
 
 #endif /* PIEL_WORKINGCOPY_H_ */

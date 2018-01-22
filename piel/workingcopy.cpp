@@ -58,18 +58,6 @@ namespace layout {
 
 /*static*/ const int WorkingCopy::local_storage_index = 0;
 
-/*static*/ Properties::DefaultFromEnv PredefinedConfigs::author =
-        Properties::Property("author",         "unknown").default_from_env("PIE_AUTHOR");
-
-/*static*/ Properties::DefaultFromEnv PredefinedConfigs::email =
-        Properties::Property("email",          "unknown").default_from_env("PIE_EMAIL");
-
-/*static*/ Properties::DefaultFromEnv PredefinedConfigs::commiter =
-        Properties::Property("commiter",       "unknown").default_from_env("PIE_COMMITER");
-
-/*static*/ Properties::DefaultFromEnv PredefinedConfigs::commiter_email =
-        Properties::Property("commiter_email", "unknown").default_from_env("PIE_COMMITER_EMAIL");
-
 WorkingCopy::WorkingCopy()
     : working_dir_()
     , storages_(local_storage_index + 1)
