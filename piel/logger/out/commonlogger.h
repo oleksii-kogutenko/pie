@@ -4,7 +4,7 @@
 
 namespace piel { namespace lib { namespace logger_out {
 
-class CommonLogger : public BaseLogger {
+class CommonLogger : public logger::LogBase {
 public:
     CommonLogger();
     virtual ~CommonLogger() {}

@@ -7,11 +7,10 @@ namespace piel { namespace lib { namespace logger_out {
 
 class FileLogger : public BaseLogger {
 private:
-    static const char*      COMMONS_LOGGER;
     static const char*      TIME_FORMAT;
     static std::ofstream    writer;
 
-    static Log &commonsLog();
+    static logger::LogPtr commonsLog();
     static void initLogFile();
 
 protected:

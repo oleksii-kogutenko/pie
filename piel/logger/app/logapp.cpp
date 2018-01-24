@@ -8,6 +8,14 @@
 namespace piel { namespace lib { namespace logger_app {
 
 using namespace logger;
+using namespace logger_dispatcher;
+using namespace std;
+
+const LogAppPtr& operator<< (const LogAppPtr& p, LogAppManipulator manipulator)
+{
+    manipulator(*p.get());
+    return p;
+}
 
 void LogApp::trace(const std::string& var1){ dispatcherPtr->enqueue(LogMessage(name, TRACE, var1)); }
 void LogApp::debug(const std::string& var1){ dispatcherPtr->enqueue(LogMessage(name, DEBUG, var1)); }
@@ -16,55 +24,32 @@ void LogApp::warn(const std::string& var1) { dispatcherPtr->enqueue(LogMessage(n
 void LogApp::error(const std::string& var1){ dispatcherPtr->enqueue(LogMessage(name, ERROR, var1)); }
 void LogApp::fatal(const std::string& var1){ dispatcherPtr->enqueue(LogMessage(name, FATAL, var1)); }
 
-LogApp::LogApp(const std::string& _name, logger_dispatcher::LogDispatcherPtr d) : name(_name)
-{
-    dispatcherPtr = d;
-}
+LogApp& trace(LogApp& val) { val.trace(val.logStream.str()); val.clear(); return val; }
+LogApp& debug(LogApp& val) { val.debug(val.logStream.str()); val.clear(); return val; }
+LogApp& info(LogApp& val)  { val.info (val.logStream.str()); val.clear(); return val; }
+LogApp& warn(LogApp& val)  { val.warn (val.logStream.str()); val.clear(); return val; }
+LogApp& error(LogApp& val) { val.error(val.logStream.str()); val.clear(); return val; }
+LogApp& fatal(LogApp& val) { val.fatal(val.logStream.str()); val.clear(); return val; }
+
+LogApp::LogApp(const string& _name, LogDispatcherPtr d)
+    : name(_name)
+    , logStream("")
+{ dispatcherPtr = d; }
 
 LogApp::~LogApp()
 {
     dispatcherPtr->enqueue(LogMessage(name, REMOVE_LOG));
 }
 
-} } } // namespace piel::lib::logger_out
-
-/*
- * TODO:
- * Logger log = Logger::get_logger("name");
- *
- * log(Logger::trace)("Some info")(5)(6).endl
- * ==> list_messages.add(message_type:trace, log_message:"Some info 5 6")
- *
- * thread::
- * {null_log|console_log|file_log}
- * ==> get log_message from list_messages: if (message_type.allowed) print(log_message)
- *
-*/
-
-
-/*
-template<typename T> void insert_into_stream(std::ostream& ostream, const T& val)
+LogApp& LogApp::operator<< (LogAppManipulator manipulator)
 {
-    ostream << val;
+    return manipulator(*this);
 }
 
-struct Logger {
+void LogApp::clear()
+{
+    logStream.str("");
+}
 
-    struct Level {};
+} } } // namespace piel::lib::logger_out
 
-    template<typename T>
-    const Logger& operator()(const T& val) const
-    {
-        insert_into_stream((*osp_), val);
-        (*osp_) << " ";
-    }
-
-    Level trace;
-    Level debug;
-    Level info;
-
-private:
-    boost::shared_ptr<std::ostream> osp_;
-
-};
-*/

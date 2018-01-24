@@ -37,8 +37,8 @@ const int BaseLogger::TRACE_LVL = 5;
 
 char const * const BaseLogger::TRACE_M = "T";
 char const * const BaseLogger::DEBUG_M = "D";
-char const * const BaseLogger::INFO_M = "i";
-char const * const BaseLogger::WARN_M = "w";
+char const * const BaseLogger::INFO_M = "I";
+char const * const BaseLogger::WARN_M = "W";
 char const * const BaseLogger::ERROR_M = "E";
 char const * const BaseLogger::FATAL_M = "F";
 char const * const BaseLogger::NULL_M  = "?";

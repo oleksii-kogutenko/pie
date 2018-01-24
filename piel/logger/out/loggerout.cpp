@@ -18,6 +18,7 @@ using namespace piel::lib::logger;
 using namespace std;
 
 const char* LoggerOut::TIME_FORMAT = "%Y-%m-%d %I:%M:%S";
+LogPtr LoggerOut::commonLogger(new CommonLogger());
 
 LoggerOut::LoggerOut()
     : qthread_(QueuedThread<logger::LogMessage>::start())
@@ -61,7 +62,7 @@ void LoggerOut::create_log(const std::string& _name)
         LogPtr log {new ConsoleLogger(_name)};
         logs.push_back(log);
     }
-    if (!Env::getEnv(nName + FileLogger::PLUGINS_LOGGER_FILENAME, std::string("")).empty()) {
+    if (!Env::getEnv(FileLogger::PLUGINS_LOGGER_FILENAME, std::string("")).empty()) {
         if (Env::getEnv(nName + FileLogger::SFX, false) ||
             Env::getEnv(BaseLogger::PLUGINS_LOGGER + FileLogger::SFX, false)) {
             LogPtr log {new FileLogger(_name)};
@@ -109,6 +110,11 @@ int LoggerOut::on_message(const logger::LogMessage& m)
         break;
     }
     return retVal;
+}
+
+logger::LogPtr LoggerOut::getCommonLogger()
+{
+    return commonLogger;
 }
 
 } } } // namespace piel::lib::logger_out

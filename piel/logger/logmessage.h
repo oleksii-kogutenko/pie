@@ -11,12 +11,12 @@ class LogMessage;
 typedef std::queue<LogMessage>     LogMessagesQueue;
 
 typedef enum {
-    TRACE,
-    DEBUG,
-    INFO,
-    WARN,
+    FATAL,
     ERROR,
-    FATAL
+    WARN,
+    INFO,
+    DEBUG,
+    TRACE
 } log_type;
 
 typedef enum {

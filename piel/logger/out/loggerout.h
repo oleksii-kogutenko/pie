@@ -45,9 +45,11 @@ public:
     int on_message(const logger::LogMessage& m);
     void enqueue(const logger::LogMessage& v);
 
+    static logger::LogPtr getCommonLogger();
+
 private:
     QueuedThread<logger::LogMessage>::ThisPtr qthread_;
-
+    static logger::LogPtr commonLogger;
 };
 
 } } } // namespace piel::lib::logger_app

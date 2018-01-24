@@ -3,7 +3,7 @@
 
 namespace piel { namespace lib { namespace logger_out {
 
-CommonLogger::CommonLogger() : BaseLogger("common", "")
+CommonLogger::CommonLogger() : LogBase("common")
 {}
 
 void CommonLogger::print(const std::string& str) {

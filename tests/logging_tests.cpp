@@ -42,27 +42,32 @@
 #include <ctime>
 #include <iostream>
 #include <stdio.h>
+#include <string>
 
 using namespace piel::lib;
 using namespace logger_app;
 using namespace logger_dispatcher;
+BOOST_AUTO_TEST_CASE(logging_simple_3)
+{
+   std::cout << "start 3 test+++\n";
+    {
+        LogAppPtr log1 = Logging::create_logger("test1");
+        log1 << "t" << 5 << "\n" << trace;
+        log1 << "d" << 4 << "\n" << debug;
+        log1 << "i" << 3 << "\n" << info;
+        log1 << "w" << 2 << "\n" << warn;
+        log1 << "e" << 1 << "\n" << error;
+        log1 << "f" << 0 << "\n" << fatal;
+    }
 
-Logging logging;
+    std::cout << "end 3 test+++\n";
+}
 
-
+/*
 BOOST_AUTO_TEST_CASE(logging_simple)
 {
-    //test_utils::TempFileHolder::Ptr wc_path = test_utils::create_temp_dir(100);
-
-    //BOOST_CHECK_THROW(WorkingCopy::attach(wc_path->first), errors::attach_to_non_working_copy);
-
-    // Second attempt must throw exception
-
-
    std::cout << "start test+++\n";
     {
-        //LogDispatcher::init();
-
         LogAppPtr log1 = Logging::create_logger("test1");
         LogAppPtr log2 = Logging::create_logger("test2");
 
@@ -70,10 +75,19 @@ BOOST_AUTO_TEST_CASE(logging_simple)
         log1->info("By\n");
         log2->info("Hello\n");
         log2->info("By\n");
-
-        //LogDispatcher::leave();
     }
 
     std::cout << "end test+++\n";
-    //sleep(2);
 }
+*/
+/*BOOST_AUTO_TEST_CASE(logging_simple_2)
+{
+   std::cout << "start 2 test+++\n";
+    {
+        LogApp& log1 = *Logging::create_logger("test1");
+        //LogAppPtr log2 = Logging::create_logger("test2");
+        log1 << std::string("m") << 1 << info;
+    }
+
+    std::cout << "end 2 test+++\n";
+}*/
