@@ -66,37 +66,55 @@ BOOST_AUTO_TEST_CASE(logging_simple_2)
     std::cout << "start 2 test+++\n";
 
     LogAppPtr log1 = Logging::create_logger("test2");
-    log1 << "t" << 5 << "\n" << trace;
-    log1 << "d" << 4 << "\n" << debug;
-    log1 << "i" << 3 << "\n" << info;
-    log1 << "w" << 2 << "\n" << warn;
-    log1 << "e" << 1 << "\n" << error;
-    log1 << "f" << 0 << "\n" << fatal;
+    log1 << "t" << 5 << trace;
+    log1 << "d" << 4 << debug;
+    log1 << "i" << 3 << info;
+    log1 << "w" << 2 << warn;
+    log1 << "e" << 1 << error;
+    log1 << "f" << 0 << fatal;
 
     std::cout << "end 2 test+++\n";
 }
 
 BOOST_AUTO_TEST_CASE(logging_simple_3)
 {
-    std::cout << "start 2 test+++\n";
+    std::cout << "start 3 test+++\n";
     {
         LogAppPtr log1 = Logging::create_logger("test3");
-        log1 << "t" << 5 << "\n" << trace;
-        log1 << "d" << 4 << "\n" << debug;
-        log1 << "i" << 3 << "\n" << info;
-        log1 << "w" << 2 << "\n" << warn;
-        log1 << "e" << 1 << "\n" << error;
-        log1 << "f" << 0 << "\n" << fatal;
+        log1 << "t" << 5 << trace;
+        log1 << "d" << 4 << debug;
+        log1 << "i" << 3 << info;
+        log1 << "w" << 2 << warn;
+        log1 << "e" << 1 << error;
+        log1 << "f" << 0 << fatal;
     }
     {
         LogAppPtr log2 = Logging::create_logger("test3");
-        log2 << "2t" << 5 << "\n" << trace;
-        log2 << "2d" << 4 << "\n" << debug;
-        log2 << "2i" << 3 << "\n" << info;
-        log2 << "2w" << 2 << "\n" << warn;
-        log2 << "2e" << 1 << "\n" << error;
-        log2 << "2f" << 0 << "\n" << fatal;
+        log2 << "2t" << 5 << trace;
+        log2 << "2d" << 4 << debug;
+        log2 << "2i" << 3 << info;
+        log2 << "2w" << 2 << warn;
+        log2 << "2e" << 1 << error;
+        log2 << "2f" << 0 << fatal;
     }
-    std::cout << "end 2 test+++\n";
+    std::cout << "end 3 test+++\n";
+}
+
+BOOST_AUTO_TEST_CASE(logging_simple_4)
+{
+    std::cout << "start 4 test+++\n";
+
+    LogAppPtr log1 = Logging::create_logger("test4");
+
+    for (int i=0; i < 10000; i++) {
+        log1 << "t" << 5 << "i:" << i << trace;
+        log1 << "d" << 4 << "i:" << i << debug;
+        log1 << "i" << 3 << "i:" << i << info;
+        log1 << "w" << 2 << "i:" << i << warn;
+        log1 << "e" << 1 << "i:" << i << error;
+        log1 << "f" << 0 << "i:" << i << fatal;
+    }
+
+    std::cout << "end 4 test+++\n";
 }
 

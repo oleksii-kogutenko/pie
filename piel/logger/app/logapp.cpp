@@ -21,12 +21,12 @@ void LogApp::warn(const std::string& var1) { dispatcherPtr->enqueue(LogMessage(n
 void LogApp::error(const std::string& var1){ dispatcherPtr->enqueue(LogMessage(name, ERROR, var1)); }
 void LogApp::fatal(const std::string& var1){ dispatcherPtr->enqueue(LogMessage(name, FATAL, var1)); }
 
-LogApp& trace(LogApp& val) { val.trace(val.logStream.str()); val.clear(); return val; }
-LogApp& debug(LogApp& val) { val.debug(val.logStream.str()); val.clear(); return val; }
-LogApp& info(LogApp& val)  { val.info (val.logStream.str()); val.clear(); return val; }
-LogApp& warn(LogApp& val)  { val.warn (val.logStream.str()); val.clear(); return val; }
-LogApp& error(LogApp& val) { val.error(val.logStream.str()); val.clear(); return val; }
-LogApp& fatal(LogApp& val) { val.fatal(val.logStream.str()); val.clear(); return val; }
+LogApp& trace(LogApp& val) { val.logStream << std::endl; val.trace(val.logStream.str()); val.clear(); return val; }
+LogApp& debug(LogApp& val) { val.logStream << std::endl; val.debug(val.logStream.str()); val.clear(); return val; }
+LogApp& info(LogApp& val)  { val.logStream << std::endl; val.info (val.logStream.str()); val.clear(); return val; }
+LogApp& warn(LogApp& val)  { val.logStream << std::endl; val.warn (val.logStream.str()); val.clear(); return val; }
+LogApp& error(LogApp& val) { val.logStream << std::endl; val.error(val.logStream.str()); val.clear(); return val; }
+LogApp& fatal(LogApp& val) { val.logStream << std::endl; val.fatal(val.logStream.str()); val.clear(); return val; }
 
 LogApp::LogApp(const string& _name, LogDispatcherPtr d)
     : name(_name)
