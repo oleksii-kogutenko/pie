@@ -4,12 +4,10 @@ namespace piel { namespace lib { namespace logger_out {
 using namespace logger_out;
 
 LogMessageQueue::LogMessageQueue()
-{
-}
+{}
 
 LogMessageQueue::~LogMessageQueue()
-{
-}
+{}
 
 void LogMessageQueue::push(const logger::LogMessage& m)
 {

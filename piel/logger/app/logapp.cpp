@@ -1,8 +1,5 @@
-#include "logapp.h"
-#include "../env.h"
-#include "../loggerutils.h"
-#include "../utils.h"
 #include <stdarg.h>
+#include "logapp.h"
 #include "../dispatcher/logdispatcher.h"
 
 namespace piel { namespace lib { namespace logger_app {

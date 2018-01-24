@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, Oleksii Kogutenko oleksii.kogutenko@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,8 @@
 
 #define BOOST_TEST_MODULE LoggingTests
 #include <boost/test/unit_test.hpp>
-
 #include <test_utils.hpp>
 
-//#include <logging.h>
-//#include "logger/app/loggerapp.h"
 #include "logger/dispatcher/logdispatcher.h"
 #include "logger/app/logapp.h"
 #include "logger/dispatcher/logging.h"
@@ -47,11 +44,43 @@
 using namespace piel::lib;
 using namespace logger_app;
 using namespace logger_dispatcher;
+
+
+BOOST_AUTO_TEST_CASE(logging_simple)
+{
+    std::cout << "start test+++\n";
+
+    LogAppPtr log1 = Logging::create_logger("test1.1");
+    LogAppPtr log2 = Logging::create_logger("test1.2");
+
+    log1->info("info\n");
+    log1->debug("debug\n");
+    log2->error("error\n");
+    log2->warn("warn\n");
+
+    std::cout << "end test+++\n";
+}
+
+BOOST_AUTO_TEST_CASE(logging_simple_2)
+{
+    std::cout << "start 2 test+++\n";
+
+    LogAppPtr log1 = Logging::create_logger("test2");
+    log1 << "t" << 5 << "\n" << trace;
+    log1 << "d" << 4 << "\n" << debug;
+    log1 << "i" << 3 << "\n" << info;
+    log1 << "w" << 2 << "\n" << warn;
+    log1 << "e" << 1 << "\n" << error;
+    log1 << "f" << 0 << "\n" << fatal;
+
+    std::cout << "end 2 test+++\n";
+}
+
 BOOST_AUTO_TEST_CASE(logging_simple_3)
 {
-   std::cout << "start 3 test+++\n";
+    std::cout << "start 2 test+++\n";
     {
-        LogAppPtr log1 = Logging::create_logger("test1");
+        LogAppPtr log1 = Logging::create_logger("test3");
         log1 << "t" << 5 << "\n" << trace;
         log1 << "d" << 4 << "\n" << debug;
         log1 << "i" << 3 << "\n" << info;
@@ -59,35 +88,15 @@ BOOST_AUTO_TEST_CASE(logging_simple_3)
         log1 << "e" << 1 << "\n" << error;
         log1 << "f" << 0 << "\n" << fatal;
     }
-
-    std::cout << "end 3 test+++\n";
-}
-
-/*
-BOOST_AUTO_TEST_CASE(logging_simple)
-{
-   std::cout << "start test+++\n";
     {
-        LogAppPtr log1 = Logging::create_logger("test1");
-        LogAppPtr log2 = Logging::create_logger("test2");
-
-        log1->info("Hello\n");
-        log1->info("By\n");
-        log2->info("Hello\n");
-        log2->info("By\n");
+        LogAppPtr log2 = Logging::create_logger("test3");
+        log2 << "2t" << 5 << "\n" << trace;
+        log2 << "2d" << 4 << "\n" << debug;
+        log2 << "2i" << 3 << "\n" << info;
+        log2 << "2w" << 2 << "\n" << warn;
+        log2 << "2e" << 1 << "\n" << error;
+        log2 << "2f" << 0 << "\n" << fatal;
     }
-
-    std::cout << "end test+++\n";
-}
-*/
-/*BOOST_AUTO_TEST_CASE(logging_simple_2)
-{
-   std::cout << "start 2 test+++\n";
-    {
-        LogApp& log1 = *Logging::create_logger("test1");
-        //LogAppPtr log2 = Logging::create_logger("test2");
-        log1 << std::string("m") << 1 << info;
-    }
-
     std::cout << "end 2 test+++\n";
-}*/
+}
+

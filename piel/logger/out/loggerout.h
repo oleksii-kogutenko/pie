@@ -27,8 +27,8 @@ protected:
 
 protected:
     static const char*      TIME_FORMAT;
-    logger::LogPtrList      logs;
-    ThreadPtr               pthread;
+    logger::LogPtrList      logPtrList;
+    ThreadPtr               threadPtr;
     bool                    enableLogsTimestamps;
     LogMessageQueuePtr      queuePtr;
 

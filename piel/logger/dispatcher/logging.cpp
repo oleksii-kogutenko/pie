@@ -10,18 +10,13 @@
 namespace piel { namespace lib { namespace logger_app {
 
 Logging::Logging()
-{
-
-}
+{}
 
 Logging::~Logging()
-{
-
-}
+{}
 
 logger_app::LogAppPtr Logging::create_logger(std::string name)
 {
-
     RawPtr p = getInstance();
     logger::LogMessage m(name, logger::CREATE_LOG);
 

@@ -12,7 +12,6 @@
 #include <boost/signals2.hpp>
 
 namespace piel { namespace lib { namespace logger_dispatcher {
-class LogDispatcher;
 
 class LogDispatcher {
 protected:

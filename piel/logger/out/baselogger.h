@@ -13,7 +13,6 @@ class BaseLogger : public logger::LogBase {
 public:
     static const std::string PLUGINS_LOGGER;
     static char const * const PLUGINS_LOGGER_FILENAME;
-
     static char const * const TIMESTAMPS_SFX;
 private:
     static char const * const LEVEL_SFX;
@@ -53,7 +52,7 @@ public:
     virtual bool isTraceEnabled();
     virtual bool isWarnEnabled();
 
-    static const char *getTypeLogStr(const logger::log_type& type);
+    static const char *getLogTypeStr(const logger::log_type& type);
 
     BaseLogger(const std::string& name, const std::string& sfx);
     virtual ~BaseLogger();

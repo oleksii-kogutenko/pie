@@ -16,7 +16,6 @@ private:
 public:
     typedef Logging* RawPtr;
 
-
     Logging();
     ~Logging();
     static logger_app::LogAppPtr create_logger(std::string name);

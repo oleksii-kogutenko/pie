@@ -12,7 +12,6 @@ private:
 
     static logger::LogPtr commonsLog();
     static void initLogFile();
-
 protected:
     virtual void print(const std::string& str);
 

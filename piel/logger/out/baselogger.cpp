@@ -1,19 +1,14 @@
 #include "baselogger.h"
-#include "../env.h"
-#include "../loggerutils.h"
 #include "../utils.h"
 #include <stdarg.h>
 
 #define DEF_PLUGINS_LOGGER  "plugins_logger"
 
-#define DBG(x)
-#define DBG1(x)
-#define DBG2(x)
-
 namespace piel { namespace lib { namespace logger_out {
 
 using namespace logger;
 using namespace std;
+using namespace utils;
 
 const std::string BaseLogger::PLUGINS_LOGGER          = DEF_PLUGINS_LOGGER;
 char const * const BaseLogger::PLUGINS_LOGGER_FILENAME = DEF_PLUGINS_LOGGER"_filename";
@@ -43,81 +38,41 @@ char const * const BaseLogger::ERROR_M = "E";
 char const * const BaseLogger::FATAL_M = "F";
 char const * const BaseLogger::NULL_M  = "?";
 
-BaseLogger::BaseLogger(const std::string &_name, const std::string &sfx) : LogBase(_name)
+BaseLogger::BaseLogger(const std::string &_name, const std::string &sfx)
+    : LogBase(_name)
+    , logLevel(0)
 {
-    DBG(std::cout << __PRETTY_FUNCTION__ << ":" << _name << " sfx:" << sfx << std::endl;)
+    int logLevelAll = getEnv(PLUGINS_LOGGER + LEVEL_SFX, INFO_LVL);
 
-    int logLevelAll = Env::getEnv(PLUGINS_LOGGER + LEVEL_SFX, INFO_LVL);
-
-    bool isTraceEnabledAll = Env::getEnv(PLUGINS_LOGGER + TRACE_SFX, false);
-    bool isDebugEnabledAll = Env::getEnv(PLUGINS_LOGGER + DEBUG_SFX, false);
-    bool isInfoEnabledAll = Env::getEnv(PLUGINS_LOGGER + INFO_SFX, false);
-    bool isWarnEnabledAll = Env::getEnv(PLUGINS_LOGGER + WARN_SFX, false);
-    bool isErrorEnabledAll = Env::getEnv(PLUGINS_LOGGER + ERROR_SFX, false);
-    bool isFatalEnabledAll = Env::getEnv(PLUGINS_LOGGER + FATAL_SFX, false);
-
-    DBG(std::cout << __PRETTY_FUNCTION__ << " === " << __LINE__ <<  std::endl;)
-    DBG2(std::cout << __PRETTY_FUNCTION__ << " " << name <<  " " << __LINE__ <<  " " << \
-         " logLevelAll:" << logLevelAll << \
-         " isTraceEnabledAll:" << isTraceEnabledAll << \
-         " isDebugEnabledAll:" << isDebugEnabledAll << \
-         " isInfoEnabledAll:" << isInfoEnabledAll << \
-         " isWarnEnabledAll:" << isWarnEnabledAll << \
-         " isErrorEnabledAll:" << isErrorEnabledAll << \
-         " isFatalEnabledAll:" << isFatalEnabledAll << \
-         std::endl;)
+    bool isTraceEnabledAll = getEnv(PLUGINS_LOGGER + TRACE_SFX, false);
+    bool isDebugEnabledAll = getEnv(PLUGINS_LOGGER + DEBUG_SFX, false);
+    bool isInfoEnabledAll = getEnv(PLUGINS_LOGGER + INFO_SFX, false);
+    bool isWarnEnabledAll = getEnv(PLUGINS_LOGGER + WARN_SFX, false);
+    bool isErrorEnabledAll = getEnv(PLUGINS_LOGGER + ERROR_SFX, false);
+    bool isFatalEnabledAll = getEnv(PLUGINS_LOGGER + FATAL_SFX, false);
 
     std::string const pName = PLUGINS_LOGGER + sfx;
-    logLevelAll = Env::getEnv(pName + LEVEL_SFX, logLevelAll);
+    logLevelAll = getEnv(pName + LEVEL_SFX, logLevelAll);
 
-    isTraceEnabledAll = Env::getEnv(pName + TRACE_SFX, isTraceEnabledAll);
-    isDebugEnabledAll = Env::getEnv(pName + DEBUG_SFX, isDebugEnabledAll);
-    isInfoEnabledAll = Env::getEnv(pName + INFO_SFX, isInfoEnabledAll);
-    isWarnEnabledAll = Env::getEnv(pName + WARN_SFX, isWarnEnabledAll);
-    isErrorEnabledAll = Env::getEnv(pName + ERROR_SFX, isErrorEnabledAll);
-    isFatalEnabledAll = Env::getEnv(pName + FATAL_SFX, isFatalEnabledAll);
+    isTraceEnabledAll = getEnv(pName + TRACE_SFX, isTraceEnabledAll);
+    isDebugEnabledAll = getEnv(pName + DEBUG_SFX, isDebugEnabledAll);
+    isInfoEnabledAll = getEnv(pName + INFO_SFX, isInfoEnabledAll);
+    isWarnEnabledAll = getEnv(pName + WARN_SFX, isWarnEnabledAll);
+    isErrorEnabledAll = getEnv(pName + ERROR_SFX, isErrorEnabledAll);
+    isFatalEnabledAll = getEnv(pName + FATAL_SFX, isFatalEnabledAll);
 
-    DBG(std::cout << __PRETTY_FUNCTION__ << " === " << __LINE__ <<  std::endl;)
-    DBG2(std::cout << __PRETTY_FUNCTION__ << " " << name <<  " " << __LINE__ <<  " " << \
-         " pName:" << pName << \
-         " logLevelAll:" << logLevelAll << \
-         " isTraceEnabledAll:" << isTraceEnabledAll << \
-         " isDebugEnabledAll:" << isDebugEnabledAll << \
-         " isInfoEnabledAll:" << isInfoEnabledAll << \
-         " isWarnEnabledAll:" << isWarnEnabledAll << \
-         " isErrorEnabledAll:" << isErrorEnabledAll << \
-         " isFatalEnabledAll:" << isFatalEnabledAll << \
-         std::endl;)
+    std::string const nName = normalize(name) + sfx;
+    logLevel = getEnv(nName + LEVEL_SFX, logLevelAll);
 
-    std::string const nName = LoggerUtils::normalize(name) + sfx;
-    logLevel = Env::getEnv(nName + LEVEL_SFX, logLevelAll);
-
-    DBG(std::cout << __PRETTY_FUNCTION__ << " === " << __LINE__ <<  std::endl;)
-    _isTraceEnabled = Env::getEnv(nName + TRACE_SFX, isTraceEnabledAll);
-    _isDebugEnabled = Env::getEnv(nName + DEBUG_SFX, isDebugEnabledAll);
-    _isInfoEnabled = Env::getEnv(nName + INFO_SFX, isInfoEnabledAll);
-    _isWarnEnabled = Env::getEnv(nName + WARN_SFX, isWarnEnabledAll);
-    _isErrorEnabled = Env::getEnv(nName + ERROR_SFX, isErrorEnabledAll);
-    _isFatalEnabled = Env::getEnv(nName + FATAL_SFX, isFatalEnabledAll);
-
-    DBG2(std::cout << __PRETTY_FUNCTION__ << " " << name <<  " " << __LINE__ <<  " " << \
-         " nName:" << nName << \
-         " logLevelAll:" << logLevel << \
-         " _isTraceEnabled:" << _isTraceEnabled << \
-         " _isDebugEnabled:" << _isDebugEnabled << \
-         " _isInfoEnabled:" << _isInfoEnabled << \
-         " _isWarnEnabled:" << _isWarnEnabled << \
-         " _isErrorEnabled:" << _isErrorEnabled << \
-         " _isFatalEnabled:" << _isFatalEnabled << \
-         std::endl;)
-
-    DBG2(std::cout << __PRETTY_FUNCTION__ << ":" << toString() << std::endl;)
+    _isTraceEnabled = getEnv(nName + TRACE_SFX, isTraceEnabledAll);
+    _isDebugEnabled = getEnv(nName + DEBUG_SFX, isDebugEnabledAll);
+    _isInfoEnabled = getEnv(nName + INFO_SFX, isInfoEnabledAll);
+    _isWarnEnabled = getEnv(nName + WARN_SFX, isWarnEnabledAll);
+    _isErrorEnabled = getEnv(nName + ERROR_SFX, isErrorEnabledAll);
+    _isFatalEnabled = getEnv(nName + FATAL_SFX, isFatalEnabledAll);
 }
 
-BaseLogger::~BaseLogger()
-{
-    DBG(std::cout << __PRETTY_FUNCTION__ << ":" << name << std::endl;)
-}
+BaseLogger::~BaseLogger() {}
 
 bool BaseLogger::isFatalEnabled() { return _isFatalEnabled || _isTraceEnabled || logLevel >= FATAL_LVL; }
 bool BaseLogger::isErrorEnabled() { return _isErrorEnabled || _isTraceEnabled || logLevel >= ERROR_LVL; }
@@ -128,10 +83,15 @@ bool BaseLogger::isTraceEnabled() { return _isTraceEnabled || logLevel >= TRACE_
 
 std::string BaseLogger::toString()
 {
-    return Utils::format("%s (%s) levels:%d F:%d E:%d W:%d i:%d D:%d T:%d", name.c_str(), LoggerUtils::normalize(name).c_str(),
-                logLevel,
-                _isFatalEnabled, _isErrorEnabled, _isWarnEnabled,
-                _isInfoEnabled, _isDebugEnabled, _isTraceEnabled);
+    stringstream os;
+    os << name << "(" << normalize(name) << ") level:" << logLevel
+       << " F:" << _isFatalEnabled
+       << " E:" << _isErrorEnabled
+       << " W:" << _isWarnEnabled
+       << " I:" << _isInfoEnabled
+       << " D:" << _isDebugEnabled
+       << " T:" << _isTraceEnabled;
+    return os.str();
 }
 
 void BaseLogger::enable(const logger::log_type& type)
@@ -160,7 +120,6 @@ void BaseLogger::disable(const logger::log_type& type)
 
 void BaseLogger::print(const logger::log_type& type, const std::string& var1)
 {
-    DBG(std::cout << __PRETTY_FUNCTION__ << ":" << type << "," << var1 << std::endl;)
     switch (type) {
     case logger::TRACE: trace(var1); break;
     case logger::DEBUG: debug(var1); break;
@@ -173,11 +132,10 @@ void BaseLogger::print(const logger::log_type& type, const std::string& var1)
 
 void BaseLogger::printMessage(const logger::LogMessage& m)
 {
-    DBG(std::cout << __PRETTY_FUNCTION__ << ":" << m.toString() << std::endl;)
     print(m.type, m.message);
 }
 
-const char *BaseLogger::getTypeLogStr(const logger::log_type& type)
+const char *BaseLogger::getLogTypeStr(const logger::log_type& type)
 {
     switch (type) {
     case logger::TRACE: return TRACE_M;
