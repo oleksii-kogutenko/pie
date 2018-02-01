@@ -94,10 +94,12 @@ struct CurlEasyHandlers {
     size_t handle_input(char *ptr, size_t size)     { return CURLE_READ_ERROR; }
 
     //! Handler what will be called before after custom_header and before handle_input.
-    void before_input()                             { }
+    //! \return if false will input operation will be aborted
+    bool before_input()                             { return true; }
 
     //! Handler what will be called before after handle_header and handle_output.
-    void before_output()                            { }
+    //! //! \return if false will output operation will be aborted
+    bool before_output()                            { return true; }
 
 };
 
@@ -209,21 +211,33 @@ size_t CurlEasyClient<Handlers>::handle_header(char *ptr, size_t size, size_t co
 template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_write(char *ptr, size_t size, size_t count, void* ctx)
 {
+    bool write_abort = false;
+
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
     if (CurlEasyHandlersTraits<Handlers>::have_before_output) {
-        thiz->handlers_->before_output();
+        write_abort = !thiz->handlers_->before_output();
     }
-    return thiz->handlers_->handle_output(ptr, size*count);
+
+    if (write_abort)
+        return 0;
+    else
+        return thiz->handlers_->handle_output(ptr, size*count);
 }
 
 template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t count, void* ctx)
 {
+    bool read_abort = false;
+
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
     if (CurlEasyHandlersTraits<Handlers>::have_before_input) {
-        thiz->handlers_->before_input();
+        read_abort = !thiz->handlers_->before_input();
     }
-    return thiz->handlers_->handle_input(ptr, size*count);
+
+    if (read_abort)
+        return CURL_READFUNC_ABORT;
+    else
+        return thiz->handlers_->handle_input(ptr, size*count);
 }
 
 template<class Handlers>

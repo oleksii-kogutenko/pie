@@ -36,6 +36,7 @@
 
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
+#include <boost/filesystem.hpp>
 
 namespace pie { namespace app {
 
@@ -163,14 +164,50 @@ std::string GavcCommand::create_url(const std::string& version_to_query) const
 
 struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallback
 {
-    virtual void callback(art::lib::ArtBaseApiHandlers *handlers)
+    virtual bool callback(art::lib::ArtBaseApiHandlers *handlers)
     {
+        bool do_download = true;
+
         std::string output_filename = handlers->headers()["X-Artifactory-Filename"];
-        LOG_T << "Artifactory filename: " << output_filename;
 
-        _dest = boost::shared_ptr<std::ofstream>(new std::ofstream(output_filename.c_str()));
+        boost::filesystem::path output_path = output_filename;
 
-        dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(_dest.get());
+        LOG_T << "Output path: " << output_path.generic_string();
+
+
+        if (boost::filesystem::exists(output_path))
+        {
+            LOG_T << "Check existing file content";
+
+            std::string output_sha256   = handlers->headers()["X-Checksum-Sha256"];
+            //std::string output_sha1     = handlers->headers()["X-Checksum-Sha1"];
+            //std::string output_md5      = handlers->headers()["X-Checksum-Md5"];
+
+            std::ifstream is(output_path.generic_string().c_str());
+
+            piel::lib::ChecksumsDigestBuilder digest_builder;
+            piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
+                    digest_builder.str_digests_for(is);
+
+            do_download =
+                    output_sha256 != str_digests[piel::lib::Sha256::t::name()];
+        }
+
+        if (do_download)
+        {
+            LOG_T << "Download file: " << output_path.generic_string();
+
+            _dest = boost::shared_ptr<std::ofstream>(new std::ofstream(output_path.generic_string().c_str()));
+
+            dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(_dest.get());
+        }
+        else
+        {
+            LOG_T << "Skip download file: " << output_path.generic_string();
+        }
+
+
+        return do_download;
     }
 private:
     boost::shared_ptr<std::ofstream> _dest;
@@ -184,6 +221,8 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         LOG_F << "Can't find downloadUri property!";
         return;
     }
+
+    //boost::optional<std::string> op = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
 
     std::string download_uri = *op;
     LOG_T << "download_uri: " << download_uri;

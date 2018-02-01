@@ -45,7 +45,7 @@ public:
     //! Interface for the callbacks. Callbacks can be set up by and will be called before IO operations.
     //! \sa set_before_input_callback, set_before_output_callback
     struct IBeforeCallback {
-        virtual void callback(ArtBaseApiHandlers *handlers) = 0;
+        virtual bool callback(ArtBaseApiHandlers *handlers) = 0;
     };
 
     //! Constructor.
@@ -83,10 +83,10 @@ public:
     virtual std::istringstream &responce_stream();
 
     //! Handler what will be called before after custom_header and before handle_input.
-    virtual void before_input();
+    virtual bool before_input();
 
     //! Handler what will be called before after handle_header and handle_output.
-    virtual void before_output();
+    virtual bool before_output();
 
     //! Set callback what will be called during before_input.
     //! \param callback Pointer to IBeforeCallback implementation instance.

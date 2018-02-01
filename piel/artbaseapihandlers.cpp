@@ -88,22 +88,30 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
     return size;
 }
 
-/*virtual*/ void ArtBaseApiHandlers::before_input()
+/*virtual*/ bool ArtBaseApiHandlers::before_input()
 {
+    bool result = true;
+
     // Call & reset callback pointer
     if (before_input_callback_) {
-        before_input_callback_->callback(this);
+        result = before_input_callback_->callback(this);
         before_input_callback_ = 0;
     }
+
+    return result;
 }
 
-/*virtual*/ void ArtBaseApiHandlers::before_output()
+/*virtual*/ bool ArtBaseApiHandlers::before_output()
 {
+    bool result = true;
+
     // Call & reset callback pointer
     if (before_output_callback_) {
-        before_output_callback_->callback(this);
+        result = before_output_callback_->callback(this);
         before_output_callback_ = 0;
     }
+
+    return result;
 }
 
 void ArtBaseApiHandlers::set_before_input_callback(ArtBaseApiHandlers::IBeforeCallback *callback)
