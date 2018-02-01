@@ -189,6 +189,9 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
             piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
                     digest_builder.str_digests_for(is);
 
+            LOG_T   << "Sha256 server: "    << output_sha256
+                    << " local: "     << str_digests[piel::lib::Sha256::t::name()];
+
             do_download =
                     output_sha256 != str_digests[piel::lib::Sha256::t::name()];
         }
