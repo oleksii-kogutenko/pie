@@ -164,84 +164,22 @@ std::string GavcCommand::create_url(const std::string& version_to_query) const
 
 struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallback
 {
-    BeforeOutputCallback(): dest_(), aborted_(false) {}
+    BeforeOutputCallback(const boost::filesystem::path& object_path): dest_(), object_path_(object_path) {}
     virtual ~BeforeOutputCallback() {}
-
-    bool aborted() const
-    {
-        return aborted_;
-    }
 
     virtual bool callback(art::lib::ArtBaseApiHandlers *handlers)
     {
-        bool do_download = true;
+        LOG_T << "Output path: " << object_path_.generic_string();
 
-        std::string output_filename = handlers->headers()["X-Artifactory-Filename"];
+        dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(object_path_.generic_string().c_str()));
 
-        boost::filesystem::path output_path = output_filename;
+        dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
 
-        LOG_T << "Output path: " << output_path.generic_string();
-
-//        if (boost::filesystem::exists(output_path))
-//        {
-//            LOG_T << "Check existing file content";
-//
-//            std::string output_sha256   = handlers->headers()["X-Checksum-Sha256"];
-//            std::string output_sha1     = handlers->headers()["X-Checksum-Sha1"];
-//            std::string output_md5      = handlers->headers()["X-Checksum-Md5"];
-//
-//            std::ifstream is(output_path.generic_string().c_str());
-//
-//            piel::lib::ChecksumsDigestBuilder digest_builder;
-//            piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
-//                    digest_builder.str_digests_for(is);
-//
-//            LOG_T   << "Sha256 server: "    << output_sha256
-//                    << " local: "     << str_digests[piel::lib::Sha256::t::name()];
-//            LOG_T   << "Sha1 server: "      << output_sha1
-//                    << " local: "     << str_digests[piel::lib::Sha::t::name()];
-//            LOG_T   << "Md5 server: "       << output_md5
-//                    << " local: "     << str_digests[piel::lib::Md5::t::name()];
-//
-//            do_download = !(  output_sha256 == str_digests[piel::lib::Sha256::t::name()]
-//                           && output_sha1   == str_digests[piel::lib::Sha::t::name()]
-//                           && output_md5    == str_digests[piel::lib::Md5::t::name()]
-//                           );
-//
-//            if (do_download)
-//            {
-//                LOG_T << "Remove file: " <<  output_path.generic_string();
-//
-//                boost::filesystem::remove(output_path);
-//            }
-//        }
-
-        if (do_download)
-        {
-            LOG_T << "Download file: " << output_path.generic_string();
-
-            dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(output_path.generic_string().c_str()));
-
-            dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
-            dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_id(output_filename);
-
-            aborted_ = false;
-        }
-        else
-        {
-            LOG_T << "Skip download file: " << output_path.generic_string();
-
-            aborted_ = true;
-        }
-
-        return do_download;
+        return true;
     }
 private:
     boost::shared_ptr<std::ofstream> dest_;
-    bool aborted_;
-    std::string sha1_;
-    std::string sha256_;
-    std::string md5_;
+    boost::filesystem::path object_path_;
 };
 
 std::map<std::string,std::string> GavcCommand::get_server_checksums(const pt::ptree& obj_tree, const std::string& section) const
@@ -329,16 +267,19 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
         if (do_download)
         {
+            LOG_T << "Download/Update object.";
+
             art::lib::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
 
-            BeforeOutputCallback before_output;
+            BeforeOutputCallback before_output(object_path);
+            download_handlers.set_id(object_path.filename().c_str());
             download_handlers.set_before_output_callback(&before_output);
 
             piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
 
             std::cout << "Downloading file from: " << download_uri << std::endl;
 
-            if (!download_client.perform() && !before_output.aborted())
+            if (!download_client.perform())
             {
                 LOG_E << "Error on downloading file attempt!";
                 LOG_E << download_client.curl_error().presentation();
