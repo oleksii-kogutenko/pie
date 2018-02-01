@@ -142,6 +142,23 @@ public:
     MapType::mapped_type& operator[](const MapType::key_type& key);
     void clear();
 
+    enum JoinDirection {
+        JoinDirection_left,
+        JoinDirection_right,
+    };
+
+    template<JoinDirection direction=JoinDirection_right>
+    Properties join(const Properties& right) const
+    {
+        Properties result = *this;
+
+        for (MapType::const_iterator i = right.data_.begin(), end = right.data_.end(); i != end; ++i)
+            if (direction == JoinDirection_right || result.data_.find(i->first) == result.data_.end())
+                result.data_[i->first] = i->second;
+
+        return result;
+    }
+
 private:
     MapType data_;
 
