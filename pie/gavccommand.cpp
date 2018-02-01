@@ -164,6 +164,14 @@ std::string GavcCommand::create_url(const std::string& version_to_query) const
 
 struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallback
 {
+    BeforeOutputCallback(): dest_(), aborted_(false) {}
+    virtual ~BeforeOutputCallback() {}
+
+    bool aborted() const
+    {
+        return aborted_;
+    }
+
     virtual bool callback(art::lib::ArtBaseApiHandlers *handlers)
     {
         bool do_download = true;
@@ -200,20 +208,24 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
         {
             LOG_T << "Download file: " << output_path.generic_string();
 
-            _dest = boost::shared_ptr<std::ofstream>(new std::ofstream(output_path.generic_string().c_str()));
+            dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(output_path.generic_string().c_str()));
 
-            dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(_dest.get());
+            dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
+
+            aborted_ = false;
         }
         else
         {
             LOG_T << "Skip download file: " << output_path.generic_string();
-        }
 
+            aborted_ = true;
+        }
 
         return do_download;
     }
 private:
-    boost::shared_ptr<std::ofstream> _dest;
+    boost::shared_ptr<std::ofstream> dest_;
+    bool aborted_;
 };
 
 void GavcCommand::on_object(pt::ptree::value_type obj)
@@ -224,8 +236,6 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         LOG_F << "Can't find downloadUri property!";
         return;
     }
-
-    //boost::optional<std::string> op = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
 
     std::string download_uri = *op;
     LOG_T << "download_uri: " << download_uri;
@@ -241,7 +251,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
         std::cout << "Downloading file from: " << download_uri << std::endl;
 
-        if (!download_client.perform())
+        if (!download_client.perform() && !before_output.aborted())
         {
             LOG_E << "Error on downloading file attempt!";
             LOG_E << download_client.curl_error().presentation();
