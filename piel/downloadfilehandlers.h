@@ -36,7 +36,7 @@ namespace piel { namespace lib {
 
 class DownloadFileHandlers {
 public:
-    DownloadFileHandlers(std::ostream* dest);
+    DownloadFileHandlers(const std::string& id, std::ostream* dest);
 
     CurlEasyHandlers::headers_type custom_header();
 
@@ -53,6 +53,7 @@ public:
     void before_output();
 
 private:
+    std::string id_;                            //!< download id
     std::ostream* dest_;                        //!< destination stream.
     ChecksumsDigestBuilder checksums_builder_;  //!< checksums digest builder for the content.
 

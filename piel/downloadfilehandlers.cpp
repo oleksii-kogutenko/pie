@@ -34,8 +34,9 @@ CURLH_T_(piel::lib::DownloadFileHandlers,\
 
 namespace piel { namespace lib {
 
-DownloadFileHandlers::DownloadFileHandlers(std::ostream* dest)
-    : dest_(dest)
+DownloadFileHandlers::DownloadFileHandlers(const std::string& id, std::ostream* dest)
+    : id_(id)
+    , dest_(dest)
     , checksums_builder_()
 {
     checksums_builder_.init();

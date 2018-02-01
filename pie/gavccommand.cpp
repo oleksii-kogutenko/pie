@@ -223,6 +223,7 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
             dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(output_path.generic_string().c_str()));
 
             dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
+            dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_id(output_filename);
 
             aborted_ = false;
         }

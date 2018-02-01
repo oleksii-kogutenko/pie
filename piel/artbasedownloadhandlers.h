@@ -50,7 +50,11 @@ public:
 
     void set_destination(std::ostream* dest);
 
+    void set_id(const std::string& id)  { id_ = id; }
+    std::string id() const              { return id_; }
+
 private:
+    std::string id_;                                        //!< Download id.
     std::string api_token_;                                 //!< Artifactory server REST api access token.
     std::ostream* dest_;                                    //!< Destination stream.
     piel::lib::ChecksumsDigestBuilder checksums_builder_;   //!< Checksums digest builder for the content.

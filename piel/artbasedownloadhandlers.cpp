@@ -26,6 +26,7 @@
  *
  */
 
+#include <iostream>
 #include <artconstants.h>
 #include <artbasedownloadhandlers.h>
 
@@ -37,6 +38,7 @@ namespace art { namespace lib {
 
 ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
+    , id_()
     , dest_(0)
     , checksums_builder_()
 {
@@ -45,6 +47,7 @@ ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token)
 
 ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, std::ostream *dest)
     : ArtBaseApiHandlers(api_token)
+    , id_()
     , dest_(dest)
     , checksums_builder_()
 {
@@ -63,6 +66,8 @@ void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
 
 /*virtual*/ size_t ArtBaseDownloadHandlers::handle_output(char *ptr, size_t size)
 {
+    std::cout << "id: " << id_ << " size: " << size << std::endl;
+
     if (dest_) dest_->write(ptr, size);
     checksums_builder_.update(ptr, size);
     return size;
