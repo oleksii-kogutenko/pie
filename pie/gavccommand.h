@@ -56,6 +56,8 @@ protected:
                       const std::string& env_var,
                       std::string& var);
 
+    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
+
 private:
     int argc_;
     char **argv_;
