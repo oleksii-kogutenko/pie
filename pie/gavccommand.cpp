@@ -182,14 +182,13 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
 
         LOG_T << "Output path: " << output_path.generic_string();
 
-
         if (boost::filesystem::exists(output_path))
         {
             LOG_T << "Check existing file content";
 
             std::string output_sha256   = handlers->headers()["X-Checksum-Sha256"];
-            //std::string output_sha1     = handlers->headers()["X-Checksum-Sha1"];
-            //std::string output_md5      = handlers->headers()["X-Checksum-Md5"];
+            std::string output_sha1     = handlers->headers()["X-Checksum-Sha1"];
+            std::string output_md5      = handlers->headers()["X-Checksum-Md5"];
 
             std::ifstream is(output_path.generic_string().c_str());
 
@@ -199,9 +198,22 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
 
             LOG_T   << "Sha256 server: "    << output_sha256
                     << " local: "     << str_digests[piel::lib::Sha256::t::name()];
+            LOG_T   << "Sha1 server: "      << output_sha1
+                    << " local: "     << str_digests[piel::lib::Sha::t::name()];
+            LOG_T   << "Md5 server: "       << output_md5
+                    << " local: "     << str_digests[piel::lib::Md5::t::name()];
 
-            do_download =
-                    output_sha256 != str_digests[piel::lib::Sha256::t::name()];
+            do_download = !(  output_sha256 == str_digests[piel::lib::Sha256::t::name()]
+                           && output_sha1   == str_digests[piel::lib::Sha::t::name()]
+                           && output_md5    == str_digests[piel::lib::Md5::t::name()]
+                           );
+
+            if (do_download)
+            {
+                LOG_T << "Remove file: " <<  output_path.generic_string();
+
+                boost::filesystem::remove(output_path);
+            }
         }
 
         if (do_download)
