@@ -116,7 +116,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     }
     else
     {
-        LOG_E<< "There is no group element!";
+        LOGE << "There is no group element!" << ELOG;
         have_errors = true;
     }
 
@@ -126,7 +126,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     }
     else
     {
-        LOG_E<< "There is no artifact element!";
+        LOGE << "There is no artifact element!" << ELOG;
         have_errors = true;
     }
 
@@ -136,7 +136,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     }
     else
     {
-        LOG_E<< "There is no version element!";
+        LOGE << "There is no version element!" << ELOG;
         have_errors = true;
     }
 
@@ -146,7 +146,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     }
     else
     {
-        LOG_E<< "There is no versioning.latest element!";
+        LOGE << "There is no versioning.latest element!" << ELOG;
         have_errors = true;
     }
 
@@ -156,7 +156,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     }
     else
     {
-        LOG_E<< "There is no versioning.release element!";
+        LOGE << "There is no versioning.release element!" << ELOG;
         have_errors = true;
     }
 
@@ -166,27 +166,27 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     }
     else
     {
-        LOG_E<< "There is no versioning.last_updated element!";
+        LOGE << "There is no versioning.last_updated element!" << ELOG;
         have_errors = true;
     }
 
     if (result.versioning_.versions_.empty())
     {
-        LOG_E<< "There are no versions!";
+        LOGE << "There are no versions!" << ELOG;
         have_errors = true;
     }
 
     // Trace
-    LOG_T << "metadata group id: "                  << result.group_;
-    LOG_T << "metadata artifact id: "               << result.artifact_;
-    LOG_T << "metadata version: "                   << result.version_;
-    LOG_T << "metadata versioning latest: "         << result.versioning_.latest_;
-    LOG_T << "metadata versioning release: "        << result.versioning_.release_;
-    LOG_T << "metadata versioning last updated: "   << result.versioning_.last_updated_;
+    LOGT << "metadata group id: "                  << result.group_                     << ELOG;
+    LOGT << "metadata artifact id: "               << result.artifact_                  << ELOG;
+    LOGT << "metadata version: "                   << result.version_                   << ELOG;
+    LOGT << "metadata versioning latest: "         << result.versioning_.latest_        << ELOG;
+    LOGT << "metadata versioning release: "        << result.versioning_.release_       << ELOG;
+    LOGT << "metadata versioning last updated: "   << result.versioning_.last_updated_  << ELOG;
     typedef std::vector<std::string>::iterator Iter;
     for (Iter i = result.versioning_.versions_.begin(), end = result.versioning_.versions_.end(); i != end; ++i)
     {
-        LOG_T << "metadata versioning versions version: " << *i;
+        LOGT << "metadata versioning versions version: " << *i << ELOG;
     }
 
     if (!have_errors) {
@@ -203,12 +203,12 @@ std::vector<std::string> MavenMetadata::versions_for(const GavcQuery& query) con
     boost::optional<std::vector<gavc::OpType> > ops_val = query.query_version_ops();
 
     if (!ops_val) {
-        LOG_T << "Unable to get query operations list.";
+        LOGT << "Unable to get query operations list." << ELOG;
         return result;
     }
 
     std::vector<gavc::OpType> ops = *ops_val;
-//    LOG_T << "Query operations list:";
+//    LOGT << "Query operations list:" << ELOG;
 //    for (std::vector<gavc::OpType>::const_iterator i = ops.begin(), end = ops.end(); i!=end; ++i) {
 //        LOG_T << "   - " << i->second;
 //    }

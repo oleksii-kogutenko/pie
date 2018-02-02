@@ -74,7 +74,7 @@ struct MapDiffBuilder {
 
             if (!insert_result.second)
             {
-                LOG_F << "Unable on insert maps diff element into diff. Key: " << i->first;
+                LOGF << "Unable on insert maps diff element into diff. Key: " << i->first << ELOG;
             }
         }
 
@@ -93,7 +93,7 @@ struct MapDiffBuilder {
 
                 if (!insert_result.second)
                 {
-                    LOG_F << "Unable on insert maps diff element into diff. Key: " << i->first;
+                    LOGF << "Unable on insert maps diff element into diff. Key: " << i->first << ELOG;
                 }
             }
         }

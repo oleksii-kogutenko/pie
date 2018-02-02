@@ -68,12 +68,12 @@ public:
         if (pis)
         {
             id_ = AssetId::create_for(*pis.get());
-            LOG_T << "Calculated asset id: " << id_.string();
+            LOGT << "Calculated asset id: " << id_.string() << ELOG;
         }
         else
         {
             id_ = AssetId::not_calculated;
-            LOG_F << "Unable to calculate asset id!";
+            LOGF << "Unable to calculate asset id!" << ELOG;
 
             throw errors::unable_to_calculate_asset_id();
         }

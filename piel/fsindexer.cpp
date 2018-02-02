@@ -49,7 +49,7 @@ FsIndexer::~FsIndexer()
 /*static*/ TreeIndex::Ptr FsIndexer::build(const fs::path& dir, const fs::path& exclude)
 {
     if (!is_directory(dir)) {
-        LOG_F << dir << " is not a directory!";
+        LOGF << dir << " is not a directory!" << ELOG;
         return TreeIndex::Ptr(new TreeIndex());
     }
 
@@ -63,7 +63,7 @@ FsIndexer::~FsIndexer()
         fs::path p = directories.front();
         directories.pop();
 
-        LOG_T << "d " << p.generic_string();
+        LOGT << "d " << p.generic_string() << ELOG;
 
         for (fs::directory_iterator i = fs::directory_iterator(p), end = fs::directory_iterator(); i != end; i++)
         {
@@ -75,7 +75,7 @@ FsIndexer::~FsIndexer()
             {
                 std::string target = fs::read_symlink( e.path() ).generic_string();
 
-                LOG_T << "s " << name;
+                LOGT << "s " << name << ELOG;
 
                 if (result->insert_path(name, Asset::create_for(target)))
                 {
@@ -83,12 +83,12 @@ FsIndexer::~FsIndexer()
                 }
                 else
                 {
-                    LOG_F << "Can't insert element " << name << " into index! Probably index already have element with such name.";
+                    LOGF << "Can't insert element " << name << " into index! Probably index already have element with such name." << ELOG;
                 }
             }
             else if ( fs::is_regular_file( e.path() ) )
             {
-                LOG_T << "f " << name;
+                LOGT << "f " << name << ELOG;
 
                 if (result->insert_path(name, Asset::create_for(e.path())))
                 {
@@ -96,7 +96,7 @@ FsIndexer::~FsIndexer()
                 }
                 else
                 {
-                    LOG_F << "Can't insert element " << name << " into index! Probably index already have element with such name.";
+                    LOGF << "Can't insert element " << name << " into index! Probably index already have element with such name." << ELOG;
                 }
             }
             else if ( fs::is_directory(e.path()) )
@@ -107,7 +107,7 @@ FsIndexer::~FsIndexer()
                 }
                 else
                 {
-                    LOG_T << "exclude directory:" << e.path();
+                    LOGT << "exclude directory:" << e.path() << ELOG;
                 }
             }
         }

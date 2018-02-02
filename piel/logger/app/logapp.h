@@ -11,6 +11,7 @@ namespace piel { namespace lib { namespace logger_app {
 class LogApp;
 
 typedef LogApp& (*LogAppManipulator)(LogApp&);
+typedef SingleLevelLogProxy& (*SingleLevelLogProxyManipulator)(SingleLevelLogProxy&);
 
 LogApp& trace(LogApp& val);
 LogApp& debug(LogApp& val);
@@ -18,6 +19,7 @@ LogApp& info(LogApp& val);
 LogApp& warn(LogApp& val);
 LogApp& error(LogApp& val);
 LogApp& fatal(LogApp& val);
+SingleLevelLogProxy& send(SingleLevelLogProxy& val);
 
 struct SingleLevelLogProxy
 {
@@ -30,11 +32,15 @@ struct SingleLevelLogProxy
     template<typename T>
     SingleLevelLogProxy& operator<<(T val)
     {
-        (*log_) << val << manipulator_;
+        (*log_) << val;
         return *this;
     }
 
+    SingleLevelLogProxy& operator<<(SingleLevelLogProxyManipulator manipulator);
+
 private:
+    friend SingleLevelLogProxy& send(SingleLevelLogProxy& val);
+
     LogApp *log_;
     LogAppManipulator manipulator_;
 };
@@ -42,6 +48,13 @@ private:
 class LogApp
 {
 public:
+    SingleLevelLogProxyPtr trace();
+    SingleLevelLogProxyPtr debug();
+    SingleLevelLogProxyPtr info();
+    SingleLevelLogProxyPtr warn();
+    SingleLevelLogProxyPtr error();
+    SingleLevelLogProxyPtr fatal();
+
     void trace(const std::string& msg);
     void debug(const std::string& msg);
     void info(const std::string& msg);
@@ -60,14 +73,7 @@ public:
         return *this;
     }
 
-    LogApp& operator<< (LogAppManipulator manipulator);
-
-    SingleLevelLogProxyPtr trace();
-    SingleLevelLogProxyPtr debug();
-    SingleLevelLogProxyPtr info();
-    SingleLevelLogProxyPtr warn();
-    SingleLevelLogProxyPtr error();
-    SingleLevelLogProxyPtr fatal();
+    LogApp& operator<<(LogAppManipulator manipulator);
 
 protected:
     void clear();
@@ -107,5 +113,6 @@ const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, T val)
 }
 
 const LogAppPtr& operator<< (const LogAppPtr& p, LogAppManipulator manipulator);
+const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, SingleLevelLogProxyManipulator manipulator);
 
 } } } // namespace piel::lib::logger_out

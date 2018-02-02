@@ -82,8 +82,8 @@ void Log::operator()()
         return;
     }
 
-    LOG_T << "from: " << from->self().id().string()
-        << " to: " << to->self().id().string();
+    LOGT << "from: " << from->self().id().string()
+        << " to: " << to->self().id().string() << ELOG;
 
     piel::lib::TreeEnumerator tree_enumerator(storage(), to);
     while (tree_enumerator.next())

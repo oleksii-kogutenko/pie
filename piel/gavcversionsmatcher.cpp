@@ -46,7 +46,7 @@ bool GavcVersionsMatcher::match(const std::string& version) const
 {
     bool result = boost::regex_match(version, regex_);
 
-    LOG_T << "match version: " << version << " regex: " << regex_ << " result: " << result;
+    LOGT << "match version: " << version << " regex: " << regex_ << " result: " << result << ELOG;
 
     return result;
 }
@@ -103,7 +103,7 @@ boost::regex GavcVersionsMatcher::create_regex(const std::vector<gavc::OpType>& 
 
     regex_content << "$";
 
-    LOG_T << "created regex: " << regex_content.str();
+    LOGT << "created regex: " << regex_content.str() << ELOG;
 
     return boost::regex(regex_content.str());
 }

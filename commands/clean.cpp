@@ -70,7 +70,7 @@ std::string Clean::operator()()
         break;
         case piel::lib::IndexesDiff::ElementState_removed:
         {
-            LOG_T << "Restore removed: " << i->first;
+            LOGT << "Restore removed: " << i->first << ELOG;
 
             const piel::lib::TreeIndex::Content& reference_content =
                     working_copy()->current_tree_state()->content();
@@ -87,7 +87,7 @@ std::string Clean::operator()()
         break;
         case piel::lib::IndexesDiff::ElementState_added:
         {
-            LOG_T << "Remove added: " << item_path;
+            LOGT << "Remove added: " << item_path << ELOG;
 
             fs::remove(item_path);
             if (parent_path != working_copy()->working_dir())
@@ -102,7 +102,7 @@ std::string Clean::operator()()
         case piel::lib::IndexesDiff::ElementState_modified:
             // Keep modifications
 
-            LOG_T << "Keep modifications for: " << item_path;
+            LOGT << "Keep modifications for: " << item_path << ELOG;
 
         break;
         }

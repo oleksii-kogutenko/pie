@@ -68,7 +68,7 @@ bool GavcCommand::get_from_env(po::variables_map& vm,
         const char *value = ::getenv(env_var.c_str());
         if (value)
         {
-            LOG_T << "Got " << env_var << " environment variable. Value: " << value << ".";
+            LOGT << "Got " << env_var << " environment variable. Value: " << value << "." << ELOG;
             var = std::string(value);
             return true;
         }
@@ -109,7 +109,7 @@ bool GavcCommand::parse_arguments()
     std::string query_str(argv_[1]);
 
     // Parce query
-    LOG_T << "query to perform: " << query_str;
+    LOGT << "query to perform: " << query_str << ELOG;
 
     boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
@@ -169,7 +169,7 @@ struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallbac
 
     virtual bool callback(art::lib::ArtBaseApiHandlers *handlers)
     {
-        LOG_T << "Output path: " << object_path_.generic_string();
+        LOGT << "Output path: " << object_path_.generic_string() << ELOG;
 
         dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(object_path_.generic_string().c_str()));
 
@@ -192,21 +192,21 @@ std::map<std::string,std::string> GavcCommand::get_server_checksums(const pt::pt
     if (op_sha1)
     {
         result["sha1"] = *op_sha1;
-        LOG_T << section << " sha1: " << *op_sha1;
+        LOGT << section << " sha1: " << *op_sha1 << ELOG;
     }
 
     boost::optional<std::string> op_sha256  = pt::find_value(checksums, pt::FindPropertyHelper("sha256"));
     if (op_sha256)
     {
         result["sha256"] = *op_sha256;
-        LOG_T << section << " sha256: " << *op_sha256;
+        LOGT << section << " sha256: " << *op_sha256 << ELOG;
     }
 
     boost::optional<std::string> op_md5     = pt::find_value(checksums, pt::FindPropertyHelper("md5"));
     if (op_md5)
     {
         result["md5"] = *op_md5;
-        LOG_T << section << " md5: " << *op_md5;
+        LOGT << section << " md5: " << *op_md5 << ELOG;
     }
 
     return result;
@@ -217,28 +217,28 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     boost::optional<std::string> op_download_uri = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
     if (!op_download_uri)
     {
-        LOG_F << "Can't find downloadUri property!";
+        LOGF << "Can't find downloadUri property!" << ELOG;
         return;
     }
 
     boost::optional<std::string> op_path = pt::find_value(obj.second, pt::FindPropertyHelper("path"));
     if (!op_path)
     {
-        LOG_F << "Can't find path property!";
+        LOGF << "Can't find path property!" << ELOG;
         return;
     }
 
     std::string download_uri = *op_download_uri;
-    LOG_T << "download_uri: " << download_uri;
+    LOGT << "download_uri: " << download_uri << ELOG;
 
     if (have_to_download_results_) {
 
         boost::filesystem::path path(*op_path);
-        LOG_T << "path: " << path.generic_string();
-        LOG_T << "filename: " << path.filename();
+        LOGT << "path: " << path.generic_string() << ELOG;
+        LOGT << "filename: " << path.filename()   << ELOG;
 
         boost::filesystem::path object_path(path.filename());
-        LOG_T << "object path: " << object_path.generic_string();
+        LOGT << "object path: " << object_path.generic_string() << ELOG;
 
         std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
         //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
@@ -252,12 +252,12 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
             piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
                     digest_builder.str_digests_for(is);
 
-            LOG_T   << "Sha256 server: "    << server_checksums["sha256"]
-                    << " local: "     << str_digests[piel::lib::Sha256::t::name()];
-            LOG_T   << "Sha1 server: "      << server_checksums["sha1"]
-                    << " local: "     << str_digests[piel::lib::Sha::t::name()];
-            LOG_T   << "Md5 server: "       << server_checksums["md5"]
-                    << " local: "     << str_digests[piel::lib::Md5::t::name()];
+            LOGT   << "Sha256 server: "    << server_checksums["sha256"]
+                    << " local: "     << str_digests[piel::lib::Sha256::t::name()] << ELOG;
+            LOGT   << "Sha1 server: "      << server_checksums["sha1"]
+                    << " local: "     << str_digests[piel::lib::Sha::t::name()] << ELOG;
+            LOGT   << "Md5 server: "       << server_checksums["md5"]
+                    << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
 
             do_download = !(  server_checksums["sha256"] == str_digests[piel::lib::Sha256::t::name()]
                            && server_checksums["sha1"]   == str_digests[piel::lib::Sha::t::name()]
@@ -267,7 +267,7 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
         if (do_download)
         {
-            LOG_T << "Download/Update object.";
+            LOGT << "Download/Update object." << ELOG;
 
             art::lib::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
 
@@ -281,13 +281,13 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
             if (!download_client.perform())
             {
-                LOG_E << "Error on downloading file attempt!";
-                LOG_E << download_client.curl_error().presentation();
+                LOGE << "Error on downloading file attempt!"        << ELOG;
+                LOGE << download_client.curl_error().presentation() << ELOG;
             }
         }
         else
         {
-            LOG_T << "Object already exists.";
+            LOGT << "Object already exists." << ELOG;
         }
 
     } else {
@@ -312,8 +312,8 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     if (!get_metadata_client.perform())
     {
-        LOG_E << "Error on requesting maven metadata.";
-        LOG_E << get_metadata_client.curl_error().presentation();
+        LOGE << "Error on requesting maven metadata."           << ELOG;
+        LOGE << get_metadata_client.curl_error().presentation() << ELOG;
         return result;
     }
 
@@ -325,11 +325,11 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
     }
     catch (...)
     {
-        LOG_E << "Error on parsing maven metadata. Server response has non expected format.";
+        LOGE << "Error on parsing maven metadata. Server response has non expected format." << ELOG;
     }
 
     if (!metadata_op) {
-        LOG_E << "Can't retrieve maven metadata!";
+        LOGE << "Can't retrieve maven metadata!" << ELOG;
         return result;
     }
 
@@ -339,15 +339,15 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
 
     for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
     {
-        LOG_T << "Process version: " << *i;
+        LOGT << "Process version: " << *i << ELOG;
 
         art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
         piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);
 
         if (!client.perform())
         {
-            LOG_E << "Error on processing version: " << *i << "!";
-            LOG_E << client.curl_error().presentation();
+            LOGE << "Error on processing version: " << *i << "!"    << ELOG;
+            LOGE << client.curl_error().presentation()              << ELOG;
             return result;
         }
 

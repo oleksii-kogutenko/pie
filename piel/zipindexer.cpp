@@ -56,14 +56,14 @@ ZipIndexer::~ZipIndexer()
         boost::shared_ptr<ZipEntry>         entry       = zip.entry( i );
         ZipEntryAttributes                  attrs       = entry->attributes();
 
-        LOG_T   << std::string( entry->symlink() ? "s " +  entry->target() + " " : "f " )
+        LOGT    << std::string( entry->symlink() ? "s " +  entry->target() + " " : "f " )
                 << entry->name()
                 << " os:"
                 << boost::format( "%1$08x" ) % ( int )attrs.opsys
                 << " attributes: "
                 << boost::format( "%1$08x" ) % ( int )attrs.attributes
                 << " mode: "
-                << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 );
+                << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 ) << ELOG;
 
         if (result->insert_path( entry->name(), Asset::create_for(entry) ))
         {
@@ -78,7 +78,7 @@ ZipIndexer::~ZipIndexer()
         }
         else
         {
-            LOG_F << "Can't insert element " << entry->name() << " into index! Probably index already have element with such name.";
+            LOGF << "Can't insert element " << entry->name() << " into index! Probably index already have element with such name." << ELOG;
         }
     }
 

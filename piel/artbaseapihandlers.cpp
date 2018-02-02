@@ -64,7 +64,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
 /*virtual*/ size_t ArtBaseApiHandlers::handle_header(char *ptr, size_t size)
 {
     std::string headers(ptr, size);
-    LOG_T << "headers: " << headers;
+    LOGT << "headers: " << headers << ELOG;
 
     std::string::iterator sepa = std::find_if(headers.begin(), headers.end(), boost::is_any_of(":"));
     if (sepa == headers.end()) {
@@ -82,7 +82,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
         boost::trim(value);
     }
 
-    LOG_T << name << "= " << value;
+    LOGT << name << "= " << value << ELOG;
     headers_.insert(std::make_pair(name,value));
 
     return size;
@@ -132,7 +132,7 @@ std::map<std::string, std::string>& ArtBaseApiHandlers::headers()
 /*virtual*/ size_t ArtBaseApiHandlers::handle_output(char *ptr, size_t size)
 {
     response_buffer_.append(ptr, ptr + size);
-    LOG_T << "response: " << response_buffer_;
+    LOGT << "response: " << response_buffer_ << ELOG;
     return size;
 }
 

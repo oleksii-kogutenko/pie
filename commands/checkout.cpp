@@ -73,7 +73,7 @@ std::string Checkout::operator()()
             piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
             if (!diff.empty())
             {
-                LOG_T << "There are non commited changes!";
+                LOGT << "There are non commited changes!" << ELOG;
                 throw errors::there_are_non_commited_changes();
             }
         }
@@ -92,7 +92,7 @@ std::string Checkout::operator()()
     }
     else
     {
-        LOG_T << "Resolved empty reference: " << ref_to_;
+        LOGT << "Resolved empty reference: " << ref_to_ << ELOG;
 
         if (!create_new_branch_)
         {

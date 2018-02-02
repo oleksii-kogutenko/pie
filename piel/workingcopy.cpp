@@ -216,7 +216,7 @@ TreeIndex::Ptr WorkingCopy::working_dir_state() const
     bool have_error = false;
     do
     {
-        LOG_T << "Attempt to attach to " << current_dir;
+        LOGT << "Attempt to attach to " << current_dir << ELOG;
 
         try {
             result = WorkingCopy::Ptr(new WorkingCopy(current_dir));
@@ -225,12 +225,12 @@ TreeIndex::Ptr WorkingCopy::working_dir_state() const
         }
         catch (const errors::attach_to_non_working_copy& e)
         {
-            LOG_T << "Attaching to " << current_dir << " failed!";
+            LOGT << "Attaching to " << current_dir << " failed!" << ELOG;
             have_error = true;
         }
         catch (const errors::unable_to_find_reference_file& e)
         {
-            LOG_T << "Attaching to " << current_dir << " failed! No reference file.";
+            LOGT << "Attaching to " << current_dir << " failed! No reference file." << ELOG;
             have_error = true;
         }
 
@@ -240,7 +240,7 @@ TreeIndex::Ptr WorkingCopy::working_dir_state() const
 
     if (have_error)
     {
-        LOG_T << "Throw attaching exception!";
+        LOGT << "Throw attaching exception!" << ELOG;
         throw errors::attach_to_non_working_copy();
     }
 

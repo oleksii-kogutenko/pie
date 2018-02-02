@@ -97,7 +97,7 @@ RangeParser::~RangeParser()
     {
         range_spec::grammar<std::string::const_iterator> range_spec_grammar;
         qi::phrase_parse( spec.begin(), spec.end(), range_spec_grammar, ascii::space, result);
-        LOG_T << "range { first: "<< result.first << " second: " << result.second << "}";
+        LOGT << "range { first: "<< result.first << " second: " << result.second << "}" << ELOG;
     }
 
     return result;

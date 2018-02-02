@@ -57,7 +57,7 @@ void Create::operator()()
     working_copy()->local_storage()->create_reference(piel::lib::refs::Ref(new_ref_, new_tree_id));
     working_copy()->setup_current_tree(new_ref_, initial_tree_index);
 
-    LOG_T << "Created new tree: " << new_ref_  << ":" << new_tree_id.string();
+    LOGT << "Created new tree: " << new_ref_  << ":" << new_tree_id.string() << ELOG;
 }
 
 } } // namespace piel::cmd

@@ -182,7 +182,7 @@ void TreeIndex::set_attr_(const std::string& index_path, const std::string& attr
     if (objs_attrs_iter == content_attributes_.end())
     {
         // Actually this code never should be reached. But the STL API semantic make it possible theoretically.
-        LOG_F << "Can't get objects attributes collection!";
+        LOGF << "Can't get objects attributes collection!" << ELOG;
 
         throw errors::unable_to_get_path_attributes_map();
     }
@@ -379,7 +379,7 @@ std::set<std::string> TreeIndex::index_paths() const
     {
         if (!result.insert(i->first).second)
         {
-            LOG_F << "Not valid index! Content map contains several elements (" << content_.count(i->first) << ") for key " << i->first;
+            LOGF << "Not valid index! Content map contains several elements (" << content_.count(i->first) << ") for key " << i->first << ELOG;
 
             throw errors::index_has_several_equals_paths();
         }

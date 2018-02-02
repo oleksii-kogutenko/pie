@@ -36,11 +36,15 @@ struct Logging
     static piel::lib::logger_app::LogAppPtr log;
 };
 
-#define LOG_T Logging::log->trace()
-#define LOG_D Logging::log->debug()
-#define LOG_I Logging::log->info()
-#define LOG_W Logging::log->warn()
-#define LOG_E Logging::log->error()
-#define LOG_F Logging::log->fatal()
+#define ELOG piel::lib::logger_app::send
+#define LOG_PFX "[" __FILE__ ":" << __LINE__ << "] "
+#define LOG_(x) x << LOG_PFX
+
+#define LOGT LOG_(Logging::log->trace())
+#define LOGD LOG_(Logging::log->debug())
+#define LOGI LOG_(Logging::log->info())
+#define LOGW LOG_(Logging::log->warn())
+#define LOGE LOG_(Logging::log->error())
+#define LOGF LOG_(Logging::log->fatal())
 
 #endif // LOGGING_H

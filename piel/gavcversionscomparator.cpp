@@ -120,7 +120,10 @@ CompareNumericType GavcVersionsComparator::compare_part(const std::string& lhs, 
             part_result = lhs_part.value<CompareNumericType>() < rhs_part.value<CompareNumericType>() ? +1 : -1;
         }
 
-        LOG_T << "Versions corresponding numeric parts: " << lhs_part.presentation() << " " << rhs_part.presentation() << " part_result: " << part_result;
+        LOGT << "Versions corresponding numeric parts: "
+                << lhs_part.presentation() << " "
+                << rhs_part.presentation()
+                << " part_result: " << part_result << ELOG;
     }
     else
     {
@@ -138,7 +141,10 @@ CompareNumericType GavcVersionsComparator::compare_part(const std::string& lhs, 
             }
         }
 
-        LOG_T << "Versions corresponding lexicographic parts: " << lhs_part.presentation() << " " << rhs_part.presentation() << " part_result: " << part_result;
+        LOGT << "Versions corresponding lexicographic parts: "
+                << lhs_part.presentation() << " "
+                << rhs_part.presentation()
+                << " part_result: " << part_result << ELOG;
     }
 
     return part_result;
@@ -148,7 +154,7 @@ CompareNumericType GavcVersionsComparator::compare(const std::string& lhs, const
 {
     int result = 0;
 
-    LOG_T << "Compare versions: " << lhs << " " << rhs;
+    LOGT << "Compare versions: " << lhs << " " << rhs << ELOG;
 
     if (lhs != rhs)
     {
@@ -169,7 +175,7 @@ CompareNumericType GavcVersionsComparator::compare(const std::string& lhs, const
         }
     }
 
-    LOG_T << "Compare versions: " << lhs << " " << rhs << " result: " << result;
+    LOGT << "Compare versions: " << lhs << " " << rhs << " result: " << result << ELOG;
 
     return result;
 }

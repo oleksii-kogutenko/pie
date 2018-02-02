@@ -70,7 +70,7 @@ namespace layout {
             )
         {
             std::string part = asset_id_str.substr(pos, L::objects_subdirs_names_length);
-            LOG_T << "Path part: " << part << " pos: " << pos;
+            LOGT << "Path part: " << part << " pos: " << pos << ELOG;
             result.push_back(part);
         }
 
@@ -89,7 +89,7 @@ namespace layout {
 
         for (ConstIter i = path_parts.begin(), end = path_parts.end(); i != end; ++i)
         {
-            LOG_T << "Path part: " << *i;
+            LOGT << "Path part: " << *i << ELOG;
 
             result /= *i;
         }
@@ -119,16 +119,16 @@ LocalDirectoryStorage::LocalDirectoryStorage(const boost::filesystem::path& root
     objects_    = root_dir_ / layout::L::objects;
     references_ = root_dir_ / layout::L::references;
 
-    LOG_T << "Objects path: " << objects_ << " References: " << references_;
+    LOGT << "Objects path: " << objects_ << " References: " << references_ << ELOG;
 
     if (!fs::exists(objects_) || !fs::exists(references_))
     {
-        LOG_T << "Init. Objects path: " << objects_ << " References: " << references_;
+        LOGT << "Init. Objects path: " << objects_ << " References: " << references_ << ELOG;
         init();
     }
     else
     {
-        LOG_T << "Attach. Objects path: " << objects_ << " References: " << references_;
+        LOGT << "Attach. Objects path: " << objects_ << " References: " << references_ << ELOG;
         attach();
     }
 }
@@ -139,7 +139,7 @@ LocalDirectoryStorage::~LocalDirectoryStorage()
 
 void LocalDirectoryStorage::attach()
 {
-    LOG_T << "Loading references from: " << references_;
+    LOGT << "Loading references from: " << references_ << ELOG;
 
     refs_ = Properties::load(*fs::istream(references_).get());
 }
@@ -148,12 +148,12 @@ void LocalDirectoryStorage::init()
 {
     if (!fs::exists(objects_) && !fs::create_directories(objects_))
     {
-        LOG_F << "Unable to create objects directory: " << objects_;
+        LOGF << "Unable to create objects directory: " << objects_ << ELOG;
 
         throw errors::unable_to_create_directory();
     }
 
-    LOG_T << "Init empty references: " << references_;
+    LOGT << "Init empty references: " << references_ << ELOG;
 
     refs_.store(*fs::ostream(references_).get());
 }
@@ -170,7 +170,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
     fs::path asset_path             = layout::asset_path(objects_, asset);
     fs::path asset_parent_path      = asset_path.parent_path();
 
-    LOG_T << "Asset path: " << asset_path << " Parent path: " << asset_parent_path;
+    LOGT << "Asset path: " << asset_path << " Parent path: " << asset_parent_path << ELOG;
 
     boost::shared_ptr<std::istream> isp = asset.istream();
 
@@ -180,7 +180,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
         {
             if (!fs::create_directories(asset_parent_path))
             {
-                LOG_F << "Unable to create parent directory: " << asset_parent_path << " for the asset: " << asset.id().string();
+                LOGF << "Unable to create parent directory: " << asset_parent_path << " for the asset: " << asset.id().string() << ELOG;
 
                 throw errors::unable_to_create_directory();
             }
@@ -192,7 +192,7 @@ void LocalDirectoryStorage::put(const Asset& asset)
     }
     else
     {
-        LOG_F << "Asset: " << asset.id().string() << " is not readable!";
+        LOGF << "Asset: " << asset.id().string() << " is not readable!" << ELOG;
 
         throw errors::attempt_to_put_non_readable_asset();
     }
@@ -203,7 +203,7 @@ void LocalDirectoryStorage::put(std::set<Asset> assets)
     typedef std::set<Asset>::const_iterator ConstIter;
     for(ConstIter i = assets.begin(), end = assets.end(); i != end; ++i)
     {
-        LOG_T << "Put asset: " << i->id().string();
+        LOGT << "Put asset: " << i->id().string() << ELOG;
         put(*i);
     }
 }
@@ -275,7 +275,7 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
         std::vector<std::string> ids;
         boost::split(ids, ref_indexes_list, boost::is_any_of(constants::C::ref_ids_delimiter));
 
-        LOG_T << "Ref: " << ref << " resolved to id: " << ids[0];
+        LOGT << "Ref: " << ref << " resolved to id: " << ids[0] << ELOG;
 
         return AssetId::create(ids[0]);
     }
@@ -284,18 +284,18 @@ AssetId LocalDirectoryStorage::resolve(const std::string& ref) const
         AssetId id = AssetId::create(ref);
         if (id != AssetId::empty && contains(id))
         {
-            LOG_T << "Resolved to id: " << id.string();
+            LOGT << "Resolved to id: " << id.string() << ELOG;
             return id;
         }
         else
         {
-            LOG_T << "Uknown id: " << ref;
+            LOGT << "Uknown id: " << ref << ELOG;
             return AssetId::empty;
         }
     }
     else
     {
-        LOG_T << "Uknown string: " << ref;
+        LOGT << "Uknown string: " << ref << ELOG;
         return AssetId::empty;
     }
 }

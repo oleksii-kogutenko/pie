@@ -45,12 +45,12 @@ Reset::~Reset()
 
 std::string Reset::operator()()
 {
-    LOG_T << "Perform clean.";
+    LOGT << "Perform clean." << ELOG;
     Clean clean(working_copy());
     std::string clean_result = clean();
-    LOG_T << "Clean result: " << clean_result;
+    LOGT << "Clean result: " << clean_result << ELOG;
 
-    LOG_T << "Perform checkout.";
+    LOGT << "Perform checkout." << ELOG;
     Checkout checkout(working_copy(), ref_to_);
     checkout.set_force(true);
 

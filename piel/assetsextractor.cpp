@@ -48,14 +48,14 @@ void AssetsExtractor::create_parent_path(const boost::filesystem::path& item_pat
 {
     fs::path parent_path    = item_path.parent_path();
 
-    LOG_T << "Extract item: " << item_path << " parent: " << parent_path;
+    LOGT << "Extract item: " << item_path << " parent: " << parent_path << ELOG;
 
     // Create item parent directory
     if (fs::exists(parent_path))
     {
         if (!fs::is_directory(parent_path))
         {
-            LOG_T << "Replace parent by directory: " << parent_path;
+            LOGT << "Replace parent by directory: " << parent_path << ELOG;
 
             fs::remove_all(parent_path);
 
@@ -64,14 +64,14 @@ void AssetsExtractor::create_parent_path(const boost::filesystem::path& item_pat
     }
     else
     {
-        LOG_T << "Create parent: " << parent_path;
+        LOGT << "Create parent: " << parent_path << ELOG;
 
         fs::create_directories(parent_path);
     }
 
     if (!fs::exists(parent_path) || !fs::is_directory(parent_path))
     {
-        LOG_F << "No parent: " << parent_path;
+        LOGF << "No parent: " << parent_path << ELOG;
 
         // No item parent
         throw errors::unable_to_create_item_parent();
@@ -84,7 +84,7 @@ void AssetsExtractor::extract_asset_into(const boost::filesystem::path& item_pat
     boost::shared_ptr<std::istream> isp = i->second.istream();
     if (!isp)
     {
-        LOG_F << "Non readable asset: " << i->second.id().string();
+        LOGF << "Non readable asset: " << i->second.id().string() << ELOG;
 
         // Non readable asset
         throw errors::attempt_to_export_non_readable_asset();
@@ -102,13 +102,13 @@ void AssetsExtractor::extract_asset_into(const boost::filesystem::path& item_pat
 
     if (asset_type == PredefinedAttributes::asset_type__file)
     {
-        LOG_T << "Copy data from asset to file.";
+        LOGT << "Copy data from asset to file." << ELOG;
 
         boost::shared_ptr<std::ostream> osp = fs::ostream(item_path);
 
         if (i->second.id().string() != fs::copy_into(osp, isp))
         {
-            LOG_F << "Corrupted asset data.";
+            LOGF << "Corrupted asset data." << ELOG;
 
             throw errors::exported_data_is_corrupted();
         }
@@ -117,21 +117,21 @@ void AssetsExtractor::extract_asset_into(const boost::filesystem::path& item_pat
     }
     else if (asset_type == PredefinedAttributes::asset_type__symlink)
     {
-        LOG_T << "Create symbolic link.";
+        LOGT << "Create symbolic link." << ELOG;
 
         std::ostringstream* ossp = new std::ostringstream();
         boost::shared_ptr<std::ostream> oss(ossp);
 
         if (i->second.id().string() != fs::copy_into(oss, isp))
         {
-            LOG_F << "Corrupted asset data.";
+            LOGF << "Corrupted asset data." << ELOG;
 
             throw errors::exported_data_is_corrupted();
         }
 
         std::string symlink_target = ossp->str();
 
-        LOG_T << "Create symbolic link " << item_path << " -> " << symlink_target;
+        LOGT << "Create symbolic link " << item_path << " -> " << symlink_target << ELOG;
 
         fs::create_symlink(symlink_target, item_path);
 
@@ -148,7 +148,7 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory, con
 {
     if (!fs::exists(directory) || !fs::is_directory(directory))
     {
-        LOG_F << "Attempt to extract data to non existing directory: " << directory;
+        LOGF << "Attempt to extract data to non existing directory: " << directory << ELOG;
 
         throw errors::attempt_to_export_to_non_existing_directory();
     }
@@ -160,7 +160,7 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory, con
             if (!boost::starts_with(std::make_pair(i->first.begin(),i->first.end()),
                     std::make_pair(prefix_only.begin(),prefix_only.end())))
             {
-                LOG_T << "Skip: " << i->first << " because of prefix: " << prefix_only;
+                LOGT << "Skip: " << i->first << " because of prefix: " << prefix_only << ELOG;
                 continue;
             }
         }
@@ -171,14 +171,14 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory, con
         {
             if (politic_ & ExtractPolicy__replace_existing)
             {
-                LOG_T << "Replace existing file: " << item_path;
+                LOGT << "Replace existing file: " << item_path << ELOG;
 
                 fs::remove_all(item_path);
             }
 
             if (politic_ & ExtractPolicy__backup_existing)
             {
-                LOG_T << "Backup existing file: " << item_path;
+                LOGT << "Backup existing file: " << item_path << ELOG;
 
                 fs::copy_file(item_path, item_path / (std::string(".backup.") + index_->self().id().string()));
             }
@@ -187,12 +187,12 @@ void AssetsExtractor::extract_into(const boost::filesystem::path& directory, con
             {
                 item_path /= std::string(".new.") + index_->self().id().string();
 
-                LOG_T << "New item path: " << item_path;
+                LOGT << "New item path: " << item_path << ELOG;
             }
 
             if ((politic_ & ExtractPolicy__keep_existing) && !(politic_ & ExtractPolicy__put_new_with_suffix))
             {
-                LOG_T << "Keep existing: " << item_path;
+                LOGT << "Keep existing: " << item_path << ELOG;
 
                 continue;
             }

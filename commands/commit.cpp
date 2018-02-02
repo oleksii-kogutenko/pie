@@ -61,7 +61,7 @@ const Commit* Commit::set_message(const std::string& message)
 
 piel::lib::IndexesDiff Commit::diff(const piel::lib::TreeIndex::Ptr& current_index) const
 {
-    LOG_T << "Calculate diff " << working_copy()->current_tree_state()->self().id().string() << " <-> CDIR";
+    LOGT << "Calculate diff " << working_copy()->current_tree_state()->self().id().string() << " <-> CDIR" << ELOG;
     return piel::lib::IndexesDiff::diff(working_copy()->current_tree_state(), current_index);
 }
 
@@ -73,15 +73,15 @@ std::string Commit::operator()()
     piel::lib::IndexesDiff indexes_diff = diff(current_index);
     if (indexes_diff.empty())
     {
-        LOG_T << "Diff is empty!";
+        LOGT << "Diff is empty!" << ELOG;
         throw errors::nothing_to_commit();
     }
 
-    LOG_T << "Non empty diff:";
+    LOGT << "Non empty diff:" << ELOG;
 
     std::cout << indexes_diff.format();
 
-    LOG_T << "Continue commit.";
+    LOGT << "Continue commit." << ELOG;
 
     piel::lib::TreeIndex::Ptr reference_index    = working_copy()->current_tree_state();
 

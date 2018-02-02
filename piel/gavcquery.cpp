@@ -179,11 +179,11 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
         return boost::none;
     }
 
-    LOG_T << "group: "      << result.group();
-    LOG_T << "name: "       << result.name();
-    LOG_T << "version: "    << result.version();
-    LOG_T << "classifier: " << result.classifier();
-    LOG_T << "extension: "  << result.extension();
+    LOGT << "group: "      << result.group()        << ELOG;
+    LOGT << "name: "       << result.name()         << ELOG;
+    LOGT << "version: "    << result.version()      << ELOG;
+    LOGT << "classifier: " << result.classifier()   << ELOG;
+    LOGT << "extension: "  << result.extension()    << ELOG;
 
     // Attempt to parse versions query
     boost::optional<std::vector<gavc::OpType> > ops = result.query_version_ops();
@@ -215,12 +215,12 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
 
     for (std::vector<gavc::OpType>::iterator i = result.begin(), end = result.end(); i != end; ++i )
     {
-        LOG_T << "version query op: " << i->second;
+        LOGT << "version query op: " << i->second << ELOG;
     }
 
     if (!data_.version.empty() & result.empty())
     {
-        LOG_E << "version query: " << data_.version << " has wrong syntax!";
+        LOGE << "version query: " << data_.version << " has wrong syntax!" << ELOG;
         return boost::none;
     }
 
@@ -256,21 +256,21 @@ std::string GavcQuery::to_string() const
         result << extension();
 	}
 
-	LOG_T << result.str();
+	LOGT << result.str() << ELOG;
 
     return result.str();
 }
 
 std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, const std::string& repository) const
 {
-    LOG_T << "Build url for maven metadata. server_url: " << server_url << " repository: " << repository;
+    LOGT << "Build url for maven metadata. server_url: " << server_url << " repository: " << repository << ELOG;
 
     std::string group_path = group();
     std::replace(group_path.begin(), group_path.end(), GavcConstants::group_delimiter, GavcConstants::path_delimiter);
     std::string result = boost::str(boost::format( "%2$s%1$c%3$s%1$c%4$s%1$c%5$s%1$c%6$s" )
         % GavcConstants::path_delimiter % server_url % repository % group_path % name() % GavcConstants::maven_metadata_filename);
 
-    LOG_T << "Maven metadata url: " << result;
+    LOGT << "Maven metadata url: " << result << ELOG;
     return result;
 }
 

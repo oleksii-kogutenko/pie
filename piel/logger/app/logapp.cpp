@@ -15,6 +15,12 @@ const LogAppPtr& operator<< (const LogAppPtr& p, LogAppManipulator manipulator)
     return p;
 }
 
+const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, SingleLevelLogProxyManipulator manipulator)
+{
+    manipulator(*p.get());
+    return p;
+}
+
 void LogApp::trace(const std::string& var1)
 {
     dispatcher_->enqueue(LogMessage(name_, TRACE, var1));
@@ -93,6 +99,12 @@ LogApp& fatal(LogApp& val)
     return val;
 }
 
+SingleLevelLogProxy& send(SingleLevelLogProxy& val)
+{
+    (*val.log_) << val.manipulator_;
+    return val;
+}
+
 LogApp::LogApp(const std::string& _name, LogDispatcherPtr d)
     : name_(_name)
     , log_stream_("")
@@ -113,6 +125,11 @@ LogApp::~LogApp()
 }
 
 LogApp& LogApp::operator<< (LogAppManipulator manipulator)
+{
+    return manipulator(*this);
+}
+
+SingleLevelLogProxy& SingleLevelLogProxy::operator<<(SingleLevelLogProxyManipulator manipulator)
 {
     return manipulator(*this);
 }
@@ -171,4 +188,3 @@ SingleLevelLogProxyPtr LogApp::fatal()
 }
 
 } } } // namespace piel::lib::logger_out
-
