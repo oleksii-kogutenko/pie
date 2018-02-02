@@ -28,7 +28,7 @@
 
 #define BOOST_TEST_MODULE LoggingTests
 #include <boost/test/unit_test.hpp>
-#include <test_utils.hpp>
+#include "test_utils.hpp"
 
 #include "logger/dispatcher/logdispatcher.h"
 #include "logger/app/logapp.h"

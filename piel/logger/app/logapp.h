@@ -37,7 +37,7 @@ public:
     void fatal(const std::string& var1);
 
     LogApp(const LogApp& l) : dispatcherPtr(l.dispatcherPtr), name(l.name) {
-        logStream << l.logStream;
+        logStream << l.logStream.str();
     }
     LogApp(const std::string& _name, logger_dispatcher::LogDispatcherPtr d);
     ~LogApp();

@@ -17,7 +17,7 @@ target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(${Module_name} crypto)
 
 # libzip (libzip-dev)
-target_link_libraries(${Module_name} ${ZIP})
+target_link_libraries(${Module_name} zip)
 
 # libzip (libcurl4-openssl-dev)
 target_link_libraries(${Module_name} curl)
