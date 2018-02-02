@@ -6,36 +6,36 @@
 #include <ctime>
 
 namespace piel { namespace lib { namespace logger_out {
-using namespace logger;
-using namespace std;
-using namespace utils;
 
-const char* FileLogger::SFX = "_file";
-const char* FileLogger::TIME_FORMAT = "%Y-%m-%d %I-%M-%S";
+using namespace piel::lib::logger;
+using namespace piel::lib::logger_utils;
+
+const char* FileLogger::sfx = "_file";
+const char* FileLogger::time_format = "%Y-%m-%d %I-%M-%S";
 std::ofstream    FileLogger::writer;
 
 FileLogger::FileLogger(const std::string& name)
-    : BaseLogger(name, SFX)
+    : BaseLogger(name, sfx)
 {
-    initLogFile();
+    init_log_file();
 }
 
-LogPtr FileLogger::commonsLog()
+LogPtr FileLogger::commons_log()
 {
-    return LoggerOut::getCommonLogger();
+    return LoggerOut::common_logger();
 }
 
-void FileLogger::initLogFile()
+void FileLogger::init_log_file()
 {
     if (!writer.is_open()) {
-        std::string logFileName = getEnv(PLUGINS_LOGGER_FILENAME, std::string(""));
+        std::string logFileName = get_env(plugins_logger_filename, std::string(""));
         if (!logFileName.empty()) {
-            writer.open(logFileName);
+            writer.open(logFileName.c_str());
             if (!writer.is_open()) {
-               commonsLog()->error(std::string("ERROR[FileLogger] Can't create log file: ") + logFileName + "\n");
+               commons_log()->error(std::string("ERROR[FileLogger] Can't create log file: ") + logFileName + "\n");
             } else {
                 writer << "--------------------------------------------------------------------------------\n";
-                writer << " Log started at: " << timeToStr(TIME_FORMAT, std::time(nullptr)) << "\n";
+                writer << " Log started at: " << time_to_str(time_format, std::time(nullptr)) << "\n";
                 writer << "--------------------------------------------------------------------------------\n";
                 writer << "\n";
                 writer.flush();

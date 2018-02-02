@@ -1,4 +1,5 @@
 #pragma once
+
 #include <boost/shared_ptr.hpp>
 
 namespace piel { namespace lib { namespace logger_app {

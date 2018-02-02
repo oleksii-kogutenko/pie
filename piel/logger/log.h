@@ -13,12 +13,12 @@ typedef std::list<LogPtr> LogPtrList;
 
 class Log {
 public:
-    virtual bool isDebugEnabled() = 0;
-    virtual bool isErrorEnabled() = 0;
-    virtual bool isFatalEnabled() = 0;
-    virtual bool isInfoEnabled() = 0;
-    virtual bool isTraceEnabled() = 0;
-    virtual bool isWarnEnabled() = 0;
+    virtual bool is_debug_enabled() = 0;
+    virtual bool is_error_enabled() = 0;
+    virtual bool is_fatal_enabled() = 0;
+    virtual bool is_info_enabled() = 0;
+    virtual bool is_trace_enabled() = 0;
+    virtual bool is_warn_enabled() = 0;
 
     virtual void trace(const std::string& var1) = 0;
     virtual void debug(const std::string& var1) = 0;
@@ -27,16 +27,16 @@ public:
     virtual void error(const std::string& var1) = 0;
     virtual void fatal(const std::string& var1) = 0;
 
-    virtual void printMessage(const LogMessage & m) = 0;
-    virtual std::string getName() = 0;
+    virtual void print_message(const LogMessage & m) = 0;
+    virtual std::string get_mame() = 0;
 
     Log() {};
     virtual ~Log() {};
 
 protected:
     virtual void print(const std::string& var1) = 0;
-    virtual void printWarn(const std::string& var1) = 0;
-    virtual void printErr(const std::string& var1) = 0;
+    virtual void print_warn(const std::string& var1) = 0;
+    virtual void print_err(const std::string& var1) = 0;
 
 protected:
     std::string name;

@@ -30,21 +30,10 @@
 #include <boost/test/unit_test.hpp>
 #include "test_utils.hpp"
 
-#include "logger/dispatcher/logdispatcher.h"
-#include "logger/app/logapp.h"
-#include "logger/dispatcher/logging.h"
-
-#include <locale>
-#include <time.h>
-#include <ctime>
-#include <iostream>
-#include <stdio.h>
-#include <string>
+#include <logger/app/logging.h>
 
 using namespace piel::lib;
-using namespace logger_app;
-using namespace logger_dispatcher;
-
+using namespace piel::lib::logger_app;
 
 BOOST_AUTO_TEST_CASE(logging_simple)
 {

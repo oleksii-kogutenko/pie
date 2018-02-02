@@ -1,22 +1,25 @@
 #pragma once
 
+#include "../logbase.h"
 #include "baselogger.h"
 #include <fstream>
 
 namespace piel { namespace lib { namespace logger_out {
 
-class FileLogger : public BaseLogger {
+class FileLogger : public BaseLogger
+{
 private:
-    static const char*      TIME_FORMAT;
+    static const char*      time_format;
     static std::ofstream    writer;
 
-    static logger::LogPtr commonsLog();
-    static void initLogFile();
+    static logger::LogPtr commons_log();
+    static void init_log_file();
+
 protected:
     virtual void print(const std::string& str);
 
 public:
-    static const char* SFX;
+    static const char* sfx;
 
     FileLogger(const std::string& name);
     virtual ~FileLogger() {}

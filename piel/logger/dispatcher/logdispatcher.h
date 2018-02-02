@@ -13,10 +13,8 @@
 
 namespace piel { namespace lib { namespace logger_dispatcher {
 
-class LogDispatcher {
-protected:
-    boost::signals2::signal<void (const logger::LogMessage& m)> enqueue_signal;
-
+class LogDispatcher
+{
 public:
     LogDispatcher();
     ~LogDispatcher();
@@ -27,6 +25,10 @@ public:
      }
 
      void enqueue(const logger::LogMessage& m);
+
+protected:
+    boost::signals2::signal<void (const logger::LogMessage& m)> enqueue_signal;
+
 };
 
 

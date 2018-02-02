@@ -2,27 +2,30 @@
 #include <iostream>
 
 namespace piel { namespace lib { namespace logger_out {
-using namespace std;
 
-const char* ConsoleLogger::SFX = "_console";
+const char* ConsoleLogger::sfx = "_console";
 
-ConsoleLogger::ConsoleLogger(const string& name)
-    : BaseLogger(name, SFX)
-{}
-
-ConsoleLogger::~ConsoleLogger()
-{}
-
-void ConsoleLogger::print(const string& str)
+ConsoleLogger::ConsoleLogger(const std::string& name)
+    : BaseLogger(name, sfx)
 {
-    cout << str;
-    cout.flush();
+
 }
 
-void ConsoleLogger::printErr(const std::string& str)
+ConsoleLogger::~ConsoleLogger()
 {
-    cerr << str;
-    cerr.flush();
+
+}
+
+void ConsoleLogger::print(const std::string& str)
+{
+    std::cout << str;
+    std::cout.flush();
+}
+
+void ConsoleLogger::print_err(const std::string& str)
+{
+    std::cerr << str;
+    std::cerr.flush();
 }
 
 } } } // namespace piel::lib::logger_out

@@ -29,17 +29,73 @@ typedef enum {
 class LogMessage
 {
 public:
-    LogMessage(const std::string& n, const logger::log_type& t, const std::string& m) : name(n), message(m), type(t), cmd(LOG) { time = std::time(nullptr); }
-    LogMessage(const LogMessage& s) : name(s.name), message(s.message), type(s.type), cmd(s.cmd) { time = std::time(nullptr); }
-    LogMessage(const std::string &n, const log_cmd& c) : name(n), cmd(c) { time = std::time(nullptr); }
-    LogMessage(const log_cmd& c) : name(), message(), type(), cmd(c), time() { time = std::time(nullptr); }
-    LogMessage& operator=(const LogMessage& m) {name=m.name; message=m.message; type=m.type; cmd=m.cmd; time = m.time; return *this; }
-    LogMessage() : name(), message(), type(), cmd(), time() {}
-    ~LogMessage() {}
+    LogMessage(const std::string& n, const logger::log_type& t, const std::string& m)
+        : name(n)
+        , message(m)
+        , type(t)
+        , cmd(LOG)
+    {
+        time = std::time(nullptr);
+    }
 
-    std::string toString() const {
+    LogMessage(const LogMessage& s)
+        : name(s.name)
+        , message(s.message)
+        , type(s.type)
+        , cmd(s.cmd)
+    {
+        time = std::time(nullptr);
+    }
+
+    LogMessage(const std::string &n, const log_cmd& c)
+        : name(n)
+        , type()
+        , cmd(c)
+    {
+        time = std::time(nullptr);
+    }
+
+    LogMessage(const log_cmd& c)
+        : name()
+        , message()
+        , type()
+        , cmd(c)
+        , time()
+    {
+        time = std::time(nullptr);
+    }
+
+    LogMessage()
+        : name()
+        , message()
+        , type()
+        , cmd()
+        , time()
+    {
+
+    }
+
+    ~LogMessage()
+    {
+
+    }
+
+    LogMessage& operator=(const LogMessage& rhs)
+    {
+        name    = rhs.name;
+        message = rhs.message;
+        type    = rhs.type;
+        cmd     = rhs.cmd;
+        time    = rhs.time;
+        return *this;
+    }
+
+    std::string str() const
+    {
         std::ostringstream os;
-        switch (cmd) {
+
+        switch (cmd)
+        {
         case LOG:
             os << "[" << name << ";" << message << ";" << "LOG" << time << "]";
             break;
@@ -56,6 +112,7 @@ public:
             os << "[null message]";
             break;
         }
+
         return os.str();
     }
 

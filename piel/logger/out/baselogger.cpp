@@ -1,3 +1,4 @@
+#include "../logbase.h"
 #include "baselogger.h"
 #include "../utils.h"
 #include <stdarg.h>
@@ -6,115 +7,114 @@
 
 namespace piel { namespace lib { namespace logger_out {
 
-using namespace logger;
-using namespace std;
-using namespace utils;
+using namespace piel::lib::logger;
+using namespace piel::lib::logger_utils;
 
-const std::string BaseLogger::PLUGINS_LOGGER          = DEF_PLUGINS_LOGGER;
-char const * const BaseLogger::PLUGINS_LOGGER_FILENAME = DEF_PLUGINS_LOGGER"_filename";
+const std::string BaseLogger::plugins_logger          = DEF_PLUGINS_LOGGER;
+char const * const BaseLogger::plugins_logger_filename = DEF_PLUGINS_LOGGER"_filename";
 
-char const * const BaseLogger::TIMESTAMPS_SFX   = "_timestamps";
+char const * const BaseLogger::timestamps_sfx   = "_timestamps";
 
-char const * const BaseLogger::LEVEL_SFX = "_level";
-char const * const BaseLogger::TRACE_SFX = "_trace";
-char const * const BaseLogger::DEBUG_SFX = "_debug";
-char const * const BaseLogger::INFO_SFX = "_info";
-char const * const BaseLogger::WARN_SFX = "_warn";
-char const * const BaseLogger::ERROR_SFX = "_error";
-char const * const BaseLogger::FATAL_SFX = "_fatal";
+char const * const BaseLogger::level_sfx = "_level";
+char const * const BaseLogger::trace_sfx = "_trace";
+char const * const BaseLogger::debug_sfx = "_debug";
+char const * const BaseLogger::info_sfx = "_info";
+char const * const BaseLogger::warn_sfx = "_warn";
+char const * const BaseLogger::error_sfx = "_error";
+char const * const BaseLogger::fatal_sfx = "_fatal";
 
-const int BaseLogger::FATAL_LVL = 0;
-const int BaseLogger::ERROR_LVL = 1;
-const int BaseLogger::WARN_LVL = 2;
-const int BaseLogger::INFO_LVL = 3;
-const int BaseLogger::DEBUG_LVL = 4;
-const int BaseLogger::TRACE_LVL = 5;
+const int BaseLogger::fatal_lvl = 0;
+const int BaseLogger::error_lvl = 1;
+const int BaseLogger::warn_lvl = 2;
+const int BaseLogger::info_lvl = 3;
+const int BaseLogger::debug_lvl = 4;
+const int BaseLogger::trace_lvl = 5;
 
-char const * const BaseLogger::TRACE_M = "T";
-char const * const BaseLogger::DEBUG_M = "D";
-char const * const BaseLogger::INFO_M = "I";
-char const * const BaseLogger::WARN_M = "W";
-char const * const BaseLogger::ERROR_M = "E";
-char const * const BaseLogger::FATAL_M = "F";
-char const * const BaseLogger::NULL_M  = "?";
+char const * const BaseLogger::trace_m = "T";
+char const * const BaseLogger::debug_m = "D";
+char const * const BaseLogger::info_m = "I";
+char const * const BaseLogger::warn_m = "W";
+char const * const BaseLogger::error_m = "E";
+char const * const BaseLogger::fatal_m = "F";
+char const * const BaseLogger::null_m  = "?";
 
 BaseLogger::BaseLogger(const std::string &_name, const std::string &sfx)
     : LogBase(_name)
-    , logLevel(0)
+    , log_level_(0)
 {
-    int logLevelAll = getEnv(PLUGINS_LOGGER + LEVEL_SFX, INFO_LVL);
+    int logLevelAll = get_env(plugins_logger + level_sfx, info_lvl);
 
-    bool isTraceEnabledAll = getEnv(PLUGINS_LOGGER + TRACE_SFX, false);
-    bool isDebugEnabledAll = getEnv(PLUGINS_LOGGER + DEBUG_SFX, false);
-    bool isInfoEnabledAll = getEnv(PLUGINS_LOGGER + INFO_SFX, false);
-    bool isWarnEnabledAll = getEnv(PLUGINS_LOGGER + WARN_SFX, false);
-    bool isErrorEnabledAll = getEnv(PLUGINS_LOGGER + ERROR_SFX, false);
-    bool isFatalEnabledAll = getEnv(PLUGINS_LOGGER + FATAL_SFX, false);
+    bool is_trace_enabled_all = get_env(plugins_logger + trace_sfx, false);
+    bool is_debug_enabled_all = get_env(plugins_logger + debug_sfx, false);
+    bool is_info_enabled_all = get_env(plugins_logger + info_sfx, false);
+    bool is_warn_enabled_all = get_env(plugins_logger + warn_sfx, false);
+    bool is_error_enabled_all = get_env(plugins_logger + error_sfx, false);
+    bool is_fatal_enabled_all = get_env(plugins_logger + fatal_sfx, false);
 
-    std::string const pName = PLUGINS_LOGGER + sfx;
-    logLevelAll = getEnv(pName + LEVEL_SFX, logLevelAll);
+    std::string const pName = plugins_logger + sfx;
+    logLevelAll = get_env(pName + level_sfx, logLevelAll);
 
-    isTraceEnabledAll = getEnv(pName + TRACE_SFX, isTraceEnabledAll);
-    isDebugEnabledAll = getEnv(pName + DEBUG_SFX, isDebugEnabledAll);
-    isInfoEnabledAll = getEnv(pName + INFO_SFX, isInfoEnabledAll);
-    isWarnEnabledAll = getEnv(pName + WARN_SFX, isWarnEnabledAll);
-    isErrorEnabledAll = getEnv(pName + ERROR_SFX, isErrorEnabledAll);
-    isFatalEnabledAll = getEnv(pName + FATAL_SFX, isFatalEnabledAll);
+    is_trace_enabled_all = get_env(pName + trace_sfx, is_trace_enabled_all);
+    is_debug_enabled_all = get_env(pName + debug_sfx, is_debug_enabled_all);
+    is_info_enabled_all = get_env(pName + info_sfx, is_info_enabled_all);
+    is_warn_enabled_all = get_env(pName + warn_sfx, is_warn_enabled_all);
+    is_error_enabled_all = get_env(pName + error_sfx, is_error_enabled_all);
+    is_fatal_enabled_all = get_env(pName + fatal_sfx, is_fatal_enabled_all);
 
-    std::string const nName = normalize(name) + sfx;
-    logLevel = getEnv(nName + LEVEL_SFX, logLevelAll);
+    std::string const nName = normalize(name_) + sfx;
+    log_level_ = get_env(nName + level_sfx, logLevelAll);
 
-    _isTraceEnabled = getEnv(nName + TRACE_SFX, isTraceEnabledAll);
-    _isDebugEnabled = getEnv(nName + DEBUG_SFX, isDebugEnabledAll);
-    _isInfoEnabled = getEnv(nName + INFO_SFX, isInfoEnabledAll);
-    _isWarnEnabled = getEnv(nName + WARN_SFX, isWarnEnabledAll);
-    _isErrorEnabled = getEnv(nName + ERROR_SFX, isErrorEnabledAll);
-    _isFatalEnabled = getEnv(nName + FATAL_SFX, isFatalEnabledAll);
+    is_trace_enabled_ = get_env(nName + trace_sfx, is_trace_enabled_all);
+    is_debug_enabled_ = get_env(nName + debug_sfx, is_debug_enabled_all);
+    is_info_enabled_ = get_env(nName + info_sfx, is_info_enabled_all);
+    is_warn_enabled_ = get_env(nName + warn_sfx, is_warn_enabled_all);
+    is_error_enabled_ = get_env(nName + error_sfx, is_error_enabled_all);
+    is_fatal_enabled_ = get_env(nName + fatal_sfx, is_fatal_enabled_all);
 }
 
 BaseLogger::~BaseLogger() {}
 
-bool BaseLogger::isFatalEnabled() { return _isFatalEnabled || _isTraceEnabled || logLevel >= FATAL_LVL; }
-bool BaseLogger::isErrorEnabled() { return _isErrorEnabled || _isTraceEnabled || logLevel >= ERROR_LVL; }
-bool BaseLogger::isWarnEnabled()  { return _isWarnEnabled || _isTraceEnabled || logLevel >= WARN_LVL; }
-bool BaseLogger::isInfoEnabled()  { return _isInfoEnabled || _isTraceEnabled || logLevel >= INFO_LVL; }
-bool BaseLogger::isDebugEnabled() { return _isDebugEnabled || _isTraceEnabled || logLevel >= DEBUG_LVL; }
-bool BaseLogger::isTraceEnabled() { return _isTraceEnabled || logLevel >= TRACE_LVL; }
+bool BaseLogger::is_fatal_enabled() { return is_fatal_enabled_ || is_trace_enabled_ || log_level_ >= fatal_lvl; }
+bool BaseLogger::is_error_enabled() { return is_error_enabled_ || is_trace_enabled_ || log_level_ >= error_lvl; }
+bool BaseLogger::is_warn_enabled()  { return is_warn_enabled_ || is_trace_enabled_ || log_level_ >= warn_lvl; }
+bool BaseLogger::is_info_enabled()  { return is_info_enabled_ || is_trace_enabled_ || log_level_ >= info_lvl; }
+bool BaseLogger::is_debug_enabled() { return is_debug_enabled_ || is_trace_enabled_ || log_level_ >= debug_lvl; }
+bool BaseLogger::is_trace_enabled() { return is_trace_enabled_ || log_level_ >= trace_lvl; }
 
-std::string BaseLogger::toString()
+std::string BaseLogger::str() const
 {
-    stringstream os;
-    os << name << "(" << normalize(name) << ") level:" << logLevel
-       << " F:" << _isFatalEnabled
-       << " E:" << _isErrorEnabled
-       << " W:" << _isWarnEnabled
-       << " I:" << _isInfoEnabled
-       << " D:" << _isDebugEnabled
-       << " T:" << _isTraceEnabled;
+    std::stringstream os;
+    os << name_ << "(" << normalize(name_) << ") level:" << log_level_
+       << " F:" << is_fatal_enabled_
+       << " E:" << is_error_enabled_
+       << " W:" << is_warn_enabled_
+       << " I:" << is_info_enabled_
+       << " D:" << is_debug_enabled_
+       << " T:" << is_trace_enabled_;
     return os.str();
 }
 
 void BaseLogger::enable(const logger::log_type& type)
 {
     switch (type) {
-    case logger::TRACE: _isTraceEnabled = true; break;
-    case logger::DEBUG: _isDebugEnabled = true; break;
-    case logger::INFO:  _isInfoEnabled  = true; break;
-    case logger::WARN:  _isWarnEnabled  = true; break;
-    case logger::ERROR: _isErrorEnabled = true; break;
-    case logger::FATAL: _isFatalEnabled = true; break;
+    case logger::TRACE: is_trace_enabled_ = true; break;
+    case logger::DEBUG: is_debug_enabled_ = true; break;
+    case logger::INFO:  is_info_enabled_  = true; break;
+    case logger::WARN:  is_warn_enabled_  = true; break;
+    case logger::ERROR: is_error_enabled_ = true; break;
+    case logger::FATAL: is_fatal_enabled_ = true; break;
     }
 }
 
 void BaseLogger::disable(const logger::log_type& type)
 {
     switch (type) {
-    case logger::TRACE: _isTraceEnabled = false; break;
-    case logger::DEBUG: _isDebugEnabled = false; break;
-    case logger::INFO:  _isInfoEnabled  = false; break;
-    case logger::WARN:  _isWarnEnabled  = false; break;
-    case logger::ERROR: _isErrorEnabled = false; break;
-    case logger::FATAL: _isFatalEnabled = false; break;
+    case logger::TRACE: is_trace_enabled_ = false; break;
+    case logger::DEBUG: is_debug_enabled_ = false; break;
+    case logger::INFO:  is_info_enabled_  = false; break;
+    case logger::WARN:  is_warn_enabled_  = false; break;
+    case logger::ERROR: is_error_enabled_ = false; break;
+    case logger::FATAL: is_fatal_enabled_ = false; break;
     }
 }
 
@@ -130,22 +130,22 @@ void BaseLogger::print(const logger::log_type& type, const std::string& var1)
     }
 }
 
-void BaseLogger::printMessage(const logger::LogMessage& m)
+void BaseLogger::print_message(const logger::LogMessage& m)
 {
     print(m.type, m.message);
 }
 
-const char *BaseLogger::getLogTypeStr(const logger::log_type& type)
+const char *BaseLogger::get_log_type_str(const logger::log_type& type)
 {
     switch (type) {
-    case logger::TRACE: return TRACE_M;
-    case logger::DEBUG: return DEBUG_M;
-    case logger::INFO:  return INFO_M;
-    case logger::WARN:  return WARN_M;
-    case logger::ERROR: return ERROR_M;
-    case logger::FATAL: return FATAL_M;
+    case logger::TRACE: return trace_m;
+    case logger::DEBUG: return debug_m;
+    case logger::INFO:  return info_m;
+    case logger::WARN:  return warn_m;
+    case logger::ERROR: return error_m;
+    case logger::FATAL: return fatal_m;
     }
-    return NULL_M;
+    return null_m;
 }
 
 

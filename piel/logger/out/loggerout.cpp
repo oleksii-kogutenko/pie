@@ -12,12 +12,12 @@
 #include "../utils.h"
 
 namespace piel { namespace lib { namespace logger_out {
-using namespace piel::lib::logger;
-using namespace piel::lib::utils;
-using namespace std;
 
-const char* LoggerOut::TIME_FORMAT = "%Y-%m-%d %I:%M:%S";
-LogPtr LoggerOut::commonLogger(new CommonLogger());
+using namespace piel::lib::logger;
+using namespace piel::lib::logger_utils;
+
+const char* LoggerOut::time_format = "%Y-%m-%d %I:%M:%S";
+LogPtr LoggerOut::common_logger_(new CommonLogger());
 
 LoggerOut::LoggerOut()
     : qthread_(QueuedThread<logger::LogMessage>::start())
@@ -36,14 +36,14 @@ void LoggerOut::enqueue(const logger::LogMessage& v)
     qthread_->enqueue(v);
 }
 
-void LoggerOut::genMessage(logger::LogMessage& m)
+void LoggerOut::gen_message(logger::LogMessage& m)
 {
     std::stringstream os;
 
-    if (enableLogsTimestamps) {
-        os << "[" << timeToStr(TIME_FORMAT) << "]";
+    if (enable_logs_timestamps_) {
+        os << "[" << time_to_str(time_format) << "]";
     }
-    os << "[" << m.name << "][" << BaseLogger::getLogTypeStr(m.type) << "] " << m.message;
+    os << "[" << m.name << "][" << BaseLogger::get_log_type_str(m.type) << "] " << m.message;
 
     m.message = os.str();
 }
@@ -53,41 +53,41 @@ void LoggerOut::create_log(const std::string& _name)
     std::string nName = normalize(_name);
     {
         LogPtr log {new NullLogger(_name)};
-        logPtrList.push_back(log);
+        log_ptr_list_.push_back(log);
     }
 
-    if (!getEnv(nName + ConsoleLogger::SFX, false) ||
-         getEnv(BaseLogger::PLUGINS_LOGGER + ConsoleLogger::SFX, true) ) {
+    if (!get_env(nName + ConsoleLogger::sfx, false) ||
+         get_env(BaseLogger::plugins_logger + ConsoleLogger::sfx, true) ) {
         LogPtr log {new ConsoleLogger(_name)};
-        logPtrList.push_back(log);
+        log_ptr_list_.push_back(log);
     }
 
-    if (!getEnv(FileLogger::PLUGINS_LOGGER_FILENAME, std::string("")).empty()) {
-        if (getEnv(nName + FileLogger::SFX, false) ||
-            getEnv(BaseLogger::PLUGINS_LOGGER + FileLogger::SFX, false)) {
+    if (!get_env(FileLogger::plugins_logger_filename, std::string("")).empty()) {
+        if (get_env(nName + FileLogger::sfx, false) ||
+            get_env(BaseLogger::plugins_logger + FileLogger::sfx, false)) {
             LogPtr log {new FileLogger(_name)};
-            logPtrList.push_back(log);
+            log_ptr_list_.push_back(log);
 
         }
     }
 
-    enableLogsTimestamps = getEnv(BaseLogger::PLUGINS_LOGGER + BaseLogger::TIMESTAMPS_SFX, false);
+    enable_logs_timestamps_ = get_env(BaseLogger::plugins_logger + BaseLogger::timestamps_sfx, false);
 }
 
 void LoggerOut::remove_log(const std::string& _name)
 {
-    logPtrList.remove_if(bind2nd(checkEqualLog(), _name));
-    logPtrList.remove_if(bind2nd(checkEqualLog(), _name+"_null"));
+    log_ptr_list_.remove_if(std::bind2nd(CheckEqualLog(), _name));
+    log_ptr_list_.remove_if(std::bind2nd(CheckEqualLog(), _name+"_null"));
 }
 
 void LoggerOut::print(const logger::LogMessage& m)
 {
     logger::LogMessage new_m(m);
-    genMessage(new_m);
+    gen_message(new_m);
 
-    for(LogPtrList::const_iterator i=logPtrList.begin(), end = logPtrList.end(); i!=end; ++i) {
-        if ( (*i)->getName() != m.name ) continue;
-        (*i)->printMessage(new_m);
+    for(LogPtrList::const_iterator i=log_ptr_list_.begin(), end = log_ptr_list_.end(); i!=end; ++i) {
+        if ( (*i)->get_mame() != m.name ) continue;
+        (*i)->print_message(new_m);
     }
 }
 
@@ -113,9 +113,9 @@ int LoggerOut::on_message(const logger::LogMessage& m)
     return retVal;
 }
 
-logger::LogPtr LoggerOut::getCommonLogger()
+logger::LogPtr LoggerOut::common_logger()
 {
-    return commonLogger;
+    return common_logger_;
 }
 
 } } } // namespace piel::lib::logger_out

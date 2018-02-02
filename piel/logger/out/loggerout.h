@@ -5,12 +5,14 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
-#include "../log.h"
+
+#include "../../queuedthread.h"
 #include "../singletone.h"
+#include "../log.h"
+#include "../logmessage.h"
 #include "commonlogger.h"
 #include "loggerout_types.h"
 #include "logmessagequeue.h"
-#include "../../queuedthread.h"
 
 namespace piel { namespace lib { namespace logger_out {
 
@@ -18,25 +20,22 @@ LogMessageQueueWeakPtr createOutputLogger();
 
 class LoggerOut {
 protected:
-    class checkEqualLog : public std::binary_function<logger::LogPtr, std::string, bool>
+    struct CheckEqualLog : public std::binary_function<logger::LogPtr, std::string, bool>
     {
-        public:
-            bool operator()(const logger::LogPtr &log, const std::string &name) const
-            {   return log->getName() == name;}
+        bool operator()(const logger::LogPtr &log, const std::string &name) const
+        {
+            return log->get_mame() == name;
+        }
     };
 
 protected:
-    static const char*      TIME_FORMAT;
-    logger::LogPtrList      logPtrList;
-    ThreadPtr               threadPtr;
-    bool                    enableLogsTimestamps;
-    LogMessageQueuePtr      queuePtr;
+    static const char*      time_format;
 
     void create_log(const std::string& name);
     void remove_log(const std::string& name);
     void print(const logger::LogMessage& m);
     bool process_queue();
-    void genMessage(logger::LogMessage& m);        
+    void gen_message(logger::LogMessage& m);
 
 public:
     LoggerOut();
@@ -45,11 +44,17 @@ public:
     int on_message(const logger::LogMessage& m);
     void enqueue(const logger::LogMessage& v);
 
-    static logger::LogPtr getCommonLogger();
+    static logger::LogPtr common_logger();
 
 private:
     QueuedThread<logger::LogMessage>::ThisPtr qthread_;
-    static logger::LogPtr commonLogger;
+    static logger::LogPtr   common_logger_;
+
+    logger::LogPtrList      log_ptr_list_;
+    ThreadPtr               thread_ptr_;
+    bool                    enable_logs_timestamps_;
+    LogMessageQueuePtr      queue_ptr_;
+
 };
 
 } } } // namespace piel::lib::logger_app
