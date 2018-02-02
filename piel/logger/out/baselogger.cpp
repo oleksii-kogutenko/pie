@@ -3,15 +3,15 @@
 #include "../utils.h"
 #include <stdarg.h>
 
-#define DEF_PLUGINS_LOGGER  "plugins_logger"
+#define DEF_LOGGER "default_logger"
 
 namespace piel { namespace lib { namespace logger_out {
 
 using namespace piel::lib::logger;
 using namespace piel::lib::logger_utils;
 
-const std::string BaseLogger::plugins_logger          = DEF_PLUGINS_LOGGER;
-char const * const BaseLogger::plugins_logger_filename = DEF_PLUGINS_LOGGER"_filename";
+const std::string BaseLogger::default_logger          = DEF_LOGGER;
+char const * const BaseLogger::default_logger_filename = DEF_LOGGER"_filename";
 
 char const * const BaseLogger::timestamps_sfx   = "_timestamps";
 
@@ -42,16 +42,16 @@ BaseLogger::BaseLogger(const std::string &_name, const std::string &sfx)
     : LogBase(_name)
     , log_level_(0)
 {
-    int logLevelAll = get_env(plugins_logger + level_sfx, info_lvl);
+    int logLevelAll = get_env(default_logger + level_sfx, info_lvl);
 
-    bool is_trace_enabled_all = get_env(plugins_logger + trace_sfx, false);
-    bool is_debug_enabled_all = get_env(plugins_logger + debug_sfx, false);
-    bool is_info_enabled_all = get_env(plugins_logger + info_sfx, false);
-    bool is_warn_enabled_all = get_env(plugins_logger + warn_sfx, false);
-    bool is_error_enabled_all = get_env(plugins_logger + error_sfx, false);
-    bool is_fatal_enabled_all = get_env(plugins_logger + fatal_sfx, false);
+    bool is_trace_enabled_all = get_env(default_logger + trace_sfx, false);
+    bool is_debug_enabled_all = get_env(default_logger + debug_sfx, false);
+    bool is_info_enabled_all = get_env(default_logger + info_sfx, false);
+    bool is_warn_enabled_all = get_env(default_logger + warn_sfx, false);
+    bool is_error_enabled_all = get_env(default_logger + error_sfx, false);
+    bool is_fatal_enabled_all = get_env(default_logger + fatal_sfx, false);
 
-    std::string const pName = plugins_logger + sfx;
+    std::string const pName = default_logger + sfx;
     logLevelAll = get_env(pName + level_sfx, logLevelAll);
 
     is_trace_enabled_all = get_env(pName + trace_sfx, is_trace_enabled_all);

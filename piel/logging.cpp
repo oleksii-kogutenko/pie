@@ -27,3 +27,5 @@
  */
 
 #include <logging.h>
+
+/*static*/ piel::lib::logger_app::LogAppPtr Logging::log = piel::lib::logger_app::Logging::create_logger("pie");

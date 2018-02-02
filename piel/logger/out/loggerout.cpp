@@ -57,21 +57,21 @@ void LoggerOut::create_log(const std::string& _name)
     }
 
     if (!get_env(nName + ConsoleLogger::sfx, false) ||
-         get_env(BaseLogger::plugins_logger + ConsoleLogger::sfx, true) ) {
+         get_env(BaseLogger::default_logger + ConsoleLogger::sfx, true) ) {
         LogPtr log {new ConsoleLogger(_name)};
         log_ptr_list_.push_back(log);
     }
 
-    if (!get_env(FileLogger::plugins_logger_filename, std::string("")).empty()) {
+    if (!get_env(FileLogger::default_logger_filename, std::string("")).empty()) {
         if (get_env(nName + FileLogger::sfx, false) ||
-            get_env(BaseLogger::plugins_logger + FileLogger::sfx, false)) {
+            get_env(BaseLogger::default_logger + FileLogger::sfx, false)) {
             LogPtr log {new FileLogger(_name)};
             log_ptr_list_.push_back(log);
 
         }
     }
 
-    enable_logs_timestamps_ = get_env(BaseLogger::plugins_logger + BaseLogger::timestamps_sfx, false);
+    enable_logs_timestamps_ = get_env(BaseLogger::default_logger + BaseLogger::timestamps_sfx, false);
 }
 
 void LoggerOut::remove_log(const std::string& _name)

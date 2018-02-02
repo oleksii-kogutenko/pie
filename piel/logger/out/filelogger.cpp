@@ -28,7 +28,7 @@ LogPtr FileLogger::commons_log()
 void FileLogger::init_log_file()
 {
     if (!writer.is_open()) {
-        std::string logFileName = get_env(plugins_logger_filename, std::string(""));
+        std::string logFileName = get_env(default_logger_filename, std::string(""));
         if (!logFileName.empty()) {
             writer.open(logFileName.c_str());
             if (!writer.is_open()) {

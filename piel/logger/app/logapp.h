@@ -12,13 +12,32 @@ class LogApp;
 
 typedef LogApp& (*LogAppManipulator)(LogApp&);
 
-// Manipulators
 LogApp& trace(LogApp& val);
 LogApp& debug(LogApp& val);
 LogApp& info(LogApp& val);
 LogApp& warn(LogApp& val);
 LogApp& error(LogApp& val);
 LogApp& fatal(LogApp& val);
+
+struct SingleLevelLogProxy
+{
+    SingleLevelLogProxy(LogApp* log, const LogAppManipulator& manipulator)
+        : log_(log)
+        , manipulator_(manipulator)
+    {
+    }
+
+    template<typename T>
+    SingleLevelLogProxy& operator<<(T val)
+    {
+        (*log_) << val << manipulator_;
+        return *this;
+    }
+
+private:
+    LogApp *log_;
+    LogAppManipulator manipulator_;
+};
 
 class LogApp
 {
@@ -43,6 +62,13 @@ public:
 
     LogApp& operator<< (LogAppManipulator manipulator);
 
+    SingleLevelLogProxyPtr trace();
+    SingleLevelLogProxyPtr debug();
+    SingleLevelLogProxyPtr info();
+    SingleLevelLogProxyPtr warn();
+    SingleLevelLogProxyPtr error();
+    SingleLevelLogProxyPtr fatal();
+
 protected:
     void clear();
 
@@ -57,10 +83,24 @@ protected:
     logger_dispatcher::LogDispatcherPtr dispatcher_;
     std::string                         name_;
 
+    SingleLevelLogProxyPtr              trace_;
+    SingleLevelLogProxyPtr              debug_;
+    SingleLevelLogProxyPtr              info_;
+    SingleLevelLogProxyPtr              warn_;
+    SingleLevelLogProxyPtr              error_;
+    SingleLevelLogProxyPtr              fatal_;
+
 };
 
 template<typename T>
 const LogAppPtr& operator<<(const LogAppPtr& p, T val)
+{
+    p->operator <<(val);
+    return p;
+}
+
+template<typename T>
+const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, T val)
 {
     p->operator <<(val);
     return p;

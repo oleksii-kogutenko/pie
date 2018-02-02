@@ -122,5 +122,53 @@ void LogApp::clear()
     log_stream_.str("");
 }
 
+SingleLevelLogProxyPtr LogApp::trace()
+{
+    if (!trace_)
+        trace_ = SingleLevelLogProxyPtr(new SingleLevelLogProxy(this, logger_app::trace));
+
+    return trace_;
+}
+
+SingleLevelLogProxyPtr LogApp::debug()
+{
+    if (!debug_)
+        debug_ = SingleLevelLogProxyPtr(new SingleLevelLogProxy(this, logger_app::debug));
+
+    return debug_;
+}
+
+SingleLevelLogProxyPtr LogApp::info()
+{
+    if (!info_)
+        info_ = SingleLevelLogProxyPtr(new SingleLevelLogProxy(this, logger_app::info));
+
+    return info_;
+}
+
+SingleLevelLogProxyPtr LogApp::warn()
+{
+    if (!warn_)
+        warn_ = SingleLevelLogProxyPtr(new SingleLevelLogProxy(this, logger_app::warn));
+
+    return warn_;
+}
+
+SingleLevelLogProxyPtr LogApp::error()
+{
+    if (!error_)
+        error_ = SingleLevelLogProxyPtr(new SingleLevelLogProxy(this, logger_app::error));
+
+    return error_;
+}
+
+SingleLevelLogProxyPtr LogApp::fatal()
+{
+    if (!fatal_)
+        fatal_ = SingleLevelLogProxyPtr(new SingleLevelLogProxy(this, logger_app::fatal));
+
+    return fatal_;
+}
+
 } } } // namespace piel::lib::logger_out
 

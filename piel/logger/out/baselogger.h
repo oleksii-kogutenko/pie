@@ -3,6 +3,7 @@
 #include <string>
 
 #include "../logbase.h"
+#include "../logmessage.h"
 
 namespace errors {
     struct not_implemented {};
@@ -13,8 +14,8 @@ namespace piel { namespace lib { namespace logger_out {
 class BaseLogger : public logger::LogBase {
 public:
 
-    static const std::string plugins_logger;
-    static char const * const plugins_logger_filename;
+    static const std::string default_logger;
+    static char const * const default_logger_filename;
     static char const * const timestamps_sfx;
 
     virtual void enable(const logger::log_type &type);

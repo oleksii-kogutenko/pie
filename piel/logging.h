@@ -29,27 +29,18 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
-#include <boost/log/trivial.hpp>
+#include <logger/app/logging.h>
 
-//#define LOG_(x) BOOST_LOG_TRIVIAL(x) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
-#define LOG_(x) BOOST_LOG_TRIVIAL(x) << "[" << __FILE__ << ":" << __LINE__ << "] "
-#define LOG_T   LOG_(trace)
-#define LOG_D   LOG_(debug)
-#define LOG_I   LOG_(info)
-#define LOG_W   LOG_(warning)
-#define LOG_E   LOG_(error)
-#define LOG_F   LOG_(fatal)
-
-#define LOG_T_(x)   LOG_(trace) << x
-#define LOG_D_(x)   LOG_(debug) << x
-#define LOG_I_(x)   LOG_(info) << x
-#define LOG_W_(x)   LOG_(warning) << x
-#define LOG_E_(x)   LOG_(error) << x
-#define LOG_F_(x)   LOG_(fatal) << x
-
-
-class Logging
+struct Logging
 {
+    static piel::lib::logger_app::LogAppPtr log;
 };
+
+#define LOG_T Logging::log->trace()
+#define LOG_D Logging::log->debug()
+#define LOG_I Logging::log->info()
+#define LOG_W Logging::log->warn()
+#define LOG_E Logging::log->error()
+#define LOG_F Logging::log->fatal()
 
 #endif // LOGGING_H
