@@ -44,8 +44,9 @@ public:
         cond_.notify_all();
     }
 
-    virtual void on_about_to_quit() {
+    void complete_and_join() {
         quit_ = true;
+        join();
     }
 
     QueuedThread():quit_(false), queue_(new Queue()), thread_(), mutex_(), cond_() {
@@ -66,21 +67,15 @@ protected:
     }
 
     void entry() {
-        int ret_val = -1;
         bool quit = false;
 
         while (!quit) {
             boost::optional<T> opt = dequeue();
             if (opt) {
                 boost::optional<int> ret_opt = on_message(*opt);
-                if (ret_opt)
+                if (!ret_opt || (*ret_opt < 0))
                 {
-                    ret_val =           *ret_opt;
-                    if (ret_val < 0)    on_about_to_quit();
-                }
-                else
-                {
-                    on_about_to_quit();
+                    quit_ = true;
                 }
             } else {
                 if (quit_) {
