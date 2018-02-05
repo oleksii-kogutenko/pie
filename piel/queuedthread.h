@@ -11,11 +11,11 @@
 #include <iostream>
 
 namespace piel { namespace lib {
-template <class  T, int wait_timeout = 500>
+template <class  T, int wait_timeout_ms = 500>
 class QueuedThread
 {
 public:
-    typedef QueuedThread<T, wait_timeout>       ThisType;
+    typedef QueuedThread<T, wait_timeout_ms>    ThisType;
     typedef boost::shared_ptr<ThisType>         ThisPtr;
     typedef std::queue<T>                       Queue;
     typedef boost::shared_ptr<Queue>            QueuePtr;
@@ -88,7 +88,7 @@ protected:
                     continue;
                 }
                 boost::unique_lock<boost::mutex> lock{mutex_};
-                cond_.timed_wait(lock, boost::get_system_time()+boost::posix_time::milliseconds(wait_timeout));
+                cond_.timed_wait(lock, boost::get_system_time()+boost::posix_time::milliseconds(wait_timeout_ms));
             }
         }
     }
