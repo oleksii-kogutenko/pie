@@ -11,6 +11,7 @@
 #include <iostream>
 
 namespace piel { namespace lib {
+
 template <class  T, int wait_timeout_ms = 500>
 class QueuedThread
 {

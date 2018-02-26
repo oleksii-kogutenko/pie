@@ -22,7 +22,7 @@ Logging::~Logging()
 
 /*static*/ logger_app::LogAppPtr Logging::create_logger(std::string name)
 {
-    RawPtr p = getInstance();
+    RawPtr p = get_instance();
     logger::LogMessage m(name, logger::CREATE_LOG);
 
     if (!p->logger_out_thread_) {

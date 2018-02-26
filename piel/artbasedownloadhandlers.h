@@ -34,8 +34,18 @@
 
 #include <string>
 #include <ostream>
+#include <boost/signals2.hpp>
+#include <queuedthread.hpp>
 
 namespace art { namespace lib {
+
+struct BufferInfo
+{
+    std::string id;
+    size_t size;
+};
+
+typedef piel::lib::QueuedThread<BufferInfo> BufferInfoListener;
 
 class ArtBaseDownloadHandlers: public ArtBaseApiHandlers
 {
@@ -53,11 +63,17 @@ public:
     void set_id(const std::string& id)  { id_ = id; }
     std::string id() const              { return id_; }
 
+    template<typename FuncObj>
+    void connect(FuncObj obj) {
+        on_buffer_.connect(obj);
+    }
+
 private:
-    std::string id_;                                        //!< Download id.
-    std::string api_token_;                                 //!< Artifactory server REST api access token.
-    std::ostream* dest_;                                    //!< Destination stream.
-    piel::lib::ChecksumsDigestBuilder checksums_builder_;   //!< Checksums digest builder for the content.
+    std::string id_;                                                //!< Download id.
+    std::string api_token_;                                         //!< Artifactory server REST api access token.
+    std::ostream* dest_;                                            //!< Destination stream.
+    piel::lib::ChecksumsDigestBuilder checksums_builder_;           //!< Checksums digest builder for the content.
+    boost::signals2::signal<void (const BufferInfo& m)> on_buffer_; //!< Signal processed buffer
 };
 
 } } // namespace art::lib

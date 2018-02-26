@@ -68,8 +68,17 @@ void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
 {
     std::cout << "id: " << id_ << " size: " << size << std::endl;
 
-    if (dest_) dest_->write(ptr, size);
+    if (dest_)
+    {
+        dest_->write(ptr, size);
+    }
     checksums_builder_.update(ptr, size);
+
+    on_buffer_({
+        .id = id_,
+        .size = size,
+    });
+
     return size;
 }
 
