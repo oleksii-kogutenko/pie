@@ -27,13 +27,13 @@ set(CMAKE_BUILD_TYPE Debug)
 
 include_directories("piel", "commands", "pie")
 
-find_library(ZIP NAMES zip PATHS "libzip/lib" NO_DEFAULT_PATH)
-include_directories("libzip/include")
-#link_directories("libzip/lib")
-
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
+include("third-party/CMakeLists.txt")
+
+add_subdirectory(third-party)
 add_subdirectory(piel)
 add_subdirectory(commands)
 add_subdirectory(pie)

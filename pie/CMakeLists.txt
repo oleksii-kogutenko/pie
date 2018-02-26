@@ -4,12 +4,12 @@ file(GLOB SOURCES "*.cpp")
 add_executable(${Module_name} ${SOURCES})
 
 # Components
-target_link_libraries(${Module_name} piel commands pthread)
+target_link_libraries(${Module_name} piel commands pthread ${ZIP})
 
 # Externals
 #
 # Boost (libboost-all-dev)
-find_package( Boost COMPONENTS program_options system filesystem log regex REQUIRED)
+find_package( Boost COMPONENTS program_options system filesystem log regex thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES})
 
@@ -17,7 +17,8 @@ target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(${Module_name} crypto)
 
 # libzip (libzip-dev)
-target_link_libraries(${Module_name} zip)
+#target_link_libraries(${Module_name} ${ZIP})
+#include_directories("third-party/libzip/include")
 
 # libzip (libcurl4-openssl-dev)
 target_link_libraries(${Module_name} curl)

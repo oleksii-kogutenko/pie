@@ -1,12 +1,17 @@
 find_package (Boost COMPONENTS system filesystem random log unit_test_framework regex thread REQUIRED)
 
-set(Piel_LIBRARIES piel commands crypto zip curl pthread ${Boost_LIBRARIES})
+set(Piel_LIBRARIES piel commands crypto ${ZIP} curl pthread ${Boost_LIBRARIES})
 
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
 
 include_directories(${Boost_INCLUDE_DIR})
+
+#############################################################
+add_executable(logging_tests logging_tests.cpp)
+target_link_libraries(logging_tests ${Piel_LIBRARIES})
+add_test (NAME LoggingTests COMMAND logging_tests)
 
 #############################################################
 add_executable(properties properties.cpp)
