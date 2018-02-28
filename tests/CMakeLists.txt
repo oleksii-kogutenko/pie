@@ -9,9 +9,14 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 include_directories(${Boost_INCLUDE_DIR})
 
 #############################################################
-add_executable(logging_tests logging_tests.cpp)
-target_link_libraries(logging_tests ${Piel_LIBRARIES})
-add_test (NAME LoggingTests COMMAND logging_tests)
+add_executable(outputstream_test outputstream_test.cpp)
+target_link_libraries(outputstream_test ${Piel_LIBRARIES})
+add_test (NAME OutputStreamTests COMMAND outputstream_test)
+
+#############################################################
+add_executable(art_test art_test.cpp)
+target_link_libraries(art_test ${Piel_LIBRARIES})
+#add_test (NAME ArtTests COMMAND art_test)
 
 #############################################################
 add_executable(properties properties.cpp)
