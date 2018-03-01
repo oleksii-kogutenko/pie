@@ -1,6 +1,9 @@
 #ifndef ARTBASEAPIDEPLOYARTIFACTHANDLERS_H
 #define ARTBASEAPIDEPLOYARTIFACTHANDLERS_H
 #include <artbaseapisendlerhandlers.h>
+#include "streamssequencepartitionallyoutputhelper.h"
+#include "checksumsdigestbuilder.hpp"
+
 #include <fstream>
 
 namespace art { namespace lib {
@@ -16,17 +19,32 @@ public:
     virtual size_t handle_input(char *ptr, size_t size);
     virtual void gen_additional_tree(boost::property_tree::ptree &);
 
+    virtual std::string get_path();
+
     void file(const std::string& fname);
 
     void sha1(const std::string& sha1);
     void md5(const std::string& md5);
+
+    void set_group(const std::string& s) { group_ = s; }
+    void set_version(const std::string& s) { version_ = s; }
+    void set_classifier(const std::string& s) { classifier_ = s; }
+
+    std::string get_group() { return group_; }
+    std::string get_version() { return version_; }
+    std::string get_classifier() { return classifier_; }
 private:
-    std::ifstream file_;
+    StreamsSequencePartitionallyOutputHelper uploader_;
+    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
+
     size_t        file_size_;
     size_t        file_send_size_;
     std::string   sha1_;
     std::string   md5_;
 
+    std::string   group_;
+    std::string   version_;
+    std::string   classifier_;
 };
 
 } } // namespace art::lib

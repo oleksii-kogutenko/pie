@@ -25,6 +25,7 @@ ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_toke
     , url_()
     , repo_()
     , path_()
+    //, is_()
 
 {
     LOGT << __PRETTY_FUNCTION__ << ELOG;

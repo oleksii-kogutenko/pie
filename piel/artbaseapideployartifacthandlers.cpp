@@ -18,7 +18,8 @@ namespace art { namespace lib {
 
 ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::string& api_token)
     : ArtBaseApiSendlerHandlers(api_token)
-    , file_()
+    , uploader_()
+    , str_digests_()
     , file_send_size_(0)
 {
     LOGT << ELOG;
@@ -30,7 +31,8 @@ ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::st
                                                                    const std::string& path,
                                                                    const std::string& fname)
     : ArtBaseApiSendlerHandlers(api_token, url, repo, path)
-    , file_()
+    , uploader_()
+    , str_digests_()
     , file_send_size_(0)
 {
     LOGT << ELOG;
@@ -40,77 +42,76 @@ ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::st
 ArtBaseApiDeployArtifactHandlers::~ArtBaseApiDeployArtifactHandlers()
 {
     LOGT << ELOG;
-    if (file_.is_open())
-    {
-        file_.close();
-    }
 }
 
 void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
 {
     LOGT << ELOG;
-    file_.open(fname);
-    if (!file_.is_open())
-    {
+    boost::shared_ptr<std::istream> file_ptr(new std::ifstream(fname));
+    uploader_.push_input_stream(file_ptr);
+
+    std::ifstream in(fname, std::ifstream::ate | std::ifstream::binary);
+    //std::ifstream in(fname, std::ifstream::ate | std::ifstream::binary);
+    if (!in.is_open()) {
         LOGE << "Wrong to open file:" << fname << ELOG;
-    } else {
-        std::stringstream ss;
-        std::ifstream in(fname, std::ifstream::ate | std::ifstream::binary);
-        file_size_ = in.tellg();
-        in.close();
-        ss << file_size_;
-        LOGT  << __PRETTY_FUNCTION__ << fname << " file_size_:" << file_size_ << ELOG;
-        update_attributes(ArtBaseConstants::size, ss.str());
-        update_attributes(ArtBaseConstants::mem_type, "application/text");
+        return;
     }
-}
+    //file_size_ = boost::numeric_cast<size_t>(in.tellg());
+    file_size_ = in.tellg();
 
-void ArtBaseApiDeployArtifactHandlers::sha1(const std::string& sha1)
-{
-    LOGT << ELOG;
-    sha1_ = sha1;
-}
+    in.seekg(0);
 
-void ArtBaseApiDeployArtifactHandlers::md5(const std::string& md5)
-{
-    LOGT << ELOG;
-    md5_ = md5;
+    piel::lib::ChecksumsDigestBuilder digest_builder;
+    digest_builder.init();
+
+    str_digests_ = digest_builder.str_digests_for(in);
+
+    in.close();
+
+    std::stringstream ss;
+
+    ss << file_size_;
+    LOGT  << __PRETTY_FUNCTION__ << fname << " file_size_:" << file_size_ << ELOG;
+    LOGT  << __PRETTY_FUNCTION__ << fname << " md5:" << str_digests_[piel::lib::Md5::t::name()] << ELOG;
+    LOGT  << __PRETTY_FUNCTION__ << fname << " sha1:" << str_digests_[piel::lib::Sha::t::name()] << ELOG;
+    update_attributes(ArtBaseConstants::size, ss.str());
+    update_attributes(ArtBaseConstants::mem_type, "application/text");
 }
 
 void ArtBaseApiDeployArtifactHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
 {
     LOGT << ELOG;
     pt::ptree checksum;
-    checksum.insert(checksum.end(), std::make_pair(ArtBaseConstants::checksums_md5, pt::ptree(md5_)));
-    checksum.insert(checksum.end(), std::make_pair(ArtBaseConstants::checksums_sha1, pt::ptree(sha1_)));
+    checksum.insert(checksum.end(),
+                    std::make_pair(
+                        ArtBaseConstants::checksums_md5,
+                        pt::ptree(str_digests_[piel::lib::Md5::t::name()])));
+    checksum.insert(checksum.end(),
+                    std::make_pair(
+                        ArtBaseConstants::checksums_sha1,
+                        pt::ptree(str_digests_[piel::lib::Sha::t::name()])));
     tree.add_child(ArtBaseConstants::checksums, checksum);
 }
 
 size_t ArtBaseApiDeployArtifactHandlers::handle_input(char *ptr, size_t size)
 {
     LOGT << ELOG;
-    size_t ret_val = 0;//ArtBaseApiSendlerHandlers::handle_input(ptr, size);
-    if (!ret_val) {
-        if (0 == file_send_size_) {
-            LOGT  << __PRETTY_FUNCTION__ << " --1--" << ELOG;
-            file_send_size_ = file_.read(ptr, size).gcount();
-            ret_val = file_send_size_;
-            LOGT  << __PRETTY_FUNCTION__ << " --1-- ret_val:" << ret_val << ELOG;
-        }else if (file_send_size_ == file_size_) {
-            LOGT  << __PRETTY_FUNCTION__ << " --2--" << ELOG;
 
-            ret_val = 0;
-        } else {
-            LOGT  << __PRETTY_FUNCTION__ << " --3--" << ELOG;
-
-            ret_val = file_.readsome(ptr, size);
-            file_send_size_ += ret_val;
-
-            LOGT << __PRETTY_FUNCTION__ << " --size_to_send:" << ret_val << " --send_size_:" << file_send_size_ << ELOG;
-        }
-    }
-    return ret_val;
+    return uploader_.putto(ptr, size);
 }
 
+std::string ArtBaseApiDeployArtifactHandlers::get_path()
+{
+    std::string p = ArtBaseApiSendlerHandlers::get_path();
+    p.append(ArtBaseConstants::uri_delimiter)
+            .append(get_group()).append(ArtBaseConstants::uri_delimiter)
+            .append(get_version()).append(ArtBaseConstants::uri_delimiter)
+            .append(get_group()).append("-")
+            .append(get_version());
+    if (get_classifier() != ".pom") p.append("-");
+    p.append(get_classifier());
+    LOGT << __PRETTY_FUNCTION__ << p << ELOG;
+    return p;
+}
 
 } } // namespace art::lib

@@ -2,6 +2,7 @@
 #define ARTBASEAPISENDLERHANDLERS_H
 #include <artbaseapihandlers.h>
 #include <boost_property_tree_ext.hpp>
+#include "streamssequencepartitionallyoutputhelper.h"
 
 namespace art { namespace lib {
 
@@ -42,6 +43,7 @@ private:
     std::string url_;
     std::string repo_;
     std::string path_;
+    //StreamsSequencePartitionallyOutputHelper is_;
 };
 
 } } // namespace art::lib
