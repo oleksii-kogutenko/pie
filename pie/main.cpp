@@ -39,6 +39,7 @@
 #include <logcommand.h>
 #include <treecommand.h>
 #include <pushcommand.h>
+#include <uploadcommand.h>
 
 int main(int argc, char **argv)
 {
@@ -55,6 +56,7 @@ int main(int argc, char **argv)
     application.register_command(new pie::app::CommmandConstructor<pie::app::TreeCommand>("tree", "Show tree names."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::LogCommand>("log", "Show tree log."));
     application.register_command(new pie::app::CommmandConstructor<pie::app::PushCommand>("push", "Push to artifactory server."));
+    application.register_command(new pie::app::CommmandConstructor<pie::app::UploadCommand>("upload", "Upload to artifactory server."));
 
     return application.run();
 }
