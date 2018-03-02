@@ -31,7 +31,6 @@ public:
     std::string get_version() { return version_; }
     std::string get_classifier() { return classifier_; }
 private:
-    StreamsSequencePartitionallyOutputHelper uploader_;
     piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
 
     std::string   name_;

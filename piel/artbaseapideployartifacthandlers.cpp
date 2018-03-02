@@ -19,7 +19,6 @@ namespace art { namespace lib {
 
 ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::string& api_token)
     : ArtBaseApiSendlerHandlers(api_token)
-    , uploader_()
     , str_digests_()
 {
     LOGT << ELOG;
@@ -31,7 +30,6 @@ ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::st
                                                                    const std::string& path,
                                                                    const std::string& fname)
     : ArtBaseApiSendlerHandlers(api_token, url, repo, path)
-    , uploader_()
     , str_digests_()
 {
     LOGT << ELOG;
@@ -47,10 +45,10 @@ void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
 {
     LOGT << ELOG;
     boost::shared_ptr<std::istream> file_ptr(new std::ifstream(fname));
-    uploader_.push_input_stream(file_ptr);
+    push_input_stream(file_ptr);
 
     std::ifstream in(fname, std::ifstream::ate | std::ifstream::binary);
-    //std::ifstream in(fname, std::ifstream::ate | std::ifstream::binary);
+
     if (!in.is_open()) {
         LOGE << "Wrong to open file:" << fname << ELOG;
         return;
@@ -97,7 +95,7 @@ size_t ArtBaseApiDeployArtifactHandlers::handle_input(char *ptr, size_t size)
 {
     LOGT << ELOG;
 
-    return uploader_.putto(ptr, size);
+    return putto(ptr, size);
 }
 
 std::string ArtBaseApiDeployArtifactHandlers::get_path()

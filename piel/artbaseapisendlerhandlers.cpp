@@ -18,14 +18,14 @@ namespace art { namespace lib {
 
 ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
+    , uploader_()
     , attributes_()
     , send_size_(0)
-    , os_()
     , answer_()
     , url_()
     , repo_()
     , path_()
-    //, is_()
+    , first_call_(true)
 
 {
     LOGT << __PRETTY_FUNCTION__ << ELOG;
@@ -33,60 +33,55 @@ ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_toke
 
 ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_token, const std::string& url, const std::string& repo, const std::string& path)
     : ArtBaseApiHandlers(api_token)
+    , uploader_()
     , attributes_()
     , send_size_(0)
-    , os_()
     , answer_()
     , url_()
     , repo_()
     , path_()
+    , first_call_(true)
 {
     set_url(url);
     set_repo(repo);
     set_path(path);
 }
 
-size_t ArtBaseApiSendlerHandlers::handle_input(char *ptr, size_t size)
+void ArtBaseApiSendlerHandlers::push_input_stream(boost::shared_ptr<std::istream> is)
 {
-    std::string str = os_.str();
-    size_t os_size = str.length();
-    size_t size_to_send = 0;
+    uploader_.push_input_stream(is);
+}
 
-    LOGT <<  "size:" << size << " send_size_:" << send_size_ << " os_size:" << os_size << ELOG;
+size_t ArtBaseApiSendlerHandlers::putto(char* ptr, size_t size)
+{
+    return uploader_.putto(ptr, size);
+}
 
-    if ( 0 == send_size_ ) {
-        LOGT <<  " --1--" << ELOG;
-        pt::ptree tree;
+void ArtBaseApiSendlerHandlers::prepare_header()
+{
+    std::stringstream os;
+    pt::ptree tree;
 
-        for (Attributes::const_iterator i = attributes_.begin(), end = attributes_.end(); i != end; ++i)
-        {
-            tree.insert(tree.end(), std::make_pair(i->first, pt::ptree(i->second)));
-        }
-
-        gen_additional_tree(tree);
-
-        pt::write_json(os_, tree, false);
-
-        str = os_.str();
-        os_size = str.length();
-
-        send_size_ = str.copy(ptr, size, 0);
-
-        size_to_send = send_size_;
-    } else if (send_size_ == os_size) {
-        LOGT  << __PRETTY_FUNCTION__ << " --2--" << ELOG;
-
-        size_to_send = 0;
-    } else {
-        LOGT  << __PRETTY_FUNCTION__ << " --3--" << ELOG;
-
-        size_to_send = str.copy(ptr, size, send_size_);
-        send_size_ += size_to_send;
-
-        LOGT << __PRETTY_FUNCTION__ << " --size_to_send:" << size_to_send << " --send_size_:" << send_size_ << ELOG;
+    for (Attributes::const_iterator i = attributes_.begin(), end = attributes_.end(); i != end; ++i)
+    {
+        tree.insert(tree.end(), std::make_pair(i->first, pt::ptree(i->second)));
     }
 
-    return  size_to_send;
+    gen_additional_tree(tree);
+
+    pt::write_json(os, tree, false);
+
+    boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
+    uploader_.push_input_stream(is);
+}
+
+size_t ArtBaseApiSendlerHandlers::handle_input(char *ptr, size_t size)
+{
+    if (first_call_) {
+        first_call_ = false;
+        prepare_header();
+    }
+    return  uploader_.putto(ptr, size);
 }
 
 size_t ArtBaseApiSendlerHandlers::handle_output(char *ptr, size_t size)
@@ -128,7 +123,7 @@ void ArtBaseApiSendlerHandlers::set_url(const std::string& url)
     url_ = trim(url);
     attributes_[ArtBaseConstants::uri_attribute] = get_url();
 
-    LOGT << "get_url:" << get_url() << ELOG;
+    LOGT << "set_url:" << get_url() << ELOG;
 }
 
 void ArtBaseApiSendlerHandlers::set_repo(const std::string& repo)
@@ -137,7 +132,7 @@ void ArtBaseApiSendlerHandlers::set_repo(const std::string& repo)
     repo_ = trim(repo);
     attributes_[ArtBaseConstants::repo_attribute] = get_repo();
 
-    LOGT << "get_repo:" << get_repo() << ELOG;
+    LOGT << "set_repo:" << get_repo() << ELOG;
 }
 
 void ArtBaseApiSendlerHandlers::set_path(const std::string& path)
@@ -146,7 +141,7 @@ void ArtBaseApiSendlerHandlers::set_path(const std::string& path)
     path_ = trim(path);
     attributes_[ArtBaseConstants::path_attribute] = get_path();
 
-    LOGT << "get_path:" << get_path() << ELOG;
+    LOGT << "set_path:" << get_path() << ELOG;
 }
 
 

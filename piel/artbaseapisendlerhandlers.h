@@ -17,6 +17,8 @@ public:
     virtual size_t handle_input(char *ptr, size_t size);
     virtual size_t handle_output(char *ptr, size_t size);
 
+    virtual void prepare_header();
+
     virtual void set_url(const std::string& url);
     virtual void set_repo(const std::string& repo);
     virtual void set_path(const std::string& path);
@@ -32,10 +34,13 @@ public:
     void update_attributes(const std::string& key, const std::string& value);
     void update_attributes(const std::string& key, const char* value);
 
+    void push_input_stream(boost::shared_ptr<std::istream> is);
+    size_t putto(char* ptr, size_t size);
 protected:
     std::string trim(const std::string& src);
 
 private:
+    StreamsSequencePartitionallyOutputHelper uploader_;
     Attributes  attributes_;
     size_t      send_size_;
     std::stringstream os_;
@@ -43,7 +48,8 @@ private:
     std::string url_;
     std::string repo_;
     std::string path_;
-    //StreamsSequencePartitionallyOutputHelper is_;
+
+    bool    first_call_;
 };
 
 } } // namespace art::lib
