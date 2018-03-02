@@ -22,6 +22,7 @@ public:
     virtual std::string get_path();
 
     void file(const std::string& fname);
+    void generate_pom();
 
     void set_name(const std::string& s) { name_ = s; }
     void set_version(const std::string& s) { version_ = s; }

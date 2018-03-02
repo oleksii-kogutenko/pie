@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 namespace pt = boost::property_tree;
 
@@ -39,6 +40,30 @@ ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::st
 ArtBaseApiDeployArtifactHandlers::~ArtBaseApiDeployArtifactHandlers()
 {
     LOGT << ELOG;
+}
+
+void ArtBaseApiDeployArtifactHandlers::generate_pom()
+{
+    std::stringstream os;
+    pt::ptree tree_project;
+    pt::ptree tree;
+
+    tree_project.put("modelVersion", "4.0.0");
+    tree_project.put("groupId", ArtBaseApiSendlerHandlers::get_path());
+    tree_project.put("artifactId", get_name());
+    tree_project.put("version", get_version());
+    tree_project.put("packaging", "pom");
+
+    tree.add_child("project", tree_project);
+
+    pt::write_xml(os, tree);
+
+    LOGT << "------------ +++ POM:XML +++ -------------" << ELOG;
+    LOGT << os.str() << ELOG;
+    LOGT << "------------ --- POM:XML --- -------------" << ELOG;
+
+    boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
+    push_input_stream(is);
 }
 
 void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)

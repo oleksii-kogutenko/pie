@@ -63,6 +63,7 @@ const std::string classifier_1_2_fn = "/home/okogutenko/projects/222/.pom";
 /*--------------*/
 const std::string server_api_access_token_="AKCp5ZmHGkTVwqqV8eUaMsdfCeoBM5wLjdEpSJbHSRCoehE64X7t8Fw8coASJyrosEaiK5YW7";
 
+/*
 BOOST_AUTO_TEST_CASE(art_test_deploy_artifact_1)
 {
 
@@ -75,7 +76,10 @@ BOOST_AUTO_TEST_CASE(art_test_deploy_artifact_1)
     deploy_handlers.set_name(group_1);
     deploy_handlers.set_version(version_1);
     deploy_handlers.set_classifier(classifier_1_1);
-    deploy_handlers.file(classifier_1_1_fn);
+    //deploy_handlers.file(classifier_1_1_fn);
+    deploy_handlers.generate_pom();
+
+    return;
     //deploy_handlers.md5(deploy1_md5);
     //deploy_handlers.sha1(deploy1_sha1);
 
@@ -166,16 +170,16 @@ BOOST_AUTO_TEST_CASE(art_test_deploy_artifact)
 }
 */
 
-/*
+
 BOOST_AUTO_TEST_CASE(art_test)
 {
 
     LOGT << "MkDir test" << ELOG;
 
     art::lib::ArtBaseApiCreateDirectoryHandlers mkdir_handlers(server_api_access_token_);
-    mkdir_handlers.url(server_url);
-    mkdir_handlers.repo(server_repository);
-    mkdir_handlers.path(server_path);
+    mkdir_handlers.set_url("http://artifactory.developonbox.ru/artifactory");
+    mkdir_handlers.set_repo("test-repo-local");
+    mkdir_handlers.set_path("test_dir/dir3");
 
     piel::lib::CurlEasyClient<art::lib::ArtBaseApiCreateDirectoryHandlers> mkdir_client(mkdir_handlers.gen_uri(), &mkdir_handlers);
 
@@ -187,4 +191,4 @@ BOOST_AUTO_TEST_CASE(art_test)
         LOGE << mkdir_client.curl_error().presentation() << ELOG;
     }
 }
-*/
+
