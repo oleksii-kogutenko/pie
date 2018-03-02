@@ -13,6 +13,17 @@ const std::string ArtBaseConstants::checksums       = "checksums";
 const std::string ArtBaseConstants::checksums_md5   = "md5";
 const std::string ArtBaseConstants::checksums_sha1  = "sha1";
 const std::string ArtBaseConstants::mem_type        = "mimeType";
+const std::string ArtBaseConstants::mem_type_text   = "application/text";
 
+const std::string ArtBaseConstants::pom_modelVersion        = "modelVersion";
+const std::string ArtBaseConstants::pom_modelVersion_ver    = "4.0.0";
+const std::string ArtBaseConstants::pom_groupId             = "groupId";
+const std::string ArtBaseConstants::pom_artifactId          = "artifactId";
+const std::string ArtBaseConstants::pom_version             = "version";
+const std::string ArtBaseConstants::pom_packaging           = "packaging";
+const std::string ArtBaseConstants::pom_packaging_pack      = "pom";
+const std::string ArtBaseConstants::pom_project             = "project";
+
+const std::string ArtBaseConstants::pom_classifier          = ".pom";
 
 } } // namespace art::lib

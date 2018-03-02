@@ -107,33 +107,21 @@ void Upload::operator()()
         }
         LOGT << "--" << __LINE__ << "--" << ELOG;
     }
-    push_pom();
+    deploy_pom();
 }
 
-void Upload::push_pom()
+void Upload::deploy_pom()
 {
     art::lib::ArtBaseApiDeployArtifactHandlers deploy_handlers(server_api_access_token_);
-    deploy_handlers.set_url(server_url_);
-    deploy_handlers.set_repo(server_repository_);
-    deploy_handlers.set_path(query_.group());
-    deploy_handlers.set_name(query_.name());
-    deploy_handlers.set_version(query_.version());
-    deploy_handlers.set_classifier(".pom");
-    deploy_handlers.generate_pom();
-
-    LOGT << "--" << __LINE__ << "--" << ELOG;
+    deploy_handlers.generate_pom(server_url_, server_repository_, query_.group(), query_.name(), query_.version());
 
     piel::lib::CurlEasyClient<art::lib::ArtBaseApiDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
-    LOGT << "--" << __LINE__ << "--" << ELOG;
-
-    std::cout << "upload to here: " << deploy_handlers.gen_uri() << std::endl;
 
     if (!upload_client.perform())
     {
         LOGE << "Error on downloading file attempt!"        << ELOG;
         LOGE << upload_client.curl_error().presentation() << ELOG;
     }
-    LOGT << "--" << __LINE__ << "--" << ELOG;
 }
 
 } } // namespace piel::cmd

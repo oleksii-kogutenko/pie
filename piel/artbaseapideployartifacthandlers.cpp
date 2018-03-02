@@ -42,19 +42,35 @@ ArtBaseApiDeployArtifactHandlers::~ArtBaseApiDeployArtifactHandlers()
     LOGT << ELOG;
 }
 
+void ArtBaseApiDeployArtifactHandlers::generate_pom(const std::string& uri,
+                                                    const std::string& repo,
+                                                    const std::string& path,
+                                                    const std::string& name,
+                                                    const std::string& ver)
+{
+    set_url(uri);
+    set_repo(repo);
+    set_path(path);
+    set_name(name);
+    set_version(ver);
+    generate_pom();
+}
+
 void ArtBaseApiDeployArtifactHandlers::generate_pom()
 {
+    set_classifier(ArtBaseConstants::pom_classifier);
+
     std::stringstream os;
     pt::ptree tree_project;
     pt::ptree tree;
 
-    tree_project.put("modelVersion", "4.0.0");
-    tree_project.put("groupId", ArtBaseApiSendlerHandlers::get_path());
-    tree_project.put("artifactId", get_name());
-    tree_project.put("version", get_version());
-    tree_project.put("packaging", "pom");
+    tree_project.put(ArtBaseConstants::pom_modelVersion, ArtBaseConstants::pom_modelVersion_ver);
+    tree_project.put(ArtBaseConstants::pom_groupId, ArtBaseApiSendlerHandlers::get_path());
+    tree_project.put(ArtBaseConstants::pom_artifactId, get_name());
+    tree_project.put(ArtBaseConstants::pom_version, get_version());
+    tree_project.put(ArtBaseConstants::pom_packaging, ArtBaseConstants::pom_packaging_pack);
 
-    tree.add_child("project", tree_project);
+    tree.add_child(ArtBaseConstants::pom_project, tree_project);
 
     pt::write_xml(os, tree);
 
@@ -94,11 +110,7 @@ void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
 
     ss << file_size;
     update_attributes(ArtBaseConstants::size, ss.str());
-    update_attributes(ArtBaseConstants::mem_type, "application/text");
-
-    LOGT  << __PRETTY_FUNCTION__ << fname << " file_size_:" << file_size << ELOG;
-    LOGT  << __PRETTY_FUNCTION__ << fname << " md5:" << str_digests_[piel::lib::Md5::t::name()] << ELOG;
-    LOGT  << __PRETTY_FUNCTION__ << fname << " sha1:" << str_digests_[piel::lib::Sha::t::name()] << ELOG;
+    update_attributes(ArtBaseConstants::mem_type, ArtBaseConstants::mem_type_text);
 }
 
 void ArtBaseApiDeployArtifactHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
@@ -136,7 +148,6 @@ std::string ArtBaseApiDeployArtifactHandlers::get_path()
     std::vector<std::string> name_ext;
     boost::split(name_ext, classifier, boost::is_any_of("."));
 
-    //if (classifier != ".pom") p.append("-");
     if (name_ext[0].size()) p.append("-");
 
     p.append(classifier);

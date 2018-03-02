@@ -17,6 +17,18 @@ struct ArtBaseConstants {
     static const std::string checksums_sha1;
 
     static const std::string mem_type;
+    static const std::string mem_type_text;
+
+    static const std::string pom_modelVersion;
+    static const std::string pom_modelVersion_ver;
+    static const std::string pom_groupId;
+    static const std::string pom_artifactId;
+    static const std::string pom_version;
+    static const std::string pom_packaging;
+    static const std::string pom_packaging_pack;
+    static const std::string pom_project;
+
+    static const std::string pom_classifier;
 };
 
 } } // namespace art::lib

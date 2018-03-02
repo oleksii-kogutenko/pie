@@ -23,6 +23,7 @@ public:
 
     void file(const std::string& fname);
     void generate_pom();
+    void generate_pom(const std::string& uri, const std::string& repo, const std::string& path, const std::string& name, const std::string& ver);
 
     void set_name(const std::string& s) { name_ = s; }
     void set_version(const std::string& s) { version_ = s; }

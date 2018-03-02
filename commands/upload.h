@@ -54,7 +54,7 @@ public:
     const Upload* set_query(const art::lib::GavcQuery& query);
     const Upload* set_classifiers(const art::lib::ufs::UFSVector& classifiers);
 protected:
-    void push_pom();
+    void deploy_pom();
 private:
     std::string server_url_;
     std::string server_api_access_token_;
