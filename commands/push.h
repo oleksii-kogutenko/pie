@@ -31,6 +31,8 @@
 
 #include <workingcopycommand.h>
 #include <indexesdiff.h>
+#include <gavcquery.h>
+#include "uploadfilesspec.h"
 
 namespace piel { namespace cmd {
 
@@ -46,20 +48,18 @@ public:
 
     std::string operator()();
 
-    const Push* set_message(const std::string& message);
-
-protected:
-    piel::lib::IndexesDiff diff(const piel::lib::TreeIndex::Ptr& current_index) const;
+    const Push* set_server_url(const std::string& url);
+    const Push* set_server_api_access_token(const std::string& token);
+    const Push* set_server_repository(const std::string& repo);
+    const Push* set_query(const art::lib::GavcQuery& query);
+    const Push* set_classifiers(const art::lib::ufs::UFSVector& classifiers);
 
 private:
-    std::string message_;
-};
-
-struct PredefinedConfigs {
-    static piel::lib::Properties::DefaultFromEnv author;
-    static piel::lib::Properties::DefaultFromEnv email;
-    static piel::lib::Properties::DefaultFromEnv commiter;
-    static piel::lib::Properties::DefaultFromEnv commiter_email;
+    std::string server_url_;
+    std::string server_api_access_token_;
+    std::string server_repository_;
+    art::lib::GavcQuery query_;
+    art::lib::ufs::UFSVector classifier_vector_;
 };
 
 } } // namespace piel::cmd

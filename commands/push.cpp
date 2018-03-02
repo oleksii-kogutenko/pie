@@ -29,17 +29,19 @@
 #include <push.h>
 #include <logging.h>
 #include <fsindexer.h>
+#include <artbaseapideployartifacthandlers.h>
+
+namespace al = art::lib;
 
 namespace piel { namespace cmd {
 
-/*static*/ piel::lib::Properties::DefaultFromEnv PredefinedConfigs::author =
-        piel::lib::Properties::Property("author",         "unknown").default_from_env("PIE_AUTHOR");
-
-/*static*/ piel::lib::Properties::DefaultFromEnv PredefinedConfigs::email =
-        piel::lib::Properties::Property("email",          "unknown").default_from_env("PIE_EMAIL");
-
 Push::Push(const piel::lib::WorkingCopy::Ptr& working_copy)
     : WorkingCopyCommand(working_copy)
+    , server_url_()
+    , server_api_access_token_()
+    , server_repository_()
+    , query_()
+    , classifier_vector_()
 {
 }
 
@@ -47,20 +49,39 @@ Push::~Push()
 {
 }
 
-const Push* Push::set_message(const std::string& message)
+const Push* Push::set_server_url(const std::string& url)
 {
-    message_ = message;
+    server_url_ = url;
     return this;
 }
 
-piel::lib::IndexesDiff Push::diff(const piel::lib::TreeIndex::Ptr& current_index) const
+const Push* Push::set_server_api_access_token(const std::string& token)
 {
-    LOGT << "Calculate diff " << working_copy()->current_tree_state()->self().id().string() << " <-> CDIR" << ELOG;
-    return piel::lib::IndexesDiff::diff(working_copy()->current_tree_state(), current_index);
+    server_api_access_token_ = token;
+    return this;
+}
+
+const Push* Push::set_server_repository(const std::string& repo)
+{
+    server_repository_ = repo;
+    return this;
+}
+
+const Push* Push::set_query(const art::lib::GavcQuery &query)
+{
+    query_ = query;
+    return this;
+}
+
+const Push* Push::set_classifiers(const art::lib::ufs::UFSVector& classifiers)
+{
+    classifier_vector_ = classifiers;
+    return this;
 }
 
 std::string Push::operator()()
 {
+    /*
     piel::lib::IObjectsStorage::Ptr ls  = working_copy()->local_storage();
     piel::lib::TreeIndex::Ptr current_index  = working_copy()->working_dir_state();
 
@@ -90,18 +111,41 @@ std::string Push::operator()()
         current_index->set_parent(reference_index->self());
     }
 
-    // Fill from config
-    current_index->set_author_(         working_copy()->config().get(PredefinedConfigs::author).value());
-    current_index->set_email_(          working_copy()->config().get(PredefinedConfigs::email).value());
-
-    // Set message
-    current_index->set_message_(message_);
-
     // Put changes into local storage
     ls->put(current_index->assets());
     ls->update_reference(piel::lib::refs::Ref(working_copy()->current_tree_name(), current_index->self()));
 
     working_copy()->setup_current_tree(working_copy()->current_tree_name(), current_index);
+    */
+    LOGT << "list:" << al::ufs::to_string(classifier_vector_) << ELOG;
+    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it) {
+        LOGT << "element:" << al::ufs::to_string(*it) << ELOG;
+
+        art::lib::ArtBaseApiDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+        deploy_handlers.set_url(server_url_);
+        deploy_handlers.set_repo(server_repository_);
+        deploy_handlers.set_path(query_.group());
+        deploy_handlers.set_name(query_.name());
+        deploy_handlers.set_version(query_.version());
+        deploy_handlers.set_classifier(al::ufs::to_classifier(*it));
+        deploy_handlers.file(it->file_name);
+
+        LOGT << "--" << __LINE__ << "--" << ELOG;
+
+        piel::lib::CurlEasyClient<art::lib::ArtBaseApiDeployArtifactHandlers> push_client(deploy_handlers.gen_uri(), &deploy_handlers);
+        LOGT << "--" << __LINE__ << "--" << ELOG;
+
+        std::cout << "upload to here: " << deploy_handlers.gen_uri() << std::endl;
+
+        if (!push_client.perform())
+        {
+            LOGE << "Error on downloading file attempt!"        << ELOG;
+            LOGE << push_client.curl_error().presentation() << ELOG;
+        }
+        LOGT << "--" << __LINE__ << "--" << ELOG;
+
+    }
+
     return working_copy()->current_tree_state()->self().id().string();
 }
 

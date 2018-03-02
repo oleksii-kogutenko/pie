@@ -33,33 +33,25 @@
 #include <gavcquery.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
-#include <vector>
+#include "uploadfilesspec.h"
+#include <workingcopy.h>
 
 namespace pie { namespace app {
 
 class PushCommand: public ICommand
 {
-    typedef std::vector<std::string> StringVector;
 public:
     PushCommand(Application *app, int argc, char **argv);
     virtual ~PushCommand();
 
     virtual int perform();
-
-    bool have_to_download_results() const { return have_to_download_results_; }
-
 protected:
     bool parse_arguments();
     void show_command_help_message(const boost::program_options::options_description& desc);
-    std::string create_url(const std::string& version_to_query) const;
-    void on_object(boost::property_tree::ptree::value_type obj);
     bool get_from_env(boost::program_options::variables_map& vm,
                       const std::string& opt_name,
                       const std::string& env_var,
                       std::string& var);
-
-    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
-
 private:
     int argc_;
     char **argv_;
@@ -70,11 +62,9 @@ private:
 
     art::lib::GavcQuery query_;
 
-    bool have_to_download_results_;
+    art::lib::ufs::UFSVector classifier_vector_;
 
-    std::string  classifier_vector_str_;
-    StringVector classifier_vector_;
-
+    piel::lib::WorkingCopy::Ptr working_copy_;
 };
 
 } } // namespace pie::app

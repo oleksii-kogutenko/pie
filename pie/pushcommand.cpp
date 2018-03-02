@@ -30,9 +30,6 @@
 #include <cstdlib>
 #include <pushcommand.h>
 #include <push.h>
-#include <artbaseapideployartifacthandlers.h>
-
-#include <artbasedownloadhandlers.h>
 
 #include <artgavchandlers.h>
 #include <logging.h>
@@ -47,6 +44,7 @@ namespace pie { namespace app {
 
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
+namespace al = art::lib;
 
 PushCommand::PushCommand(Application *app, int argc, char **argv)
     : ICommand(app)
@@ -56,7 +54,6 @@ PushCommand::PushCommand(Application *app, int argc, char **argv)
     , server_api_access_token_()
     , server_repository_()
     , query_()
-    , have_to_download_results_(false)
     , classifier_vector_()
 {
 }
@@ -96,11 +93,13 @@ void PushCommand::show_command_help_message(const po::options_description& desc)
 bool PushCommand::parse_arguments()
 {
     po::options_description desc("Push options");
+    std::string  classifiers_str;
+
     desc.add_options()
         ("token,t",         po::value<std::string>(&server_api_access_token_),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
-        ("filelist,f",      po::value<std::string>(&classifier_vector_str_)->required(),    "List of files to upload (required). Use as: file1,file2,...")
+        ("filelist,f",      po::value<std::string>(&classifiers_str)->required(),    "List of files to upload (required). Use as: classifier1:file1,classifier2:file2,...")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -134,7 +133,7 @@ bool PushCommand::parse_arguments()
         int version;
         version = boost::lexical_cast<int>(query_.version());
     }
-    catch(boost::bad_lexical_cast& e)
+    catch(boost::bad_lexical_cast&)
     {
         std::cout << "'" << query_.version() << "' Version must be numeric value" << std::endl;
         return false;
@@ -155,173 +154,27 @@ bool PushCommand::parse_arguments()
     get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              server_url_);
     get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       server_repository_);
 
-    // Gen file list
-    LOGT << "classifier_vector_str_:" << classifier_vector_str_ << ELOG;
-    boost::split(classifier_vector_, classifier_vector_str_, boost::is_any_of(","));
-
-    for (StringVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it) {
-        LOGT << "classifier_vector_:" << (*it) << ELOG;
-    }
-
     if (!get_env_flag) {
         show_command_help_message(desc);
         return false;
     }
 
-    //have_to_download_results_ = vm.count("download");
+    // Gen file list
+    LOGT << "classifiers_str:" << classifiers_str << ELOG;
+
+    al::UploadFileSpec spec;
+
+    boost::optional<al::UploadFileSpec> result_parse = spec.parse(classifiers_str);
+    if (result_parse)
+    {
+        classifier_vector_ = result_parse->get_data();
+    } else {
+        std::cout << "Wrong parse <filelist> argument!" << std::endl;
+        show_command_help_message(desc);
+        return false;
+    }
 
     return true;
-}
-
-std::string PushCommand::create_url(const std::string& version_to_query) const
-{
-    std::string url = server_url_;
-    url.append("/api/search/gavc");
-    url.append("?r=").append(server_repository_);
-    url.append("&g=").append(query_.group());
-    url.append("&a=").append(query_.name());
-    if (!version_to_query.empty()) {
-        url.append("&v=").append(version_to_query);
-    }
-    if (!query_.classifier().empty()) {
-        url.append("&c=").append(query_.classifier());
-    }
-    return url;
-}
-
-struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallback
-{
-    BeforeOutputCallback(const boost::filesystem::path& object_path): dest_(), object_path_(object_path) {}
-    virtual ~BeforeOutputCallback() {}
-
-    virtual bool callback(art::lib::ArtBaseApiHandlers *handlers)
-    {
-        LOGT << "Output path: " << object_path_.generic_string() << ELOG;
-
-        dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(object_path_.generic_string().c_str()));
-
-        dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
-
-        return true;
-    }
-private:
-    boost::shared_ptr<std::ofstream> dest_;
-    boost::filesystem::path object_path_;
-};
-
-std::map<std::string,std::string> PushCommand::get_server_checksums(const pt::ptree& obj_tree, const std::string& section) const
-{
-    std::map<std::string,std::string> result;
-
-    pt::ptree checksums = obj_tree.get_child(section);
-
-    boost::optional<std::string> op_sha1    = pt::find_value(checksums, pt::FindPropertyHelper("sha1"));
-    if (op_sha1)
-    {
-        result["sha1"] = *op_sha1;
-        LOGT << section << " sha1: " << *op_sha1 << ELOG;
-    }
-
-    boost::optional<std::string> op_sha256  = pt::find_value(checksums, pt::FindPropertyHelper("sha256"));
-    if (op_sha256)
-    {
-        result["sha256"] = *op_sha256;
-        LOGT << section << " sha256: " << *op_sha256 << ELOG;
-    }
-
-    boost::optional<std::string> op_md5     = pt::find_value(checksums, pt::FindPropertyHelper("md5"));
-    if (op_md5)
-    {
-        result["md5"] = *op_md5;
-        LOGT << section << " md5: " << *op_md5 << ELOG;
-    }
-
-    return result;
-}
-
-void PushCommand::on_object(pt::ptree::value_type obj)
-{
-    boost::optional<std::string> op_download_uri = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
-    if (!op_download_uri)
-    {
-        LOGF << "Can't find downloadUri property!" << ELOG;
-        return;
-    }
-
-    boost::optional<std::string> op_path = pt::find_value(obj.second, pt::FindPropertyHelper("path"));
-    if (!op_path)
-    {
-        LOGF << "Can't find path property!" << ELOG;
-        return;
-    }
-
-    std::string download_uri = *op_download_uri;
-    LOGT << "download_uri: " << download_uri << ELOG;
-
-    if (have_to_download_results_) {
-
-        boost::filesystem::path path(*op_path);
-        LOGT << "path: " << path.generic_string() << ELOG;
-        LOGT << "filename: " << path.filename()   << ELOG;
-
-        boost::filesystem::path object_path(path.filename());
-        LOGT << "object path: " << object_path.generic_string() << ELOG;
-
-        std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
-        //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
-
-        bool do_download = true;
-        if (boost::filesystem::exists(object_path))
-        {
-            std::ifstream is(object_path.generic_string().c_str());
-
-            piel::lib::ChecksumsDigestBuilder digest_builder;
-            piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
-                    digest_builder.str_digests_for(is);
-
-            LOGT   << "Sha256 server: "    << server_checksums["sha256"]
-                    << " local: "     << str_digests[piel::lib::Sha256::t::name()] << ELOG;
-            LOGT   << "Sha1 server: "      << server_checksums["sha1"]
-                    << " local: "     << str_digests[piel::lib::Sha::t::name()] << ELOG;
-            LOGT   << "Md5 server: "       << server_checksums["md5"]
-                    << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
-
-            do_download = !(  server_checksums["sha256"] == str_digests[piel::lib::Sha256::t::name()]
-                           && server_checksums["sha1"]   == str_digests[piel::lib::Sha::t::name()]
-                           && server_checksums["md5"]    == str_digests[piel::lib::Md5::t::name()]
-                           );
-        }
-
-        if (do_download)
-        {
-            LOGT << "Download/Update object." << ELOG;
-
-            art::lib::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
-
-            BeforeOutputCallback before_output(object_path);
-            download_handlers.set_id(object_path.filename().c_str());
-            download_handlers.set_before_output_callback(&before_output);
-
-            piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
-
-            std::cout << "Downloading file from: " << download_uri << std::endl;
-
-            if (!download_client.perform())
-            {
-                LOGE << "Error on downloading file attempt!"        << ELOG;
-                LOGE << download_client.curl_error().presentation() << ELOG;
-            }
-        }
-        else
-        {
-            LOGT << "Object already exists." << ELOG;
-        }
-
-    } else {
-
-        std::cout << "Download url: " << download_uri << std::endl;
-
-    }
 }
 
 /*virtual*/ int PushCommand::perform()
@@ -332,87 +185,36 @@ void PushCommand::on_object(pt::ptree::value_type obj)
         return result;
     }
 
-    for (StringVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it) {
-        LOGT << "classifier_vector_:" << (*it) << ELOG;
-
-        art::lib::ArtBaseApiDeployArtifactHandlers deploy_handlers(server_api_access_token_);
-        deploy_handlers.set_url(server_url_);
-        deploy_handlers.set_repo(server_repository_);
-        deploy_handlers.set_path(query_.group());
-        deploy_handlers.set_group(query_.name());
-        deploy_handlers.set_version(query_.version());
-        deploy_handlers.set_classifier((*it));
-        deploy_handlers.file((*it));
-
-        LOGT << "--" << __LINE__ << "--" << ELOG;
-
-        piel::lib::CurlEasyClient<art::lib::ArtBaseApiDeployArtifactHandlers> art1_client(deploy_handlers.gen_uri(), &deploy_handlers);
-        LOGT << "--" << __LINE__ << "--" << ELOG;
-
-        std::cout << "upload to here: " << deploy_handlers.gen_uri() << std::endl;
-
-        if (!art1_client.perform())
-        {
-            LOGE << "Error on downloading file attempt!"        << ELOG;
-            LOGE << art1_client.curl_error().presentation() << ELOG;
-        }
-        LOGT << "--" << __LINE__ << "--" << ELOG;
-
-    }
-    return result;
-
-    // Get maven metadata
-    art::lib::ArtGavcHandlers download_metadata_handlers(server_api_access_token_);
-    piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> get_metadata_client(
-        query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
-
-    if (!get_metadata_client.perform())
-    {
-        LOGE << "Error on requesting maven metadata."           << ELOG;
-        LOGE << get_metadata_client.curl_error().presentation() << ELOG;
-        return result;
-    }
-
-    // Try to parse server response.
-    boost::optional<art::lib::MavenMetadata> metadata_op = boost::none;
     try
     {
-        metadata_op = art::lib::MavenMetadata::parse(download_metadata_handlers.responce_stream());
+        working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
+
+        piel::cmd::Push push(working_copy_);
+
+        push.set_server_url(server_url_);
+        push.set_server_api_access_token(server_api_access_token_);
+        push.set_server_repository(server_repository_);
+        push.set_query(query_);
+        push.set_classifiers(classifier_vector_);
+
+        std::string hash = push();
+        std::cout << working_copy_->current_tree_name() << ":" << hash << std::endl;
     }
-    catch (...)
+    catch (const piel::lib::errors::attach_to_non_working_copy& e)
     {
-        LOGE << "Error on parsing maven metadata. Server response has non expected format." << ELOG;
+        std::cerr << "Attempt to perform operation outside of working copy!" << std::endl;
+        return -1;
     }
-
-    if (!metadata_op) {
-        LOGE << "Can't retrieve maven metadata!" << ELOG;
-        return result;
-    }
-
-    art::lib::MavenMetadata metadata = *metadata_op;
-
-    std::vector<std::string> versions_to_process = metadata.versions_for(query_);
-
-    for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
+    catch (const piel::cmd::errors::nothing_to_push& e)
     {
-        LOGT << "Process version: " << *i << ELOG;
+        std::cerr << "No changes!" << std::endl;
+        return -1;
+    }
 
-        art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
-        piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);
-
-        if (!client.perform())
-        {
-            LOGE << "Error on processing version: " << *i << "!"    << ELOG;
-            LOGE << client.curl_error().presentation()              << ELOG;
-            return result;
-        }
-
-        // Create a root
-        pt::ptree root;
-
-        // Load the json file into this ptree
-        pt::read_json(api_handlers.responce_stream(), root);
-        pt::each(root.get_child("results"), boost::bind(&PushCommand::on_object, this, _1));
+    if (!working_copy_->is_valid())
+    {
+        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
+        return -1;
     }
 
     result = 0;
