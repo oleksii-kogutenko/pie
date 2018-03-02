@@ -9,6 +9,11 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 include_directories(${Boost_INCLUDE_DIR})
 
 #############################################################
+add_executable(uploadfilesspecific_test uploadfilesspecific_test.cpp)
+target_link_libraries(uploadfilesspecific_test ${Piel_LIBRARIES})
+add_test (NAME UploadFilesSpecificTest COMMAND uploadfilesspecific_test)
+
+#############################################################
 add_executable(outputstream_test outputstream_test.cpp)
 target_link_libraries(outputstream_test ${Piel_LIBRARIES})
 add_test (NAME OutputStreamTests COMMAND outputstream_test)
