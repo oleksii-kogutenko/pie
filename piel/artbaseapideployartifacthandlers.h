@@ -23,9 +23,6 @@ public:
 
     void file(const std::string& fname);
 
-    void sha1(const std::string& sha1);
-    void md5(const std::string& md5);
-
     void set_name(const std::string& s) { name_ = s; }
     void set_version(const std::string& s) { version_ = s; }
     void set_classifier(const std::string& s) { classifier_ = s; }
@@ -36,11 +33,6 @@ public:
 private:
     StreamsSequencePartitionallyOutputHelper uploader_;
     piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
-
-    size_t        file_size_;
-    size_t        file_send_size_;
-    std::string   sha1_;
-    std::string   md5_;
 
     std::string   name_;
     std::string   version_;

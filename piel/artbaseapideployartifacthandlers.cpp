@@ -21,7 +21,6 @@ ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::st
     : ArtBaseApiSendlerHandlers(api_token)
     , uploader_()
     , str_digests_()
-    , file_send_size_(0)
 {
     LOGT << ELOG;
 }
@@ -34,7 +33,6 @@ ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::st
     : ArtBaseApiSendlerHandlers(api_token, url, repo, path)
     , uploader_()
     , str_digests_()
-    , file_send_size_(0)
 {
     LOGT << ELOG;
     file(fname);
@@ -58,7 +56,7 @@ void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
         return;
     }
     //file_size_ = boost::numeric_cast<size_t>(in.tellg());
-    file_size_ = in.tellg();
+    size_t file_size = in.tellg();
 
     in.seekg(0);
 
@@ -71,12 +69,13 @@ void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
 
     std::stringstream ss;
 
-    ss << file_size_;
-    LOGT  << __PRETTY_FUNCTION__ << fname << " file_size_:" << file_size_ << ELOG;
-    LOGT  << __PRETTY_FUNCTION__ << fname << " md5:" << str_digests_[piel::lib::Md5::t::name()] << ELOG;
-    LOGT  << __PRETTY_FUNCTION__ << fname << " sha1:" << str_digests_[piel::lib::Sha::t::name()] << ELOG;
+    ss << file_size;
     update_attributes(ArtBaseConstants::size, ss.str());
     update_attributes(ArtBaseConstants::mem_type, "application/text");
+
+    LOGT  << __PRETTY_FUNCTION__ << fname << " file_size_:" << file_size << ELOG;
+    LOGT  << __PRETTY_FUNCTION__ << fname << " md5:" << str_digests_[piel::lib::Md5::t::name()] << ELOG;
+    LOGT  << __PRETTY_FUNCTION__ << fname << " sha1:" << str_digests_[piel::lib::Sha::t::name()] << ELOG;
 }
 
 void ArtBaseApiDeployArtifactHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
