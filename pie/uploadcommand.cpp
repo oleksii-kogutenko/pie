@@ -40,8 +40,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <vector>
-
 namespace pie { namespace app {
 
 namespace pt = boost::property_tree;
@@ -179,7 +177,7 @@ bool UploadCommand::parse_arguments()
     }
 
     // Gen file list
-    LOGT << "classifier_vector_str_:" << classifiers_str << ELOG;
+    LOGT << "classifiers_str:" << classifiers_str << ELOG;
 
     al::UploadFileSpec spec;
 

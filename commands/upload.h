@@ -32,7 +32,6 @@
 #include <command.h>
 #include <indexesdiff.h>
 #include <gavcquery.h>
-#include <map>
 #include "uploadfilesspec.h"
 
 namespace piel { namespace cmd {

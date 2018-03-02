@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(art_test_deploy_artifact_1)
     deploy_handlers.set_url(server_url);
     deploy_handlers.set_repo(server_repository);
     deploy_handlers.set_path(path_1);
-    deploy_handlers.set_group(group_1);
+    deploy_handlers.set_name(group_1);
     deploy_handlers.set_version(version_1);
     deploy_handlers.set_classifier(classifier_1_1);
     deploy_handlers.file(classifier_1_1_fn);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(art_test_deploy_artifact_1)
     deploy_handlers2.set_repo(server_repository);
     deploy_handlers2.set_path(path_1);
 
-    deploy_handlers2.set_group(group_1);
+    deploy_handlers2.set_name(group_1);
     deploy_handlers2.set_version(version_1);
     deploy_handlers2.set_classifier(classifier_1_2);
 

@@ -47,6 +47,11 @@ struct files_spec_data {
 };
 
 typedef std::vector<ufs::files_spec_data> UFSVector;
+
+std::string to_string(const files_spec_data&);
+std::string to_string(const UFSVector&);
+std::string to_classifier(const files_spec_data&);
+
 } //namespace ufs
 
 class UploadFileSpec {

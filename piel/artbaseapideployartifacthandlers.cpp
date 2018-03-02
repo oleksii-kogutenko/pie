@@ -7,6 +7,7 @@
 #include <boost_filesystem_ext.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace pt = boost::property_tree;
 
@@ -104,13 +105,20 @@ std::string ArtBaseApiDeployArtifactHandlers::get_path()
 {
     std::string p = ArtBaseApiSendlerHandlers::get_path();
     p.append(ArtBaseConstants::uri_delimiter)
-            .append(get_group()).append(ArtBaseConstants::uri_delimiter)
+            .append(get_name()).append(ArtBaseConstants::uri_delimiter)
             .append(get_version()).append(ArtBaseConstants::uri_delimiter)
-            .append(get_group()).append("-")
+            .append(get_name()).append("-")
             .append(get_version());
-    if (get_classifier() != ".pom") p.append("-");
-    p.append(get_classifier());
-    LOGT << __PRETTY_FUNCTION__ << p << ELOG;
+
+    std::string classifier = get_classifier();
+    std::vector<std::string> name_ext;
+    boost::split(name_ext, classifier, boost::is_any_of("."));
+
+    //if (classifier != ".pom") p.append("-");
+    if (name_ext[0].size()) p.append("-");
+
+    p.append(classifier);
+    LOGT <<  p << ELOG;
     return p;
 }
 

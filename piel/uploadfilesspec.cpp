@@ -109,6 +109,57 @@ namespace ufs {
         qi::rule<Iterator, UFSVector(), ascii::space_type>  _fsdv;    //!< Consumer is gavc_data.
     };
 
+    std::string to_string(const files_spec_data& it)
+    {
+        std::ostringstream result;
+        result << "[";
+        if (!it.classifier.empty())
+        {
+            result << it.classifier;
+        }
+        if (!it.extension.empty())
+        {
+            result << ufs::UFSConstants::extension_prefix;
+            result << it.extension;
+        }
+        if (!it.file_name.empty())
+        {
+            result << ufs::UFSConstants::delimiter;
+            result << it.file_name;
+        }
+        result << "]";
+
+        return  result.str();
+    }
+
+    std::string to_string(const UFSVector& data_)
+    {
+        std::ostringstream result;
+        for (ufs::UFSVector::const_iterator it = data_.begin(), end=data_.end(); it != end; ++it) {
+            if (it != data_.begin()) result << ufs::UFSConstants::vector_delimiter;
+            result << to_string(*it);
+        }
+
+        LOGT << result.str() << ELOG;
+
+        return result.str();
+    }
+
+    std::string to_classifier(const files_spec_data& it)
+    {
+        std::ostringstream result;
+        if (!it.classifier.empty())
+        {
+            result << it.classifier;
+        }
+        if (!it.extension.empty())
+        {
+            result << ufs::UFSConstants::extension_prefix;
+            result << it.extension;
+        }
+
+        return  result.str();
+    }
 } // namespace gavc
 
 UploadFileSpec::UploadFileSpec()
@@ -147,30 +198,7 @@ boost::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& gavc_st
 
 std::string UploadFileSpec::to_string() const
 {
-	std::ostringstream result;
-    for (ufs::UFSVector::const_iterator it = data_.begin(), end=data_.end(); it != end; ++it) {
-        if (it != data_.begin()) result << ufs::UFSConstants::vector_delimiter;
-        result << "[";
-        if (!it->classifier.empty())
-        {
-            result << it->classifier;
-        }
-        if (!it->extension.empty())
-        {
-            result << ufs::UFSConstants::extension_prefix;
-            result << it->extension;
-        }
-        if (!it->file_name.empty())
-        {
-            result << ufs::UFSConstants::delimiter;
-            result << it->file_name;
-        }
-        result << "]";
-    }
-
-	LOGT << result.str() << ELOG;
-
-    return result.str();
+    return ufs::to_string(data_);
 }
 
 } } // namespace art::lib

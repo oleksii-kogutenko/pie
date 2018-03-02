@@ -85,6 +85,11 @@ public:
     boost::optional<std::vector<gavc::OpType> > query_version_ops() const;
     std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
 
+    GavcQuery& operator= (const GavcQuery& g) {
+        data_ = g.data_;
+        return *this;
+    }
+
 private:
     gavc::gavc_data data_;
 

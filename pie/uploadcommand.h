@@ -26,14 +26,13 @@
  *
  */
 
-#ifndef UPLOAD_H
-#define UPLOAD_H
+#ifndef UPLOADCOMMAND_H
+#define UPLOADCOMMAND_H
 
 #include <application.h>
 #include <gavcquery.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
-#include <map>
 #include "uploadfilesspec.h"
 
 namespace pie { namespace app {
@@ -68,4 +67,4 @@ private:
 
 } } // namespace pie::app
 
-#endif // UploadCommand_H
+#endif // UPLOADCOMMAND_H
