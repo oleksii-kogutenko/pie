@@ -17,7 +17,7 @@ public:
     virtual size_t handle_input(char *ptr, size_t size);
     virtual size_t handle_output(char *ptr, size_t size);
 
-    virtual void prepare_header();
+    virtual boost::shared_ptr<std::istream> prepare_header();
 
     virtual void set_url(const std::string& url);
     virtual void set_repo(const std::string& repo);
@@ -40,8 +40,9 @@ protected:
     std::string trim(const std::string& src);
 
 private:
+    boost::property_tree::ptree tree_;
     StreamsSequencePartitionallyOutputHelper uploader_;
-    Attributes  attributes_;
+    //Attributes  attributes_;
     size_t      send_size_;
     std::stringstream os_;
     Attributes  answer_;

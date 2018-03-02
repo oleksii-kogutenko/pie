@@ -18,8 +18,9 @@ namespace art { namespace lib {
 
 ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
+    , tree_()
     , uploader_()
-    , attributes_()
+    //, attributes_()
     , send_size_(0)
     , answer_()
     , url_()
@@ -33,8 +34,9 @@ ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_toke
 
 ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_token, const std::string& url, const std::string& repo, const std::string& path)
     : ArtBaseApiHandlers(api_token)
+    , tree_()
     , uploader_()
-    , attributes_()
+    //, attributes_()
     , send_size_(0)
     , answer_()
     , url_()
@@ -57,29 +59,23 @@ size_t ArtBaseApiSendlerHandlers::putto(char* ptr, size_t size)
     return uploader_.putto(ptr, size);
 }
 
-void ArtBaseApiSendlerHandlers::prepare_header()
+boost::shared_ptr<std::istream> ArtBaseApiSendlerHandlers::prepare_header()
 {
     std::stringstream os;
-    pt::ptree tree;
 
-    for (Attributes::const_iterator i = attributes_.begin(), end = attributes_.end(); i != end; ++i)
-    {
-        tree.insert(tree.end(), std::make_pair(i->first, pt::ptree(i->second)));
-    }
+    gen_additional_tree(tree_);
 
-    gen_additional_tree(tree);
-
-    pt::write_json(os, tree, false);
+    pt::write_json(os, tree_, false);
 
     boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
-    uploader_.push_input_stream(is);
+    return is;
 }
 
 size_t ArtBaseApiSendlerHandlers::handle_input(char *ptr, size_t size)
 {
     if (first_call_) {
         first_call_ = false;
-        prepare_header();
+        uploader_.push_input_stream(prepare_header());
     }
     return  uploader_.putto(ptr, size);
 }
@@ -109,19 +105,24 @@ std::string ArtBaseApiSendlerHandlers::trim(const std::string &src)
 
 void ArtBaseApiSendlerHandlers::update_attributes(const std::string& key, const std::string& value)
 {
-    attributes_[key] = value;
+    tree_.insert(tree_.end(), std::make_pair(key, pt::ptree(value)));
 }
 
 void ArtBaseApiSendlerHandlers::update_attributes(const std::string& key, const char* value)
 {
-    attributes_[key] = value;
+    tree_.insert(tree_.end(), std::make_pair(key, pt::ptree(value)));
 }
 
 void ArtBaseApiSendlerHandlers::set_url(const std::string& url)
 {
     LOGT << __PRETTY_FUNCTION__ << url << ELOG;
     url_ = trim(url);
-    attributes_[ArtBaseConstants::uri_attribute] = get_url();
+    std::string value = get_url();
+    if (!value.empty()) {
+        tree_.insert(tree_.end(), std::make_pair(
+                         ArtBaseConstants::uri_attribute,
+                         pt::ptree(value)));
+    }
 
     LOGT << "set_url:" << get_url() << ELOG;
 }
@@ -130,7 +131,12 @@ void ArtBaseApiSendlerHandlers::set_repo(const std::string& repo)
 {
     LOGT << __PRETTY_FUNCTION__ << repo << ELOG;
     repo_ = trim(repo);
-    attributes_[ArtBaseConstants::repo_attribute] = get_repo();
+    std::string value = get_repo();
+    if (!value.empty()) {
+        tree_.insert(tree_.end(), std::make_pair(
+                         ArtBaseConstants::repo_attribute,
+                         pt::ptree(value)));
+    }
 
     LOGT << "set_repo:" << get_repo() << ELOG;
 }
@@ -139,7 +145,12 @@ void ArtBaseApiSendlerHandlers::set_path(const std::string& path)
 {
     LOGT << __PRETTY_FUNCTION__ << path << ELOG;
     path_ = trim(path);
-    attributes_[ArtBaseConstants::path_attribute] = get_path();
+    std::string value = get_path();
+    if (!value.empty()) {
+        tree_.insert(tree_.end(), std::make_pair(
+                         ArtBaseConstants::path_attribute,
+                         pt::ptree(value)));
+    }
 
     LOGT << "set_path:" << get_path() << ELOG;
 }
