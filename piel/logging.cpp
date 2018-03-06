@@ -28,4 +28,8 @@
 
 #include <logging.h>
 
-/*static*/ piel::lib::logger_app::LogAppPtr Logging::log = piel::lib::logger_app::Logging::create_logger("pie");
+/*static*/ piel::lib::logger_app::LogApp *Logging::log()
+{
+    static piel::lib::logger_app::LogAppPtr res = piel::lib::logger_app::Logging::create_logger("pie");
+    return res.get();
+}
