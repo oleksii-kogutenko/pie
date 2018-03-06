@@ -288,7 +288,7 @@ struct ZipEntry {
 
     //! Destructor.
     ~ZipEntry() {
-        owner_.lock()->fclose(zip_file_);
+        owner_->fclose(zip_file_);
     }
 
     //! Read entry data.
@@ -296,7 +296,7 @@ struct ZipEntry {
     //! \param size Data buffer size.
     //! \return number of readed bytes.
     zip_int64_t read(void *buf, zip_int64_t size) const {
-        return owner_.lock()->fread(zip_file_, buf, size);
+        return owner_->fread(zip_file_, buf, size);
     }
 
 #ifdef ZIP_ENABLE_SEEK_TELL
@@ -318,13 +318,13 @@ struct ZipEntry {
     //! Zip entry stat.
     //! \return libzip zip_stat_t
     zip_stat_t stat() const {
-        return owner_.lock()->stat(name_);
+        return owner_->stat(name_);
     }
 
     //! Get entry extended attributes.
     //! \return ZipEntryAttribute struct with extenden attributes.
     ZipEntryAttributes attributes() const {
-        return owner_.lock()->file_get_external_attributes(name_);
+        return owner_->file_get_external_attributes(name_);
     }
 
     //! Get unix mode.
@@ -358,8 +358,8 @@ protected:
 
     //! Reopen file.
     void reopen() {
-        owner_.lock()->fclose(zip_file_);
-        zip_file_ = owner_.lock()->fopen(name_);
+        owner_->fclose(zip_file_);
+        zip_file_ = owner_->fopen(name_);
     }
 
     //! Constructor.
@@ -367,13 +367,15 @@ protected:
     //! \param name zip archive entry name.
     //! \param zip_file zip_file_t libzip handle.
     ZipEntry(ZipFile::WeakFilePtr owner, const std::string& name, zip_file_t* zip_file)
-        : owner_(owner)
+        : owner_(owner.lock())
         , name_(name)
         , zip_file_(zip_file)
-    {}
+    {
+
+    }
 
 private:
-    ZipFile::WeakFilePtr owner_;            //!< Reference to zip file.
+    ZipFile::FilePtr owner_;            //!< Reference to zip file.
     std::string name_;                  //!< Entry name.
     zip_file_t* zip_file_;              //!< Internal libzip handle.
 };
@@ -387,7 +389,6 @@ struct ZipSource {
             zip_source_free(source_);
         }
     }
-
 
 #ifdef ZIP_ENABLE_SEEK_TELL
     zip_int8_t seek(zip_int64_t offset, int whence) const {
@@ -414,13 +415,13 @@ struct ZipSource {
     //! Zip entry stat.
     //! \return libzip zip_stat_t
     zip_stat_t stat() const {
-        return owner_.lock()->stat(entry_name_);
+        return owner_->stat(entry_name_);
     }
 
     //! Get entry extended attributes.
     //! \return ZipEntryAttribute struct with extenden attributes.
     ZipEntryAttributes attributes() const {
-        return owner_.lock()->file_get_external_attributes(entry_name_);
+        return owner_->file_get_external_attributes(entry_name_);
     }
 
     //! Get unix mode.
@@ -464,18 +465,18 @@ protected:
     //! \param name zip archive entry name.
     //! \param zip_file zip_file_t libzip handle.
     ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, const std::string& file_name)
-        : owner_(owner)
+        : owner_(owner.lock())
         , entry_name_(entry_name)
         , file_name_(file_name)
         , to_be_freed_(true)
     {
         std::cout << __PRETTY_FUNCTION__ << "+++" << std::endl;
-        source_ = zip_source_file(owner_.lock()->zip_, file_name.c_str(), 0, -1);
+        source_ = zip_source_file(owner_->zip_, file_name.c_str(), 0, -1);
         std::cout << __PRETTY_FUNCTION__ << "---" << owner_.use_count() << " source_:" << source_ << std::endl;
     }
 
 private:
-    ZipFile::WeakFilePtr    owner_;            //!< Reference to zip file.
+    ZipFile::FilePtr        owner_;            //!< Reference to zip file.
     std::string             entry_name_;                  //!< Entry name.
     std::string             file_name_;                  //!< Entry name.
     zip_source_t            *source_;
