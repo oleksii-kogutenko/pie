@@ -39,15 +39,15 @@
 
 using namespace art::lib;
 
-const std::string server_url = "http://artifactory.developonbox.ru/artifactory";
-const std::string server_repository = "test-repo-local";
+const std::string server_url = "some.server.com";
+const std::string server_repository = "some-repo";
 const std::string create_directory_server_path = "test_dir";
 /*--------------*/
 const std::string deploy1 = "test_dir/dir1/1/dir1-1-file.txt";
 const std::string deploy2 = "test_dir/dir1/1/dir1-1.pom";
 
-const std::string deploy1_fname = "/home/okogutenko/projects/222/dir1-1-file.txt";
-const std::string deploy2_fname = "/home/okogutenko/projects/222/dir1-1.pom";
+const std::string deploy1_fname = "file.txt";
+const std::string deploy2_fname = "file.pom";
 
 const std::string deploy1_md5 = "1181c1834012245d785120e3505ed169";
 const std::string deploy2_md5 = "02153619a43e56474b66d11840004880";
@@ -61,11 +61,11 @@ const std::string group_1 = "dir2";
 const std::string version_1 = "4";
 
 const std::string classifier_1_1 = "file.txt";
-const std::string classifier_1_1_fn = "/home/okogutenko/projects/222/file.txt";
+const std::string classifier_1_1_fn = "file.txt";
 const std::string classifier_1_2 = ".pom";
-const std::string classifier_1_2_fn = "/home/okogutenko/projects/222/.pom";
+const std::string classifier_1_2_fn = ".pom";
 /*--------------*/
-const std::string server_api_access_token_="AKCp5ZmHGkTVwqqV8eUaMsdfCeoBM5wLjdEpSJbHSRCoehE64X7t8Fw8coASJyrosEaiK5YW7";
+const std::string server_api_access_token_="token";
 
 /*
 BOOST_AUTO_TEST_CASE(art_test_deploy_artifact_1)
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(art_test)
     LOGT << "MkDir test" << ELOG;
 
     art::lib::ArtCreateDirectoryHandlers mkdir_handlers(server_api_access_token_);
-    mkdir_handlers.set_url("http://artifactory.developonbox.ru/artifactory");
-    mkdir_handlers.set_repo("test-repo-local");
+    mkdir_handlers.set_url("url");
+    mkdir_handlers.set_repo("repo");
     mkdir_handlers.set_path("test_dir/dir3");
 
     piel::lib::CurlEasyClient<art::lib::ArtCreateDirectoryHandlers> mkdir_client(mkdir_handlers.gen_uri(), &mkdir_handlers);
