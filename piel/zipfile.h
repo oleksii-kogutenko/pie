@@ -470,9 +470,7 @@ protected:
         , file_name_(file_name)
         , to_be_freed_(true)
     {
-        std::cout << __PRETTY_FUNCTION__ << "+++" << std::endl;
         source_ = zip_source_file(owner_->zip_, file_name.c_str(), 0, -1);
-        std::cout << __PRETTY_FUNCTION__ << "---" << owner_.use_count() << " source_:" << source_ << std::endl;
     }
 
 private:
