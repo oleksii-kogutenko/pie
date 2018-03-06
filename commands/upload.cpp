@@ -85,11 +85,14 @@ const Upload* Upload::set_classifiers(const art::lib::ufs::UFSVector& classifier
 
 void Upload::operator()()
 {
-    LOGT << "list:" << al::ufs::to_string(classifier_vector_) << ELOG;
-    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it) {
-        LOGT << "element:" << al::ufs::to_string(*it) << ELOG;
+    bool no_errors = true;
 
+    LOGT << "Classifiers vector:" << al::ufs::to_string(classifier_vector_) << ELOG;
+
+    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end && no_errors; ++it) 
+    {
         art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+
         deploy_handlers.set_url(server_url_);
         deploy_handlers.set_repo(server_repository_);
         deploy_handlers.set_path(query_.group());
@@ -98,21 +101,21 @@ void Upload::operator()()
         deploy_handlers.set_classifier(al::ufs::to_classifier(*it));
         deploy_handlers.file(it->file_name);
 
-        LOGT << "--" << __LINE__ << "--" << ELOG;
-
         piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
-        LOGT << "--" << __LINE__ << "--" << ELOG;
 
-        std::cout << "upload to here: " << deploy_handlers.gen_uri() << std::endl;
+        LOGD << "Upload: " << al::ufs::to_string(*it) << " to: " << deploy_handlers.gen_uri() << ELOG;
 
-        if (!upload_client.perform())
+        if (!(no_errors &= upload_client.perform()))
         {
-            LOGE << "Error on downloading file attempt!"        << ELOG;
-            LOGE << upload_client.curl_error().presentation() << ELOG;
+            LOGE << "Error on upload file!"                     << ELOG;
+            LOGE << upload_client.curl_error().presentation()   << ELOG;
         }
-        LOGT << "--" << __LINE__ << "--" << ELOG;
     }
-    deploy_pom();
+
+    if (no_errors)
+    {
+        deploy_pom();
+    }
 }
 
 void Upload::deploy_pom()
@@ -122,10 +125,12 @@ void Upload::deploy_pom()
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
+    LOGD << "Upload pom to: " << deploy_handlers.gen_uri() << ELOG;
+
     if (!upload_client.perform())
     {
-        LOGE << "Error on downloading file attempt!"        << ELOG;
-        LOGE << upload_client.curl_error().presentation() << ELOG;
+        LOGE << "Error on upload pom!"                      << ELOG;
+        LOGE << upload_client.curl_error().presentation()   << ELOG;
     }
 }
 
