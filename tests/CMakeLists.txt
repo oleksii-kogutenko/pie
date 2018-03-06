@@ -9,9 +9,9 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 include_directories(${Boost_INCLUDE_DIR})
 
 #############################################################
-#add_executable(zip_test zip_tests.cpp)
-#target_link_libraries(zip_test ${Piel_LIBRARIES})
-#add_test (NAME ZipTest COMMAND zip_test)
+add_executable(zip_test zip_tests.cpp)
+target_link_libraries(zip_test ${Piel_LIBRARIES})
+add_test (NAME ZipTest COMMAND zip_test)
 
 #############################################################
 add_executable(uploadfilesspecific_test uploadfilesspecific_test.cpp)
