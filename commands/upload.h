@@ -38,6 +38,8 @@ namespace piel { namespace cmd {
 
 namespace errors {
     struct nothing_to_upload {};
+    struct file_upload_error {};
+    struct pom_upload_error {};
 };
 
 class Upload: public Command

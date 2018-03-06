@@ -225,7 +225,17 @@ bool UploadCommand::parse_arguments()
     }
     catch (const piel::cmd::errors::nothing_to_upload&)
     {
-        std::cerr << "No changes!" << std::endl;
+        std::cerr << "Nohing to upload!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::file_upload_error&)
+    {
+        std::cerr << "File upload error!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::pom_upload_error&)
+    {
+        std::cerr << "POM upload error!" << std::endl;
         return -1;
     }
 

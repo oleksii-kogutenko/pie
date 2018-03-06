@@ -89,6 +89,12 @@ void Upload::operator()()
 
     LOGT << "Classifiers vector:" << al::ufs::to_string(classifier_vector_) << ELOG;
 
+    if (classifier_vector_.empty())
+    {
+        LOGE << "Nothing to upload!"                     << ELOG;
+        throw errors::nothing_to_upload();
+    }
+
     for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end && no_errors; ++it) 
     {
         art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
@@ -109,6 +115,7 @@ void Upload::operator()()
         {
             LOGE << "Error on upload file!"                     << ELOG;
             LOGE << upload_client.curl_error().presentation()   << ELOG;
+            throw errors::file_upload_error();
         }
     }
 
@@ -131,6 +138,7 @@ void Upload::deploy_pom()
     {
         LOGE << "Error on upload pom!"                      << ELOG;
         LOGE << upload_client.curl_error().presentation()   << ELOG;
+        throw errors::pom_upload_error();
     }
 }
 
