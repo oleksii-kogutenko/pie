@@ -38,28 +38,6 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/include/qi.hpp>
 
-//! Versions based queries
-//
-//  '*' - all
-//  '+' - latest
-//  '-' - oldest
-//
-// prefix(+|-|*\.)+suffix
-//  - calculation from left to right
-//    (+|-|*\.)(+|-) == (+|-) (single element)
-//    (+|-|*\.)* == * (set)
-//
-// Pairs conversion matrix:
-//     -------------
-//     | + | - | * |
-// -----------------
-// | + | + | - | + |
-// -----------------
-// | - | - | - | - |
-// -----------------
-// | * | + | - | * |
-// -----------------
-
 BOOST_FUSION_ADAPT_STRUCT(
     art::lib::ufs::files_spec_data,
     (std::string, classifier)

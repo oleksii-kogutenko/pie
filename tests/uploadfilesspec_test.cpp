@@ -30,7 +30,7 @@
  *
  */
 
-#define BOOST_TEST_MODULE UploadFileSpecific
+#define BOOST_TEST_MODULE UploadFileSpec
 #include <boost/test/unit_test.hpp>
 
 #include <logging.h>
@@ -93,30 +93,28 @@ static CheckStringArray check_result2_2 = {
 static const std::string parse2_3 = "class2_3_1.ext2_3_1:"; /// Must fail!
 static const std::string parse2_4 = "";  /// Must fail!
 
-BOOST_AUTO_TEST_CASE(UploadFileSpecific_2)
+BOOST_AUTO_TEST_CASE(UploadFileSpec_2)
 {
-    LOGT << "UploadFileSpecific test 2" << ELOG;
-
-    UploadFileSpec spec;
+    LOGT << "UploadFileSpec test 2" << ELOG;
 
     LOGT << "test case -- 1 --" << ELOG;
-    boost::optional<UploadFileSpec> result1 = spec.parse(parse2_1);
+    boost::optional<UploadFileSpec> result1 = UploadFileSpec::parse(parse2_1);
     BOOST_CHECK(result1);
     LOGI << "1:" << result1->to_string() << ELOG;
     BOOST_CHECK(check_UploadFileSpec(*result1, check_result2_1));
 
     LOGT << "test case -- 2 --" << ELOG;
-    boost::optional<UploadFileSpec> result2 = spec.parse(parse2_2);
+    boost::optional<UploadFileSpec> result2 = UploadFileSpec::parse(parse2_2);
     BOOST_CHECK(result2);
     LOGI << "2:" << result2->to_string() << ELOG;
     BOOST_CHECK(check_UploadFileSpec(*result2, check_result2_2));
 
     LOGT << "test case -- 3 --" << ELOG;
-    boost::optional<UploadFileSpec> result3 = spec.parse(parse2_3);
+    boost::optional<UploadFileSpec> result3 = UploadFileSpec::parse(parse2_3);
     BOOST_CHECK(!result3);
 
     LOGT << "test case -- 4 --" << ELOG;
-    boost::optional<UploadFileSpec> result4 = spec.parse(parse2_4);
+    boost::optional<UploadFileSpec> result4 = UploadFileSpec::parse(parse2_4);
     BOOST_CHECK(!result4);
 
 }
