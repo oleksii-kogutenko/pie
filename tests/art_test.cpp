@@ -1,5 +1,9 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2017-2018
+ *
+ *  Dmytro Iakovliev daemondzk@gmail.com
+ *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +34,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <logging.h>
-#include <artbaseapideployartifacthandlers.h>
-#include <artbaseapicreatedirectoryhandlers.h>
+#include <artdeployartifacthandlers.h>
+#include <artcreatedirectoryhandlers.h>
 
 using namespace art::lib;
 
@@ -176,12 +180,12 @@ BOOST_AUTO_TEST_CASE(art_test)
 
     LOGT << "MkDir test" << ELOG;
 
-    art::lib::ArtBaseApiCreateDirectoryHandlers mkdir_handlers(server_api_access_token_);
+    art::lib::ArtCreateDirectoryHandlers mkdir_handlers(server_api_access_token_);
     mkdir_handlers.set_url("http://artifactory.developonbox.ru/artifactory");
     mkdir_handlers.set_repo("test-repo-local");
     mkdir_handlers.set_path("test_dir/dir3");
 
-    piel::lib::CurlEasyClient<art::lib::ArtBaseApiCreateDirectoryHandlers> mkdir_client(mkdir_handlers.gen_uri(), &mkdir_handlers);
+    piel::lib::CurlEasyClient<art::lib::ArtCreateDirectoryHandlers> mkdir_client(mkdir_handlers.gen_uri(), &mkdir_handlers);
 
     std::cout << "MkDir here: " << mkdir_handlers.gen_uri() << std::endl;
 

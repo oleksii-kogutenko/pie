@@ -1,5 +1,9 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2017-2018
+ *
+ *  Dmytro Iakovliev daemondzk@gmail.com
+ *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +17,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -29,7 +33,8 @@
 #include <push.h>
 #include <logging.h>
 #include <fsindexer.h>
-#include <artbaseapideployartifacthandlers.h>
+
+#include <artdeployartifacthandlers.h>
 
 namespace al = art::lib;
 
@@ -121,7 +126,7 @@ std::string Push::operator()()
     for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it) {
         LOGT << "element:" << al::ufs::to_string(*it) << ELOG;
 
-        art::lib::ArtBaseApiDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+        art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
         deploy_handlers.set_url(server_url_);
         deploy_handlers.set_repo(server_repository_);
         deploy_handlers.set_path(query_.group());
@@ -132,7 +137,7 @@ std::string Push::operator()()
 
         LOGT << "--" << __LINE__ << "--" << ELOG;
 
-        piel::lib::CurlEasyClient<art::lib::ArtBaseApiDeployArtifactHandlers> push_client(deploy_handlers.gen_uri(), &deploy_handlers);
+        piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> push_client(deploy_handlers.gen_uri(), &deploy_handlers);
         LOGT << "--" << __LINE__ << "--" << ELOG;
 
         std::cout << "upload to here: " << deploy_handlers.gen_uri() << std::endl;

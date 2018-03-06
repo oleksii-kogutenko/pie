@@ -30,38 +30,63 @@
  *
  */
 
-#ifndef STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
-#define STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#ifndef ARTBASEAPISENDLERHANDLERS_H
+#define ARTBASEAPISENDLERHANDLERS_H
 
-#include <boost/shared_ptr.hpp>
-#include <queue>
+#include <artbaseapihandlers.h>
+#include <boost_property_tree_ext.hpp>
+#include <streamssequencepartitionallyoutputhelper.h>
 
 namespace art { namespace lib {
 
-class StreamsSequencePartitionallyOutputHelper
+class ArtBaseDeployArtifactsHandlers : public ArtBaseApiHandlers
 {
-    typedef boost::shared_ptr<std::istream> ISPtr;
-    typedef std::queue<ISPtr> ISPtrQueue;
-public:
-    StreamsSequencePartitionallyOutputHelper();
-    ~StreamsSequencePartitionallyOutputHelper(){}
+    typedef std::map<std::string, std::string> Attributes;
 
-    /*boost::shared_ptr<std::istream> istream() const
-    {
-        return is_;
-    }*/
+public:
+    ArtBaseDeployArtifactsHandlers(const std::string& api_token);
+    ArtBaseDeployArtifactsHandlers(const std::string& api_token, const std::string& uri, const std::string& repo, const std::string& path);
+    virtual ~ArtBaseDeployArtifactsHandlers(){}
+
+    virtual size_t handle_input(char *ptr, size_t size);
+    virtual size_t handle_output(char *ptr, size_t size);
+
+    virtual boost::shared_ptr<std::istream> prepare_header();
+
+    virtual void set_url(const std::string& url);
+    virtual void set_repo(const std::string& repo);
+    virtual void set_path(const std::string& path);
+
+    virtual std::string get_url() {  return url_; }
+    virtual std::string get_repo() { return repo_; }
+    virtual std::string get_path() { return  path_; }
+
+    virtual std::string gen_uri();
+
+    virtual void gen_additional_tree(boost::property_tree::ptree &) {}
+
+    void update_attributes(const std::string& key, const std::string& value);
+    void update_attributes(const std::string& key, const char* value);
 
     void push_input_stream(boost::shared_ptr<std::istream> is);
-
     size_t putto(char* ptr, size_t size);
+
+protected:
+    std::string trim(const std::string& src);
+
 private:
-    bool next();
-private:
-    ISPtrQueue   is_queue_;
-    ISPtr       current_is_;
-    size_t      put_size_;
+    boost::property_tree::ptree tree_;
+    StreamsSequencePartitionallyOutputHelper uploader_;
+    size_t      send_size_;
+    std::stringstream os_;
+    Attributes  answer_;
+    std::string url_;
+    std::string repo_;
+    std::string path_;
+
+    bool    first_call_;
 };
 
 } } // namespace art::lib
 
-#endif // STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#endif // ARTBASEAPISENDLERHANDLERS_H

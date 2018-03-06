@@ -30,38 +30,23 @@
  *
  */
 
-#ifndef STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
-#define STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#ifndef ARTBASEAPICREATEDIRECTORYHANDLERS_H
+#define ARTBASEAPICREATEDIRECTORYHANDLERS_H
 
-#include <boost/shared_ptr.hpp>
-#include <queue>
+#include <artbasedeployartifactshandlers.h>
 
 namespace art { namespace lib {
 
-class StreamsSequencePartitionallyOutputHelper
+class ArtCreateDirectoryHandlers : public ArtBaseDeployArtifactsHandlers
 {
-    typedef boost::shared_ptr<std::istream> ISPtr;
-    typedef std::queue<ISPtr> ISPtrQueue;
 public:
-    StreamsSequencePartitionallyOutputHelper();
-    ~StreamsSequencePartitionallyOutputHelper(){}
+    ArtCreateDirectoryHandlers(const std::string& api_token);
+    ArtCreateDirectoryHandlers(const std::string& api_token, const std::string& uri, const std::string& repo, const std::string& path);
+    virtual ~ArtCreateDirectoryHandlers() {}
 
-    /*boost::shared_ptr<std::istream> istream() const
-    {
-        return is_;
-    }*/
-
-    void push_input_stream(boost::shared_ptr<std::istream> is);
-
-    size_t putto(char* ptr, size_t size);
-private:
-    bool next();
-private:
-    ISPtrQueue   is_queue_;
-    ISPtr       current_is_;
-    size_t      put_size_;
+    virtual std::string get_path();
 };
 
 } } // namespace art::lib
 
-#endif // STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#endif // ARTBASEAPICREATEDIRECTORYHANDLERS_H

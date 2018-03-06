@@ -1,4 +1,37 @@
-#include "artbaseapideployartifacthandlers.h"
+/*
+ * Copyright (c) 2017-2018
+ *
+ *  Dmytro Iakovliev daemondzk@gmail.com
+ *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the <organization> nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#include <artdeployartifacthandlers.h>
+
 #include "artbaseconstants.h"
 #include <cstring>
 #include <logging.h>
@@ -13,36 +46,36 @@
 namespace pt = boost::property_tree;
 
 //      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
-CURLH_T_(art::lib::ArtBaseApiDeployArtifactHandlers,\
+CURLH_T_(art::lib::ArtDeployArtifactHandlers,\
         true,             false,         true,           true,          false,          false);
 
 namespace art { namespace lib {
 
-ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::string& api_token)
-    : ArtBaseApiSendlerHandlers(api_token)
+ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const std::string& api_token)
+    : ArtBaseDeployArtifactsHandlers(api_token)
     , str_digests_()
 {
     LOGT << ELOG;
 }
 
-ArtBaseApiDeployArtifactHandlers::ArtBaseApiDeployArtifactHandlers(const std::string& api_token,
+ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const std::string& api_token,
                                                                    const std::string& url,
                                                                    const std::string& repo,
                                                                    const std::string& path,
                                                                    const std::string& fname)
-    : ArtBaseApiSendlerHandlers(api_token, url, repo, path)
+    : ArtBaseDeployArtifactsHandlers(api_token, url, repo, path)
     , str_digests_()
 {
     LOGT << ELOG;
     file(fname);
 }
 
-ArtBaseApiDeployArtifactHandlers::~ArtBaseApiDeployArtifactHandlers()
+ArtDeployArtifactHandlers::~ArtDeployArtifactHandlers()
 {
     LOGT << ELOG;
 }
 
-void ArtBaseApiDeployArtifactHandlers::generate_pom(const std::string& uri,
+void ArtDeployArtifactHandlers::generate_pom(const std::string& uri,
                                                     const std::string& repo,
                                                     const std::string& path,
                                                     const std::string& name,
@@ -56,7 +89,7 @@ void ArtBaseApiDeployArtifactHandlers::generate_pom(const std::string& uri,
     generate_pom();
 }
 
-void ArtBaseApiDeployArtifactHandlers::generate_pom()
+void ArtDeployArtifactHandlers::generate_pom()
 {
     set_classifier(ArtBaseConstants::pom_classifier);
 
@@ -65,7 +98,7 @@ void ArtBaseApiDeployArtifactHandlers::generate_pom()
     pt::ptree tree;
 
     tree_project.put(ArtBaseConstants::pom_modelVersion, ArtBaseConstants::pom_modelVersion_ver);
-    tree_project.put(ArtBaseConstants::pom_groupId, ArtBaseApiSendlerHandlers::get_path());
+    tree_project.put(ArtBaseConstants::pom_groupId, ArtBaseDeployArtifactsHandlers::get_path());
     tree_project.put(ArtBaseConstants::pom_artifactId, get_name());
     tree_project.put(ArtBaseConstants::pom_version, get_version());
     tree_project.put(ArtBaseConstants::pom_packaging, ArtBaseConstants::pom_packaging_pack);
@@ -82,7 +115,7 @@ void ArtBaseApiDeployArtifactHandlers::generate_pom()
     push_input_stream(is);
 }
 
-void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
+void ArtDeployArtifactHandlers::file(const std::string& fname)
 {
     LOGT << ELOG;
     boost::shared_ptr<std::istream> file_ptr(new std::ifstream(fname));
@@ -110,10 +143,10 @@ void ArtBaseApiDeployArtifactHandlers::file(const std::string& fname)
 
     ss << file_size;
     update_attributes(ArtBaseConstants::size, ss.str());
-    update_attributes(ArtBaseConstants::mem_type, ArtBaseConstants::mem_type_text);
+    update_attributes(ArtBaseConstants::mime_type, ArtBaseConstants::mime_type_text);
 }
 
-void ArtBaseApiDeployArtifactHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
+void ArtDeployArtifactHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
 {
     LOGT << ELOG;
     pt::ptree checksum;
@@ -128,16 +161,16 @@ void ArtBaseApiDeployArtifactHandlers::gen_additional_tree(boost::property_tree:
     tree.add_child(ArtBaseConstants::checksums, checksum);
 }
 
-size_t ArtBaseApiDeployArtifactHandlers::handle_input(char *ptr, size_t size)
+size_t ArtDeployArtifactHandlers::handle_input(char *ptr, size_t size)
 {
     LOGT << ELOG;
 
     return putto(ptr, size);
 }
 
-std::string ArtBaseApiDeployArtifactHandlers::get_path()
+std::string ArtDeployArtifactHandlers::get_path()
 {
-    std::string p = ArtBaseApiSendlerHandlers::get_path();
+    std::string p = ArtBaseDeployArtifactsHandlers::get_path();
     p.append(ArtBaseConstants::uri_delimiter)
             .append(get_name()).append(ArtBaseConstants::uri_delimiter)
             .append(get_version()).append(ArtBaseConstants::uri_delimiter)

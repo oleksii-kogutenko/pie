@@ -1,5 +1,9 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2017-2018
+ *
+ *  Dmytro Iakovliev daemondzk@gmail.com
+ *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

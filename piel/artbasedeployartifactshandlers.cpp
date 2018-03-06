@@ -1,5 +1,38 @@
-#include "artbaseapisendlerhandlers.h"
-#include "artbaseconstants.h"
+/*
+ * Copyright (c) 2017-2018
+ *
+ *  Dmytro Iakovliev daemondzk@gmail.com
+ *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the <organization> nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#include <artbasedeployartifactshandlers.h>
+
+#include <artbaseconstants.h>
 #include <cstring>
 #include <logging.h>
 
@@ -11,16 +44,15 @@
 namespace pt = boost::property_tree;
 
 //      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
-CURLH_T_(art::lib::ArtBaseApiSendlerHandlers,\
+CURLH_T_(art::lib::ArtBaseDeployArtifactsHandlers,\
         true,             false,         true,           true,          false,          false);
 
 namespace art { namespace lib {
 
-ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_token)
+ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
     , tree_()
     , uploader_()
-    //, attributes_()
     , send_size_(0)
     , answer_()
     , url_()
@@ -32,11 +64,10 @@ ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_toke
     LOGT << __PRETTY_FUNCTION__ << ELOG;
 }
 
-ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_token, const std::string& url, const std::string& repo, const std::string& path)
+ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string& api_token, const std::string& url, const std::string& repo, const std::string& path)
     : ArtBaseApiHandlers(api_token)
     , tree_()
     , uploader_()
-    //, attributes_()
     , send_size_(0)
     , answer_()
     , url_()
@@ -49,17 +80,17 @@ ArtBaseApiSendlerHandlers::ArtBaseApiSendlerHandlers(const std::string& api_toke
     set_path(path);
 }
 
-void ArtBaseApiSendlerHandlers::push_input_stream(boost::shared_ptr<std::istream> is)
+void ArtBaseDeployArtifactsHandlers::push_input_stream(boost::shared_ptr<std::istream> is)
 {
     uploader_.push_input_stream(is);
 }
 
-size_t ArtBaseApiSendlerHandlers::putto(char* ptr, size_t size)
+size_t ArtBaseDeployArtifactsHandlers::putto(char* ptr, size_t size)
 {
     return uploader_.putto(ptr, size);
 }
 
-boost::shared_ptr<std::istream> ArtBaseApiSendlerHandlers::prepare_header()
+boost::shared_ptr<std::istream> ArtBaseDeployArtifactsHandlers::prepare_header()
 {
     std::stringstream os;
 
@@ -71,7 +102,7 @@ boost::shared_ptr<std::istream> ArtBaseApiSendlerHandlers::prepare_header()
     return is;
 }
 
-size_t ArtBaseApiSendlerHandlers::handle_input(char *ptr, size_t size)
+size_t ArtBaseDeployArtifactsHandlers::handle_input(char *ptr, size_t size)
 {
     if (first_call_) {
         first_call_ = false;
@@ -80,7 +111,7 @@ size_t ArtBaseApiSendlerHandlers::handle_input(char *ptr, size_t size)
     return  uploader_.putto(ptr, size);
 }
 
-size_t ArtBaseApiSendlerHandlers::handle_output(char *ptr, size_t size)
+size_t ArtBaseDeployArtifactsHandlers::handle_output(char *ptr, size_t size)
 {
     std::stringstream read_os;
     pt::ptree tree;
@@ -96,24 +127,24 @@ size_t ArtBaseApiSendlerHandlers::handle_output(char *ptr, size_t size)
     return size;
 }
 
-std::string ArtBaseApiSendlerHandlers::trim(const std::string &src)
+std::string ArtBaseDeployArtifactsHandlers::trim(const std::string &src)
 {
     std::string dest = src;
     boost::algorithm::trim(dest);
     return dest;
 }
 
-void ArtBaseApiSendlerHandlers::update_attributes(const std::string& key, const std::string& value)
+void ArtBaseDeployArtifactsHandlers::update_attributes(const std::string& key, const std::string& value)
 {
     tree_.insert(tree_.end(), std::make_pair(key, pt::ptree(value)));
 }
 
-void ArtBaseApiSendlerHandlers::update_attributes(const std::string& key, const char* value)
+void ArtBaseDeployArtifactsHandlers::update_attributes(const std::string& key, const char* value)
 {
     tree_.insert(tree_.end(), std::make_pair(key, pt::ptree(value)));
 }
 
-void ArtBaseApiSendlerHandlers::set_url(const std::string& url)
+void ArtBaseDeployArtifactsHandlers::set_url(const std::string& url)
 {
     LOGT << __PRETTY_FUNCTION__ << url << ELOG;
     url_ = trim(url);
@@ -127,7 +158,7 @@ void ArtBaseApiSendlerHandlers::set_url(const std::string& url)
     LOGT << "set_url:" << get_url() << ELOG;
 }
 
-void ArtBaseApiSendlerHandlers::set_repo(const std::string& repo)
+void ArtBaseDeployArtifactsHandlers::set_repo(const std::string& repo)
 {
     LOGT << __PRETTY_FUNCTION__ << repo << ELOG;
     repo_ = trim(repo);
@@ -141,7 +172,7 @@ void ArtBaseApiSendlerHandlers::set_repo(const std::string& repo)
     LOGT << "set_repo:" << get_repo() << ELOG;
 }
 
-void ArtBaseApiSendlerHandlers::set_path(const std::string& path)
+void ArtBaseDeployArtifactsHandlers::set_path(const std::string& path)
 {
     LOGT << __PRETTY_FUNCTION__ << path << ELOG;
     path_ = trim(path);
@@ -156,7 +187,7 @@ void ArtBaseApiSendlerHandlers::set_path(const std::string& path)
 }
 
 
-std::string ArtBaseApiSendlerHandlers::gen_uri()
+std::string ArtBaseDeployArtifactsHandlers::gen_uri()
 {
     std::string ret_val = get_url();
 

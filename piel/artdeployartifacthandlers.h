@@ -30,38 +30,48 @@
  *
  */
 
-#ifndef STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
-#define STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#ifndef ARTBASEAPIDEPLOYARTIFACTHANDLERS_H
+#define ARTBASEAPIDEPLOYARTIFACTHANDLERS_H
 
-#include <boost/shared_ptr.hpp>
-#include <queue>
+#include <streamssequencepartitionallyoutputhelper.h>
+#include <checksumsdigestbuilder.hpp>
+
+#include <fstream>
+#include <artbasedeployartifactshandlers.h>
 
 namespace art { namespace lib {
 
-class StreamsSequencePartitionallyOutputHelper
+class ArtDeployArtifactHandlers : public ArtBaseDeployArtifactsHandlers
 {
-    typedef boost::shared_ptr<std::istream> ISPtr;
-    typedef std::queue<ISPtr> ISPtrQueue;
 public:
-    StreamsSequencePartitionallyOutputHelper();
-    ~StreamsSequencePartitionallyOutputHelper(){}
+    ArtDeployArtifactHandlers(const std::string& api_token);
+    ArtDeployArtifactHandlers(const std::string& api_token, const std::string& uri, const std::string& repo, const std::string& path, const std::string& fname);
+    virtual ~ArtDeployArtifactHandlers();
 
-    /*boost::shared_ptr<std::istream> istream() const
-    {
-        return is_;
-    }*/
+    virtual size_t handle_input(char *ptr, size_t size);
+    virtual void gen_additional_tree(boost::property_tree::ptree &);
 
-    void push_input_stream(boost::shared_ptr<std::istream> is);
+    virtual std::string get_path();
 
-    size_t putto(char* ptr, size_t size);
+    void file(const std::string& fname);
+    void generate_pom();
+    void generate_pom(const std::string& uri, const std::string& repo, const std::string& path, const std::string& name, const std::string& ver);
+
+    void set_name(const std::string& s) { name_ = s; }
+    void set_version(const std::string& s) { version_ = s; }
+    void set_classifier(const std::string& s) { classifier_ = s; }
+
+    std::string get_name() { return name_; }
+    std::string get_version() { return version_; }
+    std::string get_classifier() { return classifier_; }
 private:
-    bool next();
-private:
-    ISPtrQueue   is_queue_;
-    ISPtr       current_is_;
-    size_t      put_size_;
+    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
+
+    std::string   name_;
+    std::string   version_;
+    std::string   classifier_;
 };
 
 } } // namespace art::lib
 
-#endif // STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#endif // ARTBASEAPIDEPLOYARTIFACTHANDLERS_H

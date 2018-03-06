@@ -30,38 +30,45 @@
  *
  */
 
-#ifndef STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
-#define STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#include <artcreatedirectoryhandlers.h>
 
-#include <boost/shared_ptr.hpp>
-#include <queue>
+#include "artbaseconstants.h"
+#include <cstring>
+#include <logging.h>
+
+#include <boost_property_tree_ext.hpp>
+#include <boost_filesystem_ext.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
+namespace pt = boost::property_tree;
+
+//      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
+CURLH_T_(art::lib::ArtCreateDirectoryHandlers,\
+        true,             false,         true,           true,          false,          false);
 
 namespace art { namespace lib {
 
-class StreamsSequencePartitionallyOutputHelper
+ArtCreateDirectoryHandlers::ArtCreateDirectoryHandlers(const std::string& api_token)
+    : ArtBaseDeployArtifactsHandlers(api_token)
 {
-    typedef boost::shared_ptr<std::istream> ISPtr;
-    typedef std::queue<ISPtr> ISPtrQueue;
-public:
-    StreamsSequencePartitionallyOutputHelper();
-    ~StreamsSequencePartitionallyOutputHelper(){}
+    LOGT << ELOG;
+}
 
-    /*boost::shared_ptr<std::istream> istream() const
-    {
-        return is_;
-    }*/
+ArtCreateDirectoryHandlers::ArtCreateDirectoryHandlers(const std::string& api_token, const std::string& url, const std::string& repo, const std::string& path)
+    : ArtBaseDeployArtifactsHandlers(api_token, url, repo, path)
+{
+    LOGT << ELOG;
+}
 
-    void push_input_stream(boost::shared_ptr<std::istream> is);
+std::string ArtCreateDirectoryHandlers::get_path()
+{
+    std::string path = ArtBaseDeployArtifactsHandlers::get_path();
+    if (path.compare(path.length() - ArtBaseConstants::uri_delimiter.length(), ArtBaseConstants::uri_delimiter.length(), ArtBaseConstants::uri_delimiter) != 0) {
+        path.append(ArtBaseConstants::uri_delimiter);
+    }
+    return path;
+}
 
-    size_t putto(char* ptr, size_t size);
-private:
-    bool next();
-private:
-    ISPtrQueue   is_queue_;
-    ISPtr       current_is_;
-    size_t      put_size_;
-};
 
 } } // namespace art::lib
-
-#endif // STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
