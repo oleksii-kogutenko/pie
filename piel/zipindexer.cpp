@@ -49,11 +49,11 @@ ZipIndexer::~ZipIndexer()
 /*static*/ TreeIndex::Ptr ZipIndexer::build(const fs::path& zip_file)
 {
     TreeIndex::Ptr          result(new TreeIndex());
-    ZipFile                 zip( zip_file.native() );
+    ZipFile::FilePtr        zip = ZipFile::open(zip_file.native());
 
-    for (zip_int64_t i = 0; i < zip.num_entries(); i++)
+    for (zip_int64_t i = 0; i < zip->num_entries(); i++)
     {
-        boost::shared_ptr<ZipEntry>         entry       = zip.entry( i );
+        boost::shared_ptr<ZipEntry>         entry       = zip->entry( i );
         ZipEntryAttributes                  attrs       = entry->attributes();
 
         LOGT    << std::string( entry->symlink() ? "s " +  entry->target() + " " : "f " )

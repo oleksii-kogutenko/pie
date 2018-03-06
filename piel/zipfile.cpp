@@ -44,6 +44,28 @@ ZipFile::EntryPtr ZipFile::entry(zip_int64_t entry_index)
                     entries_owner_, entry_name(entry_index), fopen(entry_index)));
 }
 
+ZipFile::SourcePtr ZipFile::file_entry(const std::string& entry_name, const std::string &file_name)
+{
+    return ZipFile::SourcePtr(
+            new ZipSource(
+                    entries_owner_, entry_name, file_name));
+}
+
+bool ZipFile::add(const SourcePtr& source)
+{
+    bool ret_val = true;
+    source_queue_.push(source);
+
+    zip_int64_t ret = zip_file_add(zip_, source->name().c_str(), source->source(), ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
+    source->set_to_be_freed(false);
+
+    if (ret < 0) {
+        std::cout << "Error on add zip file" << std::endl;
+        ret_val = false;
+    }
+    return ret_val;
+}
+
 zip_stat_t ZipFile::stat(zip_int64_t entry_index) const
 {
     zip_stat_t result;
