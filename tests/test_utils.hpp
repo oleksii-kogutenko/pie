@@ -12,13 +12,17 @@
 namespace piel { namespace lib { namespace test_utils {
 
 // Test utils
-inline std::string file_content(const boost::filesystem::path& path)
+inline std::string istream_content(const boost::shared_ptr<std::istream> ifsp)
 {
-    boost::shared_ptr<std::istream> ifsp = boost::filesystem::istream(path);
     std::ostringstream *oss = new std::ostringstream();
     boost::shared_ptr<std::ostream> ossp(oss);
     boost::filesystem::copy_into(ossp, ifsp);
     return oss->str();
+}
+
+inline std::string file_content(const boost::filesystem::path& path)
+{
+    return istream_content(boost::filesystem::istream(path));
 }
 
 inline std::string generate_random_string()
