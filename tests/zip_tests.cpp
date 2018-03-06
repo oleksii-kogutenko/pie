@@ -32,23 +32,26 @@
 namespace cmd=piel::cmd;
 namespace lib=piel::lib;
 namespace fs=boost::filesystem;
+namespace tst=lib::test_utils;
 
 std::string ref_name_1 = "test_reference_1";
 
-static const char* zip_path = "/home/okogutenko/projects/333_zip/";
-static const char* zip_file_path = "/home/okogutenko/projects/333_zip/arc.zip";
-static const char* zip_file2_path = "/home/okogutenko/projects/333_zip/arc2.zip";
-static const char* zip_file3_path = "/home/okogutenko/projects/333_zip/arc3.zip";
-static const char* zip_file4_path = "/home/okogutenko/projects/333_zip/arc4.zip";
-static const char* zip_file5_path = "/home/okogutenko/projects/333_zip/arc5.zip";
-static const char* zip_file6_path = "/home/okogutenko/projects/333_zip/arc6.zip";
-typedef std::map<std::string, std::string> mapa;
-static mapa files =
+static const std::string zip_name = "arc.zip";
+
+typedef std::map<std::string, tst::TempFileHolder::Ptr> mapa;
+static const int files_count = 5;
+
+mapa gen_temp_files()
 {
-    {"file1.txt", "/home/okogutenko/projects/333_zip/file1.txt"},
-    {"file2.txt", "/home/okogutenko/projects/333_zip/file2.txt"},
-    {"file3.txt", "/home/okogutenko/projects/333_zip/file3.txt"}
-};
+    mapa ret_val;
+
+    for (int i = 0; i < files_count; i++) {
+        tst::TempFileHolder::Ptr f_ptr = tst::create_random_temp_file();
+        ret_val[f_ptr->first.filename().string()] = f_ptr;
+    }
+
+    return ret_val;
+}
 
 long get_file_size(const std::string& fname)
 {
@@ -57,7 +60,7 @@ long get_file_size(const std::string& fname)
     return file_size;
 }
 
-bool check_zip_file_ptr(const char *path, const mapa files)
+bool check_zip_file_ptr(const std::string& path, const mapa files)
 {
     bool ret_val = true;
     lib::ZipFile::FilePtr zip = lib::ZipFile::open(path);
@@ -81,32 +84,27 @@ bool check_zip_file_ptr(const char *path, const mapa files)
         mapa::const_iterator it = files.find(entry_status.name);
         BOOST_CHECK(it != files.end());
 
-        long file_size = get_file_size(it->second.c_str());
-        std::ifstream f;
-        f.open(it->second.c_str());
+        std::string file_buf = it->second->second;
+        long file_size = file_buf.size();
 
         BOOST_CHECK_EQUAL(file_size, entry_status.size);
 
-        std::vector<char> file_buf(file_size), zip_buf(file_size);
-        file_buf.reserve(file_size);
+        std::vector<char> zip_buf(file_size);
         zip_buf.reserve(file_size);
 
-        f.read(file_buf.data(), file_size);
         entry->read(zip_buf.data(), file_size);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(file_buf.begin(), file_buf.end(), zip_buf.begin(), zip_buf.end());
-
-        f.close();
     }
     return ret_val;
 }
 
-void gen_zip(const char* path, mapa files)
+void gen_zip(const std::string& path, mapa files)
 {
     lib::ZipFile::FilePtr zip = lib::ZipFile::create(path);
 
     for (mapa::const_iterator it = files.begin(), end = files.end(); it != end; ++it) {
-        zip->add(zip->file_entry(it->first, it->second));
+        zip->add(zip->file_entry(it->first, it->second->first.string()));
         LOGT << "file " << it->second << " added as " << it->first << ELOG;
     }
 }
@@ -114,9 +112,15 @@ void gen_zip(const char* path, mapa files)
 BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
 {
     LOGI << "---start Zip_PlainAPI---" << ELOG;
-    const char* path = zip_file_path;
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    std::string path = tmp_dir->first.string() + zip_name;
+
+    LOGI << "ARC name: " << path << ELOG;
+
+    mapa files = gen_temp_files();
+
     int errorp;
-    zip_t *zip_create = zip_open(path, ZIP_CREATE | ZIP_TRUNCATE, &errorp);
+    zip_t *zip_create = zip_open(path.c_str(), ZIP_CREATE | ZIP_TRUNCATE, &errorp);
 
     if (!zip_create) {
         zip_error_t error;
@@ -127,8 +131,9 @@ BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
     }
     LOGT << " zip created" << ELOG;
 
+
     for (mapa::const_iterator it = files.begin(), end = files.end(); it != end; ++it) {
-        zip_source_t * zip_source_zip = zip_source_file(zip_create, it->second.c_str(), 0, -1);
+        zip_source_t * zip_source_zip = zip_source_file(zip_create, it->second->first.string().c_str(), 0, -1);
         zip_int64_t ret = zip_file_add(zip_create, it->first.c_str(), zip_source_zip, ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
 
         if (ret < 0) {
@@ -141,7 +146,7 @@ BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
 
     LOGI << "---check Zip_PlainAPI---" << ELOG;
 
-    zip_t *zip_check = zip_open(path, ZIP_RDONLY, &errorp);
+    zip_t *zip_check = zip_open(path.c_str(), ZIP_RDONLY, &errorp);
 
     if (!zip_check) {
         zip_error_t error;
@@ -173,22 +178,17 @@ BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
         mapa::const_iterator it = files.find(entry_status.name);
         BOOST_CHECK(it != files.end());
 
-        std::ifstream f;
-        f.open(it->second.c_str());
-        long file_size = get_file_size(it->second.c_str());
+        std::string file_buf = it->second->second;
+        long file_size = file_buf.size();
 
         BOOST_CHECK_EQUAL(file_size, entry_status.size);
 
-        std::vector<char> file_buf(file_size), zip_buf(file_size);
-        file_buf.reserve(file_size);
+        std::vector<char> zip_buf(file_size);
         zip_buf.reserve(file_size);
 
-        f.read(file_buf.data(), file_size);
         zip_fread(entry_file, zip_buf.data(), file_size);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(file_buf.begin(), file_buf.end(), zip_buf.begin(), zip_buf.end());
-
-        f.close();
     }
 
     zip_close(zip_check);
@@ -201,8 +201,15 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_1)
     // Create archive
     LOGI << "+++START Zip_CxxAPI_1 +++" << ELOG;
 
-    gen_zip(zip_file2_path, files);
-    check_zip_file_ptr(zip_file2_path, files);
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    std::string path = tmp_dir->first.string() + zip_name;
+
+    LOGI << "ARC name: " << path << ELOG;
+
+    mapa files = gen_temp_files();
+
+    gen_zip(path, files);
+    check_zip_file_ptr(path, files);
 
     LOGI << "---FINISH Zip_CxxAPI_1 ---" << ELOG;
 }
@@ -212,10 +219,17 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_2)
     // Create archive
     LOGI << "+++START Zip_CxxAPI_2 +++" << ELOG;
 
-    gen_zip(zip_file3_path, files);
-    check_zip_file_ptr(zip_file3_path, files);
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    std::string path = tmp_dir->first.string() + zip_name;
 
-    std::cout << "---FINISH Zip_CxxAPI_2---" << std::endl;
+    LOGI << "ARC name: " << path << ELOG;
+
+    mapa files = gen_temp_files();
+
+    gen_zip(path, files);
+    check_zip_file_ptr(path, files);
+
+    LOGI  << "---FINISH Zip_CxxAPI_2---" << ELOG;
 }
 
 BOOST_AUTO_TEST_CASE(enumerator_test)
