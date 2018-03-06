@@ -25,15 +25,21 @@ project(pie)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_BUILD_TYPE Debug)
 
+add_subdirectory(third-party/libzip-1.4.0)
+
 include_directories("piel", "commands", "pie")
+message ("CMAKE_BUILD_DIRECTORY: ${CMAKE_BUILD_DIRECTORY}")
+message ("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
+message ("CMAKE_FILES_DIRECTORY : ${CMAKE_FILES_DIRECTORY}")
+
+include_directories("third-party/libzip-1.4.0/lib", "${CMAKE_BINARY_DIR}/third-party/libzip-1.4.0")
 
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
-include("third-party/CMakeLists.txt")
+#include("third-party/CMakeLists.txt")
 
-add_subdirectory(third-party)
 add_subdirectory(piel)
 add_subdirectory(commands)
 add_subdirectory(pie)
