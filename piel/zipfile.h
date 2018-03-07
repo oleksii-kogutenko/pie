@@ -158,7 +158,6 @@ public:
     //! \sa libzip zip_close docs.
     ~ZipFile()
     {
-        std::cout << __PRETTY_FUNCTION__ << std::endl;
         ::zip_close(zip_);
     }
 
