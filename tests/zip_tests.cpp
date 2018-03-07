@@ -104,7 +104,7 @@ void gen_zip(const std::string& path, mapa files)
     lib::ZipFile::FilePtr zip = lib::ZipFile::create(path);
 
     for (mapa::const_iterator it = files.begin(), end = files.end(); it != end; ++it) {
-        zip->add(zip->file_entry(it->first, it->second->first.string()));
+        zip->add_file(it->first, it->second->first.string());
         LOGT << "file " << it->second << " added as " << it->first << ELOG;
     }
 }
@@ -163,7 +163,6 @@ BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
 
     for (i = 0; i < zip_entries; i++) {
         entry_index = zip_uint64_t(i);
-        zip_file_t* entry_file = zip_fopen_index(zip_check, entry_index, ZIP_FL_UNCHANGED);
         zip_stat_t entry_status;
 
         zip_stat_init(&entry_status);
@@ -174,6 +173,8 @@ BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
             continue;
         }
         LOGT << "zip file[" << entry_index << "] " << entry_status.name << " has size " << entry_status.size << ELOG;
+
+        zip_file_t* entry_file = zip_fopen_index(zip_check, entry_index, ZIP_FL_UNCHANGED);
 
         mapa::const_iterator it = files.find(entry_status.name);
         BOOST_CHECK(it != files.end());
@@ -189,6 +190,8 @@ BOOST_AUTO_TEST_CASE(Zip_PlainAPI)
         zip_fread(entry_file, zip_buf.data(), file_size);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(file_buf.begin(), file_buf.end(), zip_buf.begin(), zip_buf.end());
+
+        zip_fclose(entry_file);
     }
 
     zip_close(zip_check);
@@ -232,32 +235,66 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_2)
     LOGI  << "---FINISH Zip_CxxAPI_2---" << ELOG;
 }
 
-BOOST_AUTO_TEST_CASE(enumerator_test)
+tst::DirState gen_dir_state()
 {
-    lib::test_utils::DirState init_state;
+    tst::DirState init_state;
     init_state["test_file_1"] = "test file 1 content 1";
-    init_state["test_file_2"] = "test file 1 content 2";
-    init_state["test_file_3"] = "test file 1 content 3";
-    init_state["test_file_4"] = "test file 1 content 4";
-    init_state["dir1/test_file_4"] = "test file 1 content 4";
-    init_state["dir2/test_file_4"] = "test file 1 content 4";
-    init_state["dir3/test_file_4"] = "test file 1 content 4";
+    init_state["test_file_2"] = "test file 2 content 2";
+    init_state["test_file_3"] = "test file 3 content 3";
+    init_state["test_file_4"] = "test file 4 content 4";
+    init_state["dir1/test_file_4"] = "dir1/test file 4 content 4";
+    init_state["dir2/test_file_5"] = "dir2/test file 5 content 5";
+    init_state["dir3/test_file_6"] = "dir3/test file 6 content 6";
+    return  init_state;
+}
 
-    lib::test_utils::TempFileHolder::Ptr wc_path = lib::test_utils::create_temp_dir();
-
+lib::WorkingCopy::Ptr gen_wc(tst::TempFileHolder::Ptr wc_path)
+{
+    tst::DirState dir_state = gen_dir_state();
     // Init workspace
     lib::WorkingCopy::Ptr wc = lib::WorkingCopy::init(wc_path->first, ref_name_1);
-    lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), init_state);
+    tst::make_directory_state(wc->working_dir(), wc->metadata_dir(), dir_state);
 
     cmd::Commit commit(wc);
     commit.set_message("Initial commit to " + ref_name_1);
     std::string initial_state_id = commit();
+    return wc;
+}
+
+void gen_zip_from_wc(const std::string& path, lib::WorkingCopy::Ptr wc)
+{
+    lib::ZipFile::FilePtr zip = lib::ZipFile::create(path);
 
     lib::TreeEnumerator treeEnumerator(wc->local_storage(), wc->current_tree_state());
     while (treeEnumerator.next())
     {
         lib::TreeIndexEnumerator enumerator(treeEnumerator.index);
-        std::cout << treeEnumerator.index->self().id().string() << std::endl;
+        while (enumerator.next())
+        {
+            LOGD << "enumerator.path: " << enumerator.path << ELOG;
+            LOGT << lib::test_utils::istream_content(enumerator.asset.istream()) << ELOG;
+            if (zip->add_file(enumerator.path, (wc->working_dir() / enumerator.path).string(), 0777) < 0) {
+                LOGE << "Error to add " << enumerator.path << " file to zip!" << ELOG;
+            }
+        }
+    }
+
+    std::string buf = "Some data";
+    zip->add_buffer("buffer.txt", buf.c_str(), buf.size());
+}
+
+BOOST_AUTO_TEST_CASE(enumerator_test)
+{
+    LOGI  << "---start enumerator_test---" << ELOG;
+    tst::TempFileHolder::Ptr wc_path = tst::create_temp_dir();
+    lib::WorkingCopy::Ptr wc = gen_wc(wc_path);
+    gen_zip_from_wc("/home/okogutenko/projects/33_zip/wc.zip",  wc);
+    /*
+    lib::TreeEnumerator treeEnumerator(wc->local_storage(), wc->current_tree_state());
+    while (treeEnumerator.next())
+    {
+        lib::TreeIndexEnumerator enumerator(treeEnumerator.index);
+        //std::cout << treeEnumerator.index->self().id().string() << std::endl;
         while (enumerator.next())
         {
             std::cout << "\t" << enumerator.path << ":"
@@ -265,7 +302,7 @@ BOOST_AUTO_TEST_CASE(enumerator_test)
 
             std::cout << lib::test_utils::istream_content(enumerator.asset.istream()) << std::endl;
         }
-    }
+    }*/
 }
 
 

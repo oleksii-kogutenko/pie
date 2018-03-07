@@ -27,6 +27,7 @@
  */
 
 #include <zipfile.h>
+#include "logging.h"
 
 namespace piel { namespace lib {
 
@@ -44,21 +45,34 @@ ZipFile::EntryPtr ZipFile::entry(zip_int64_t entry_index)
                     entries_owner_, entry_name(entry_index), fopen(entry_index)));
 }
 
-ZipFile::SourcePtr ZipFile::file_entry(const std::string& entry_name, const std::string &file_name)
+ZipFile::SourcePtr ZipFile::create_file_source(const std::string& entry_name, const std::string &file_name)
 {
     return ZipFile::SourcePtr(
             new ZipSource(
                     entries_owner_, entry_name, file_name));
 }
 
-bool ZipFile::add(const SourcePtr& source)
+ZipFile::SourcePtr ZipFile::create_buffer_source(const std::string& entry_name, const void *data, zip_uint64_t len, int freep)
 {
-    source_queue_.push(source);
+    return ZipFile::SourcePtr(
+            new ZipSource(
+                    entries_owner_, entry_name, data, len, freep));
+}
 
-    zip_int64_t ret = zip_file_add(zip_, source->name().c_str(), source->source(), ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
+zip_int64_t ZipFile::add_source(const SourcePtr& source, int mode)
+{
+    LOGD << source->entry_name_ << " " << source->file_name_ << " --> " << filename_ << ELOG;
+
+    zip_int64_t entry_index = zip_file_add(zip_, source->name().c_str(), source->source(), ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
     source->set_to_be_freed(false);
-
-    return ret >= 0;
+    if ( mode >=0 ) {
+        ZipEntryAttributes attr;
+        // TODO: errors processing
+        zip_file_get_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, &attr.opsys, &attr.attributes);
+        attr.set_mode(mode);
+        zip_file_set_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, attr.opsys, attr.attributes);
+    }
+    return entry_index;
 }
 
 zip_stat_t ZipFile::stat(zip_int64_t entry_index) const
@@ -81,7 +95,7 @@ zip_stat_t ZipFile::stat(const std::string& entry_name) const
 
 ZipEntryAttributes ZipFile::file_get_external_attributes(zip_int64_t entry_index) const
 {
-    ZipEntryAttributes result = { 0 };
+    ZipEntryAttributes result;
     // TODO: errors processing
     ::zip_file_get_external_attributes(zip_, entry_index, ZIP_FL_UNCHANGED, &result.opsys, &result.attributes);
     return result;
@@ -89,7 +103,7 @@ ZipEntryAttributes ZipFile::file_get_external_attributes(zip_int64_t entry_index
 
 ZipEntryAttributes ZipFile::file_get_external_attributes(const std::string& entry_name) const
 {
-    ZipEntryAttributes result = { 0 };
+    ZipEntryAttributes result;
     // TODO: errors processing
     zip_stat_t zip_stat = stat(entry_name);
     ::zip_file_get_external_attributes(zip_, zip_stat.index, ZIP_FL_UNCHANGED, &result.opsys, &result.attributes);

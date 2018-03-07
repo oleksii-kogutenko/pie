@@ -40,8 +40,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <queue>
-
 //#define ZIP_ENABLE_SEEK_TELL
 
 namespace piel { namespace lib {
@@ -53,6 +51,11 @@ struct ZipSource;
 //! ZipEntry extended attributes.
 struct ZipEntryAttributes {
 
+    ZipEntryAttributes()
+        : opsys(0)
+        , attributes(0)
+    {}
+
     zip_uint8_t opsys;          //!< See libzip zip_file_get_external_attributes function docs for the details.
     zip_uint32_t attributes;    //!< See libzip zip_file_get_external_attributes function docs for the details.
 
@@ -61,6 +64,10 @@ struct ZipEntryAttributes {
     //! \sa man stat.
     mode_t mode() const {
         return attributes >> 16;
+    }
+
+    void set_mode(int mode) {
+        attributes |= (zip_uint32_t(mode) & 0xFFFF) << 16;
     }
 
     //! Check is the entry is a unix symlink.
@@ -104,7 +111,6 @@ public:
     typedef boost::shared_ptr<ZipEntry>  EntryPtr;   //!< Pointer to ZipEntry.
     typedef boost::shared_ptr<ZipFile>   FilePtr;    //!< Pointer to ZipFile.
     typedef boost::weak_ptr<ZipFile>     WeakFilePtr;    //!< Pointer to ZipFile.
-    typedef std::queue<SourcePtr>        SourceQueue;    //!< Pointer to ZipFile.
 
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
@@ -116,7 +122,6 @@ public:
         , filename_()
         , entries_owner_()
         , flags_()
-        , source_queue_()
     {
     }
 
@@ -127,7 +132,6 @@ public:
         , filename_(src.filename_)
         , entries_owner_(src.entries_owner_)
         , flags_(src.flags_)
-        , source_queue_(src.source_queue_)
     {
     }
 
@@ -154,6 +158,7 @@ public:
     //! \sa libzip zip_close docs.
     ~ZipFile()
     {
+        std::cout << __PRETTY_FUNCTION__ << std::endl;
         ::zip_close(zip_);
     }
 
@@ -177,21 +182,28 @@ public:
     //! \return Pointer to ZipEntry.
     EntryPtr entry(zip_int64_t entry_index);
 
-    //! Construct ZipEntry using entry name.
-    //! \return Pointer to ZipEntry.
-    SourcePtr file_entry(const std::string& entry_name, const std::string& file_name);
-
-    //! Construct ZipEntry using entry index.
-    //! \return Pointer to ZipEntry.
-    SourcePtr file_entry(zip_int64_t entry_index);
-
-    bool add(const SourcePtr& source);
-
-    void add_file(const std::string& entry_name, const std::string& file_name)
+    zip_int64_t add_file(const std::string& entry_name, const std::string& file_name, int mode = -1)
     {
-        add(file_entry(entry_name, file_name));
+        return add_source(create_file_source(entry_name, file_name), mode);
     }
+
+    zip_int64_t add_buffer(const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0, int mode = -1)
+    {
+        return add_source(create_buffer_source(entry_name, data, len, freep), mode);
+    }
+
+
+    bool add_symlink(const std::string& entry_name, const std::string& target, int mode = -1)
+    {
+    }
+
 protected:
+    SourcePtr create_file_source(const std::string& entry_name, const std::string& file_name);
+
+    SourcePtr create_file_source(zip_int64_t entry_index);
+
+    SourcePtr create_buffer_source(const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0);
+
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
     //! \sa libzip zip_open docs.
@@ -202,7 +214,6 @@ protected:
         , filename_(filename)
         , entries_owner_()
         , flags_()
-        , source_queue_()
     {
     }
 
@@ -274,13 +285,13 @@ protected:
     //! \return ZipEntryAttribute struct with extenden attributes.
     ZipEntryAttributes file_get_external_attributes(const std::string& entry_name) const;
 
+    zip_int64_t add_source(const SourcePtr& source, int mode = -1);
 private:
     int                     libzip_error_;    //!< libzip last error code.
     zip_t                   *zip_;            //!< libzip archive handle.
     std::string             filename_;        //!< stored filename
     ZipFile::WeakFilePtr    entries_owner_;   //!< owner for entries;
     int                     flags_;
-    SourceQueue             source_queue_;
 };
 
 //! libzip C api wrapper. Encapsulated api to work with archive entry.
@@ -371,7 +382,6 @@ protected:
         , name_(name)
         , zip_file_(zip_file)
     {
-
     }
 
 private:
@@ -424,6 +434,12 @@ struct ZipSource {
         return owner_->file_get_external_attributes(entry_name_);
     }
 
+    //! Get entry extended attributes.
+    //! \return ZipEntryAttribute struct with extenden attributes.
+    ZipEntryAttributes set_attributes() const {
+        return owner_->file_get_external_attributes(entry_name_);
+    }
+
     //! Get unix mode.
     //! \return unix file mode.
     mode_t mode() const {
@@ -447,14 +463,14 @@ struct ZipSource {
     //! \return Pointer to archive entry istream.
     ZipEntrySource::istream_ptr istream();
 
-    zip_source_t *source() const {
-        return source_;
-    }
-
+protected:
     void set_to_be_freed(bool b) {
         to_be_freed_ = b;
     }
-protected:
+
+    zip_source_t *source() const {
+        return source_;
+    }
 
     // Frienship is used for control ownership model. ZipEntry instance can be
     //created by ZipFile instance only.
@@ -471,6 +487,15 @@ protected:
         , to_be_freed_(true)
     {
         source_ = zip_source_file(owner_->zip_, file_name.c_str(), 0, -1);
+    }
+
+    ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0)
+        : owner_(owner.lock())
+        , entry_name_(entry_name)
+        , file_name_()
+        , to_be_freed_(true)
+    {
+        source_ = zip_source_buffer(owner_->zip_, data, len, freep);
     }
 
 private:
