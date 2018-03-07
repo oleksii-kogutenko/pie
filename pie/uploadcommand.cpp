@@ -104,7 +104,7 @@ bool UploadCommand::check_empty_classifiers_count(const art::lib::ufs::UFSVector
     {
         if (it->classifier.empty()) {
             count_empty_classifier++;
-            std::cout << "Find empty classifier: " << art::lib::ufs::to_string(*it) << "(" << count_empty_classifier << ")" << std::endl;
+            LOGD << "Find empty classifier: " << art::lib::ufs::to_string(*it) << "(" << count_empty_classifier << ")" << LOGE;
         }
         ret_val &= count_empty_classifier <= empty_classifiers_count_allowed;
     }
@@ -117,10 +117,10 @@ bool UploadCommand::parse_arguments()
     std::string  classifiers_str;
 
     desc.add_options()
-        ("token,t",         po::value<std::string>(&server_api_access_token_),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
-        ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
-        ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
-        ("filelist,f",      po::value<std::string>(&classifiers_str)->required(),    "List of files to upload (required). Use as: classifier1:file1,classifier2:file2,...")
+        ("token,t",         po::value<std::string>(&server_api_access_token_),          "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
+        ("server,s",        po::value<std::string>(&server_url_),                       "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
+        ("repository,r",    po::value<std::string>(&server_repository_),                "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
+        ("filelist,f",      po::value<std::string>(&classifiers_str)->required(),       "List of files to upload (required). Expected format is: classifier1:file1,classifier2:file2,...")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -190,12 +190,12 @@ bool UploadCommand::parse_arguments()
     {
         classifier_vector_ = result_parse->get_data();
         if (!check_empty_classifiers_count(classifier_vector_)) {
-            std::cout << "Empty classifiers more then " << empty_classifiers_count_allowed << ", it's wrong!" << std::endl;
+            std::cerr << "Wrong <filelist> option format. Only one empty classifier is allowed!" << std::endl;
             show_command_help_message(desc);
             return false;
         }
     } else {
-        std::cout << "Wrong parse <filelist> argument!" << std::endl;
+        std::cerr << "Unknown <filelist> option format!" << std::endl;
         show_command_help_message(desc);
         return false;
     }
@@ -225,7 +225,17 @@ bool UploadCommand::parse_arguments()
     }
     catch (const piel::cmd::errors::nothing_to_upload&)
     {
-        std::cerr << "No changes!" << std::endl;
+        std::cerr << "Nohing to upload!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::file_upload_error&)
+    {
+        std::cerr << "File upload error!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::pom_upload_error&)
+    {
+        std::cerr << "POM upload error!" << std::endl;
         return -1;
     }
 
