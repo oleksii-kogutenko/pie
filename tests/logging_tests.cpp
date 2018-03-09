@@ -92,3 +92,27 @@ BOOST_AUTO_TEST_CASE(logging_simple_4)
     std::cout << "end 4 test+++\n";
 }
 
+BOOST_AUTO_TEST_CASE(logging_simple_5)
+{
+    std::cout << "start 5 test+++\n";
+
+    LogAppPtr log1 = Logging::create_logger("test5");
+    SingleLevelLogProxyPtr trace = log1->trace();
+    SingleLevelLogProxyPtr debug = log1->debug();
+    SingleLevelLogProxyPtr info = log1->info();
+    SingleLevelLogProxyPtr warn = log1->warn();
+    SingleLevelLogProxyPtr error = log1->error();
+    SingleLevelLogProxyPtr fatal = log1->fatal();
+
+    for (int i=0; i < 10000; i++) {
+        trace << "t" << 5 << "i:" << i << send;
+        debug << "i" << 3 << "i:" << i << send;
+        info << "d" << 4 << "i:" << i << send;
+        warn << "w" << 2 << "i:" << i << send;
+        error << "e" << 1 << "i:" << i << send;
+        BOOST_CHECK_THROW(fatal << "f" << 0 << "i:" << i << send, logger_app::errors::fatal_occurred);
+    }
+
+    std::cout << "end 5 test+++\n";
+}
+

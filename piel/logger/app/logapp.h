@@ -8,28 +8,6 @@
 
 namespace piel { namespace lib { namespace logger_app {
 
-namespace errors {
-
-    // LogApp::fatal will always throw fatal_occurred finally
-    struct fatal_occurred: public std::exception
-    {
-        std::string what_;
-
-        fatal_occurred(const std::string& what)
-            : std::exception()
-            , what_(what)
-        {}
-
-        virtual ~fatal_occurred() throw () {}
-
-        const char* what() const throw ()
-        {
-            return what_.c_str();
-        }
-    };
-
-}
-
 class LogApp;
 
 typedef LogApp& (*LogAppManipulator)(LogApp&);
@@ -123,6 +101,31 @@ protected:
     SingleLevelLogProxyPtr              fatal_;
 
 };
+
+namespace errors {
+
+    // LogApp::fatal will always throw fatal_occurred finally
+    class fatal_occurred: public std::exception
+    {
+    public:
+        fatal_occurred(const std::string& what)
+            : std::exception()
+            , what_(what)
+        {}
+
+        virtual ~fatal_occurred() throw () {}
+
+        virtual const char* what() const throw ()
+        {
+            return what_.c_str();
+        }
+
+    private:
+        std::string what_;
+
+    };
+
+}
 
 template<class LogPtr, class T>
 struct inserter {
