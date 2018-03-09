@@ -8,6 +8,28 @@
 
 namespace piel { namespace lib { namespace logger_app {
 
+namespace errors {
+
+    // LogApp::fatal will always throw fatal_occurred finally
+    struct fatal_occurred: public std::exception
+    {
+        std::string what_;
+
+        fatal_occurred(const std::string& what)
+            : std::exception()
+            , what_(what)
+        {}
+
+        virtual ~fatal_occurred() throw () {}
+
+        const char* what() const throw ()
+        {
+            return what_.c_str();
+        }
+    };
+
+}
+
 class LogApp;
 
 typedef LogApp& (*LogAppManipulator)(LogApp&);
@@ -38,6 +60,10 @@ struct SingleLevelLogProxy
 
     SingleLevelLogProxy& operator<<(SingleLevelLogProxyManipulator manipulator);
 
+    bool is_fatal() const {
+        return manipulator_ == logger_app::fatal;
+    }
+
 private:
     friend SingleLevelLogProxy& send(SingleLevelLogProxy& val);
 
@@ -55,13 +81,6 @@ public:
     SingleLevelLogProxyPtr error();
     SingleLevelLogProxyPtr fatal();
 
-    void trace(const std::string& msg);
-    void debug(const std::string& msg);
-    void info(const std::string& msg);
-    void warn(const std::string& msg);
-    void error(const std::string& msg);
-    void fatal(const std::string& msg);
-
     LogApp(const LogApp& l);
     LogApp(const std::string& _name, logger_dispatcher::LogDispatcherPtr d);
     ~LogApp();
@@ -77,6 +96,13 @@ public:
 
 protected:
     void clear();
+
+    void trace(const std::string& msg);
+    void debug(const std::string& msg);
+    void info(const std::string& msg);
+    void warn(const std::string& msg);
+    void error(const std::string& msg);
+    void fatal(const std::string& msg);
 
     friend LogApp& trace(LogApp& val);
     friend LogApp& debug(LogApp& val);
@@ -98,21 +124,47 @@ protected:
 
 };
 
+template<class LogPtr, class T>
+struct inserter {
+    static void insert(const LogPtr& p, T val) {
+        p->operator <<(val);
+    }
+};
+
+template<>
+struct inserter<LogAppPtr,LogAppManipulator> {
+    static void insert(const LogAppPtr& p, LogAppManipulator val) {
+        p->operator <<(val);
+        if (val == logger_app::fatal) {
+            // Throw fatal exception
+            throw errors::fatal_occurred("Logged fatal");
+        }
+    }
+};
+
+template<>
+struct inserter<SingleLevelLogProxyPtr, SingleLevelLogProxyManipulator> {
+    static void insert(const SingleLevelLogProxyPtr& p, SingleLevelLogProxyManipulator val) {
+        p->operator <<(val);
+        if (val == logger_app::send && p->is_fatal()) {
+            // Throw fatal exception
+            throw errors::fatal_occurred("Single level proxy logged fatal");
+        }
+    }
+};
+
 template<typename T>
 const LogAppPtr& operator<<(const LogAppPtr& p, T val)
 {
-    p->operator <<(val);
+    inserter<LogAppPtr,T>::insert(p, val);
     return p;
 }
 
 template<typename T>
 const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, T val)
 {
-    p->operator <<(val);
+    inserter<SingleLevelLogProxyPtr,T>::insert(p, val);
     return p;
 }
-
-const LogAppPtr& operator<< (const LogAppPtr& p, LogAppManipulator manipulator);
-const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, SingleLevelLogProxyManipulator manipulator);
 
 } } } // namespace piel::lib::logger_out

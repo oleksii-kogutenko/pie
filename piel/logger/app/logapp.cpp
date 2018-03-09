@@ -9,18 +9,6 @@ namespace piel { namespace lib { namespace logger_app {
 using namespace piel::lib::logger;
 using namespace piel::lib::logger_dispatcher;
 
-const LogAppPtr& operator<< (const LogAppPtr& p, LogAppManipulator manipulator)
-{
-    manipulator(*p.get());
-    return p;
-}
-
-const SingleLevelLogProxyPtr& operator<<(const SingleLevelLogProxyPtr& p, SingleLevelLogProxyManipulator manipulator)
-{
-    manipulator(*p.get());
-    return p;
-}
-
 void LogApp::trace(const std::string& var1)
 {
     dispatcher_->enqueue(LogMessage(name_, TRACE, var1));

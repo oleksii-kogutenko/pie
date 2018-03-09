@@ -73,7 +73,7 @@ public:
         else
         {
             id_ = AssetId::not_calculated;
-            LOGF << "Unable to calculate asset id!" << ELOG;
+            LOGD << "Unable to calculate asset id!" << ELOG;
 
             throw errors::unable_to_calculate_asset_id();
         }

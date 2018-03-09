@@ -35,21 +35,6 @@
 using namespace piel::lib;
 using namespace piel::lib::logger_app;
 
-BOOST_AUTO_TEST_CASE(logging_simple)
-{
-    std::cout << "start test+++\n";
-
-    LogAppPtr log1 = Logging::create_logger("test1.1");
-    LogAppPtr log2 = Logging::create_logger("test1.2");
-
-    log1->info("info\n");
-    log1->debug("debug\n");
-    log2->error("error\n");
-    log2->warn("warn\n");
-
-    std::cout << "end test+++\n";
-}
-
 BOOST_AUTO_TEST_CASE(logging_simple_2)
 {
     std::cout << "start 2 test+++\n";
@@ -60,7 +45,7 @@ BOOST_AUTO_TEST_CASE(logging_simple_2)
     log1 << "i" << 3 << info;
     log1 << "w" << 2 << warn;
     log1 << "e" << 1 << error;
-    log1 << "f" << 0 << fatal;
+    BOOST_CHECK_THROW(log1 << "f" << 0 << fatal, logger_app::errors::fatal_occurred);
 
     std::cout << "end 2 test+++\n";
 }
@@ -75,7 +60,7 @@ BOOST_AUTO_TEST_CASE(logging_simple_3)
         log1 << "i" << 3 << info;
         log1 << "w" << 2 << warn;
         log1 << "e" << 1 << error;
-        log1 << "f" << 0 << fatal;
+        BOOST_CHECK_THROW(log1 << "f" << 0 << fatal, logger_app::errors::fatal_occurred);
     }
     {
         LogAppPtr log2 = Logging::create_logger("test3");
@@ -84,7 +69,7 @@ BOOST_AUTO_TEST_CASE(logging_simple_3)
         log2 << "2i" << 3 << info;
         log2 << "2w" << 2 << warn;
         log2 << "2e" << 1 << error;
-        log2 << "2f" << 0 << fatal;
+        BOOST_CHECK_THROW(log2 << "2f" << 0 << fatal, logger_app::errors::fatal_occurred);
     }
     std::cout << "end 3 test+++\n";
 }
@@ -101,7 +86,7 @@ BOOST_AUTO_TEST_CASE(logging_simple_4)
         log1 << "i" << 3 << "i:" << i << info;
         log1 << "w" << 2 << "i:" << i << warn;
         log1 << "e" << 1 << "i:" << i << error;
-        log1 << "f" << 0 << "i:" << i << fatal;
+        BOOST_CHECK_THROW(log1 << "f" << 0 << "i:" << i << fatal, logger_app::errors::fatal_occurred);
     }
 
     std::cout << "end 4 test+++\n";

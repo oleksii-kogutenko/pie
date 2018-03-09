@@ -63,14 +63,14 @@ zip_int64_t ZipFile::add_source(const SourcePtr& source, int mode)
 {
     LOGD << source->entry_name_ << " " << source->file_name_ << " --> " << filename_ << ELOG;
 
-    zip_int64_t entry_index = zip_file_add(zip_, source->name().c_str(), source->source(), ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
+    zip_int64_t entry_index = ::zip_file_add(zip_, source->name().c_str(), source->source(), ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
     source->set_to_be_freed(false);
     if ( mode >=0 ) {
         ZipEntryAttributes attr;
         // TODO: errors processing
-        zip_file_get_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, &attr.opsys, &attr.attributes);
+        ::zip_file_get_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, &attr.opsys, &attr.attributes);
         attr.set_mode(mode);
-        zip_file_set_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, attr.opsys, attr.attributes);
+        ::zip_file_set_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, attr.opsys, attr.attributes);
     }
     return entry_index;
 }
