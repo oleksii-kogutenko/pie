@@ -28,6 +28,7 @@
 #include <treeindexenumerator.h>
 #include "test_utils.hpp"
 
+#define DBOOST_AUTO_TEST_CASE(x) void x(void)
 
 namespace cmd=piel::cmd;
 namespace lib=piel::lib;
@@ -279,8 +280,8 @@ void gen_zip_from_wc(const std::string& path, lib::WorkingCopy::Ptr wc)
         }
     }
 
-    std::string buf = "Some data";
-    zip->add_buffer("buffer.txt", buf.c_str(), buf.size());
+    //std::string buf = "Some data";
+    //zip->add_buffer("buffer.txt", buf.c_str(), buf.size());
 }
 
 BOOST_AUTO_TEST_CASE(enumerator_test)
@@ -371,13 +372,14 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_2)
     LOGI << "ARC name: " << path << ELOG;
 
     std::string test_str = "Test string";
-    std::istringstream test_stream(test_str);
+    lib::ZipFile::IStreamPtr test_stream_ptr = lib::ZipFile::IStreamPtr(new std::istringstream(test_str) );
+    //std::istringstream test_stream(test_str);
 
     const char* fname = "buffer.txt";
     {
         lib::ZipFile::FilePtr zip = lib::ZipFile::create(path);
 
-        zip->add_istream(fname, test_stream);
+        zip->add_istream(fname, test_stream_ptr);
     }
 
     {
