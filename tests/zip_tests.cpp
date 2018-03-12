@@ -305,6 +305,120 @@ BOOST_AUTO_TEST_CASE(enumerator_test)
     }*/
 }
 
+BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_1)
+{
+    // Create archive
+    LOGI << "+++START Zip_CxxAPI_buffer_1 +++" << ELOG;
+
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    std::string path = tmp_dir->first.string() + zip_name;
+
+    LOGI << "ARC name: " << path << ELOG;
+
+    std::string test_str = "Test string";
+
+    const char* fname = "buffer.txt";
+    {
+        lib::ZipFile::FilePtr zip = lib::ZipFile::create(path);
+
+        zip->add_buffer(fname, test_str.c_str(), test_str.size());
+    }
+
+    {
+        lib::ZipFile::FilePtr zip = lib::ZipFile::open(path);
+
+        for (zip_int64_t i = 0; i < zip->num_entries(); i++)
+        {
+            lib::ZipFile::EntryPtr   entry       = zip->entry( i );
+
+            zip_stat_t entry_status = entry->stat();
+
+            BOOST_CHECK(strcmp(entry_status.name, fname) == 0);
+            int ret = 0;
+            if ((ret = strcmp(entry_status.name, fname)) != 0) {
+                LOGE << entry_status.name << "!=" << fname << ELOG;
+                LOGE << ret << "=" << ret << ELOG;
+                break;
+            }
+
+            long file_size = test_str.size();
+
+            BOOST_CHECK_EQUAL(file_size, entry_status.size);
+            if (file_size != entry_status.size) {
+                LOGE << file_size << "!=" << entry_status.size << ELOG;
+                break;
+            }
+
+            std::vector<char> zip_buf(file_size);
+            zip_buf.reserve(file_size);
+
+            entry->read(zip_buf.data(), file_size);
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(test_str.begin(), test_str.end(), zip_buf.begin(), zip_buf.end());
+        }
+
+    }
+    LOGI  << "---FINISH Zip_CxxAPI_buffer_1---" << ELOG;
+}
+
+BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_2)
+{
+    // Create archive
+    LOGI << "+++START Zip_CxxAPI_buffer_2 +++" << ELOG;
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    std::string path = tmp_dir->first.string() + zip_name;
+
+    LOGI << "ARC name: " << path << ELOG;
+
+    std::string test_str = "Test string";
+    std::istringstream test_stream(test_str);
+
+    const char* fname = "buffer.txt";
+    {
+        lib::ZipFile::FilePtr zip = lib::ZipFile::create(path);
+
+        zip->add_istream(fname, test_stream);
+    }
+
+    {
+        lib::ZipFile::FilePtr zip = lib::ZipFile::open(path);
+
+        for (zip_int64_t i = 0; i < zip->num_entries(); i++)
+        {
+            lib::ZipFile::EntryPtr   entry       = zip->entry( i );
+
+            zip_stat_t entry_status = entry->stat();
+
+            BOOST_CHECK(strcmp(entry_status.name, fname) == 0);
+            int ret = 0;
+            if ((ret = strcmp(entry_status.name, fname)) != 0) {
+                LOGE << entry_status.name << "!=" << fname << ELOG;
+                LOGE << ret << "=" << ret << ELOG;
+                break;
+            }
+
+            long file_size = test_str.size();
+
+            BOOST_CHECK_EQUAL(file_size, entry_status.size);
+            if (file_size != entry_status.size) {
+                LOGE << file_size << "!=" << entry_status.size << ELOG;
+                break;
+            }
+
+            std::vector<char> zip_buf(file_size);
+            zip_buf.reserve(file_size);
+
+            entry->read(zip_buf.data(), file_size);
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(test_str.begin(), test_str.end(), zip_buf.begin(), zip_buf.end());
+        }
+
+    }
+
+    LOGI  << "---FINISH Zip_CxxAPI_buffer_2---" << ELOG;
+}
+
+
 
 /*
 BOOST_AUTO_TEST_CASE(Zip_created)

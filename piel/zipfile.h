@@ -191,6 +191,10 @@ public:
         return add_source(create_buffer_source(entry_name, data, len, freep), mode);
     }
 
+    zip_int64_t add_istream(const std::string& entry_name, std::istream& stream, int mode = -1)
+    {
+        return add_source(create_istream_source(entry_name, stream), mode);
+    }
 
     bool add_symlink(const std::string& entry_name, const std::string& target, int mode = -1)
     {
@@ -202,6 +206,8 @@ protected:
     SourcePtr create_file_source(zip_int64_t entry_index);
 
     SourcePtr create_buffer_source(const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0);
+
+    SourcePtr create_istream_source(const std::string& entry_name, std::istream& source);
 
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
@@ -496,6 +502,17 @@ protected:
     {
         source_ = zip_source_buffer(owner_->zip_, data, len, freep);
     }
+
+    ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, const std::istream& stream);
+/*        : owner_(owner.lock())
+        , entry_name_(entry_name)
+        , file_name_()
+        , to_be_freed_(true)
+    {
+        std::streamsize size = stream->gcount();
+        void *data = stream->gcount();
+        source_ = zip_source_buffer(owner_->zip_, data, len, freep);
+    }*/
 
 private:
     ZipFile::FilePtr        owner_;            //!< Reference to zip file.

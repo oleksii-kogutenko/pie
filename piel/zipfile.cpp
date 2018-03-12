@@ -31,6 +31,21 @@
 
 namespace piel { namespace lib {
 
+ZipSource::ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, const std::istream &s)
+    : owner_(owner.lock())
+    , entry_name_(entry_name)
+    , file_name_()
+    , to_be_freed_(true)
+{
+    std::istream stream(s.rdbuf());
+    stream.seekg(0, std::ios_base::end);
+    std::streamsize len = stream.tellg();
+    stream.seekg(0, std::ios_base::beg);
+    void *data = malloc(size_t(len));
+    stream.read(static_cast<std::istream::char_type*>(data), len);
+    source_ = zip_source_buffer(owner_->zip_, data, zip_uint64_t(len), 1);
+}
+
 ZipFile::EntryPtr ZipFile::entry(const std::string& entry_name)
 {
     return ZipFile::EntryPtr(
@@ -58,6 +73,14 @@ ZipFile::SourcePtr ZipFile::create_buffer_source(const std::string& entry_name, 
             new ZipSource(
                     entries_owner_, entry_name, data, len, freep));
 }
+
+ZipFile::SourcePtr ZipFile::create_istream_source(const std::string& entry_name, std::istream& source)
+{
+    return ZipFile::SourcePtr(
+            new ZipSource(
+                    entries_owner_, entry_name, source));
+}
+
 
 zip_int64_t ZipFile::add_source(const SourcePtr& source, int mode)
 {
