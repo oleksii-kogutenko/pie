@@ -279,18 +279,25 @@ void gen_zip_from_wc(const std::string& path, lib::WorkingCopy::Ptr wc)
             }
         }
     }
-
-    //std::string buf = "Some data";
-    //zip->add_buffer("buffer.txt", buf.c_str(), buf.size());
 }
 
 BOOST_AUTO_TEST_CASE(enumerator_test)
 {
     LOGI  << "---start enumerator_test---" << ELOG;
+
+    // Generate zip file
     tst::TempFileHolder::Ptr wc_path = tst::create_temp_dir();
+    tst::TempFileHolder::Ptr zip_path = tst::create_temp_dir(0);
+    zip_path->first /= zip_name;
     lib::WorkingCopy::Ptr wc = gen_wc(wc_path);
-    gen_zip_from_wc("/home/okogutenko/projects/33_zip/wc.zip",  wc);
-    /*
+
+    gen_zip_from_wc(zip_path->first.string(), wc);
+
+    // Check zip file
+    LOGI  << "---Check zip file " << zip_path->first.string() << " ---" << ELOG;
+
+    lib::ZipFile::FilePtr zip = lib::ZipFile::open(zip_path->first.string());
+
     lib::TreeEnumerator treeEnumerator(wc->local_storage(), wc->current_tree_state());
     while (treeEnumerator.next())
     {
@@ -302,8 +309,27 @@ BOOST_AUTO_TEST_CASE(enumerator_test)
                     << enumerator.asset.id().string() << std::endl;
 
             std::cout << lib::test_utils::istream_content(enumerator.asset.istream()) << std::endl;
+
+            lib::ZipFile::EntryPtr entry = zip->entry( enumerator.path );
+            BOOST_CHECK(entry);
+            if (!entry) {
+                LOGE << "Emptry entry for " << enumerator.path << ELOG;
+                continue;
+            }
+
+            boost::shared_ptr<std::istream> asset_istream_ptr = enumerator.asset.istream();
+            size_t asset_stream_size = static_cast<size_t>(asset_istream_ptr->gcount());
+
+            std::vector<char> zip_buf(asset_stream_size), asset_buf(asset_stream_size);
+            zip_buf.reserve(asset_stream_size);
+            asset_buf.reserve(asset_stream_size);
+
+            entry->read(zip_buf.data(), static_cast<zip_int64_t>(asset_stream_size));
+            asset_istream_ptr->read(asset_buf.data(), static_cast<std::streamsize>(asset_stream_size));
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(asset_buf.begin(), asset_buf.end(), zip_buf.begin(), zip_buf.end());
         }
-    }*/
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_1)
@@ -342,7 +368,7 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_1)
                 break;
             }
 
-            long file_size = test_str.size();
+            zip_uint64_t file_size = test_str.size();
 
             BOOST_CHECK_EQUAL(file_size, entry_status.size);
             if (file_size != entry_status.size) {
@@ -353,7 +379,7 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_1)
             std::vector<char> zip_buf(file_size);
             zip_buf.reserve(file_size);
 
-            entry->read(zip_buf.data(), file_size);
+            entry->read(zip_buf.data(), static_cast<zip_int64_t>(file_size));
 
             BOOST_CHECK_EQUAL_COLLECTIONS(test_str.begin(), test_str.end(), zip_buf.begin(), zip_buf.end());
         }
@@ -362,10 +388,10 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_1)
     LOGI  << "---FINISH Zip_CxxAPI_buffer_1---" << ELOG;
 }
 
-BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_2)
+BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_istream)
 {
     // Create archive
-    LOGI << "+++START Zip_CxxAPI_buffer_2 +++" << ELOG;
+    LOGI << "+++START Zip_CxxAPI_buffer_istream +++" << ELOG;
     tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
     std::string path = tmp_dir->first.string() + zip_name;
 
@@ -399,7 +425,7 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_2)
                 break;
             }
 
-            long file_size = test_str.size();
+            zip_uint64_t file_size = test_str.size();
 
             BOOST_CHECK_EQUAL(file_size, entry_status.size);
             if (file_size != entry_status.size) {
@@ -410,56 +436,67 @@ BOOST_AUTO_TEST_CASE(Zip_CxxAPI_buffer_2)
             std::vector<char> zip_buf(file_size);
             zip_buf.reserve(file_size);
 
-            entry->read(zip_buf.data(), file_size);
+            entry->read(zip_buf.data(), static_cast<zip_int64_t>(file_size));
 
             BOOST_CHECK_EQUAL_COLLECTIONS(test_str.begin(), test_str.end(), zip_buf.begin(), zip_buf.end());
         }
 
     }
 
-    LOGI  << "---FINISH Zip_CxxAPI_buffer_2---" << ELOG;
+    LOGI  << "---FINISH Zip_CxxAPI_buffer_istream---" << ELOG;
 }
 
-
-
-/*
-BOOST_AUTO_TEST_CASE(Zip_created)
+DBOOST_AUTO_TEST_CASE(Zip_created)
 {
     // Create archive
-    std::cout << "+++START free+++" << __LINE__<< std::endl;
+    LOGI << "+++START Zip_created +++" << ELOG;
 
-    ZipFile::FilePtr zip = ZipFile::create(zip_file4_path);
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    boost::filesystem::path zip_path = tmp_dir->first / zip_name;
 
-    std::cout << "---FINISH free---" << __LINE__<< std::endl;
+    lib::ZipFile::FilePtr zip = lib::ZipFile::create(zip_path.string());
+
+    LOGI  << "---FINISH Zip_created---" << ELOG;
 }
-/*
-BOOST_AUTO_TEST_CASE(Zip_opened)
+
+DBOOST_AUTO_TEST_CASE(Zip_opened)
 {
     // Create archive
-    std::cout << "+++START openned+++" << __LINE__<< std::endl;
+    LOGI << "+++START Zip_opened +++" << ELOG;
 
-    ZipFile::FilePtr zip = ZipFile::open(zip_file4_path);
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    boost::filesystem::path zip_path = tmp_dir->first / zip_name;
 
-    std::cout << "---FINISH openned---" << __LINE__<< std::endl;
+    lib::ZipFile::FilePtr zip = lib::ZipFile::open(zip_path.string());
+
+    LOGI  << "---FINISH Zip_opened---" << ELOG;
 }
 
-BOOST_AUTO_TEST_CASE(Zip_MemoryLeak)
+DBOOST_AUTO_TEST_CASE(Zip_MemoryLeak)
 {
-    const char* path = zip_file6_path;
+    LOGI << "+++START Zip_MemoryLeak +++" << ELOG;
+
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    boost::filesystem::path zip_path = tmp_dir->first / zip_name;
+
     int errorp;
-    zip_t *zip = zip_open(path, ZIP_CREATE | ZIP_TRUNCATE, &errorp);
+    zip_t *zip = ::zip_open(zip_path.string().c_str(), ZIP_CREATE | ZIP_TRUNCATE, &errorp);
     zip_close(zip);
 
-    std::cout << "---FINISH Leak---" << __LINE__<< std::endl;
+    LOGI  << "---FINISH Zip_MemoryLeak---" << ELOG;
 }
 
-BOOST_AUTO_TEST_CASE(Zip_NoMemoryLeak)
+DBOOST_AUTO_TEST_CASE(Zip_NoMemoryLeak)
 {
-    const char* path = zip_file6_path;
+    LOGI << "+++START Zip_NoMemoryLeak +++" << ELOG;
+
+    tst::TempFileHolder::Ptr tmp_dir = tst::create_temp_dir();
+    boost::filesystem::path zip_path = tmp_dir->first / zip_name;
+
     int errorp;
-    zip_t *zip = zip_open(path, ZIP_CREATE, &errorp);
+    zip_t *zip = zip_open(zip_path.string().c_str(), ZIP_CREATE, &errorp);
     zip_close(zip);
 
-    std::cout << "---FINISH No Leak---" << __LINE__<< std::endl;
+    LOGI  << "---FINISH Zip_NoMemoryLeak---" << ELOG;
 }
-*/
+
