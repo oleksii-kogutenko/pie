@@ -379,6 +379,7 @@ buffer_free(buffer_t *buffer)
         free(buffer->fragments[i].data);
     }
     free(buffer->fragments);
+    free(buffer->fragment_offsets);
     free(buffer);
 }
 
