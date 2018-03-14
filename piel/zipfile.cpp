@@ -274,9 +274,8 @@ ZipSource::ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, 
     , entry_name_(entry_name)
     , file_name_()
     , to_be_freed_(true)
-    , stream_ptr_()
+    , stream_ptr_(SourceIStreamPtr(new ZipSourceIStream))
 {
-    stream_ptr_ = SourceIStreamPtr(new ZipSourceIStream);
     source_ = stream_ptr_->init(owner_->zip_, stream_weak_ptr, stream_ptr_);
 }
 
