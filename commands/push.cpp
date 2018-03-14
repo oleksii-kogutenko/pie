@@ -35,14 +35,17 @@
 #include <fsindexer.h>
 #include <treeindexenumerator.h>
 #include <artdeployartifacthandlers.h>
+#include <boost_filesystem_ext.hpp>
 
 namespace al = art::lib;
+namespace fs = boost::filesystem;
 
 namespace piel { namespace cmd {
 
 namespace constants {
 
     static const std::string zip_extention = ".zip";
+    static const std::string pom_extention = ".pom";
 
 };
 
@@ -85,15 +88,20 @@ const Push* Push::set_query(const art::lib::GavcQuery &query)
     return this;
 }
 
-void Push::generate_arch()
-{
-
-}
-
-void Push::deploy_pom()
+void Push::deploy_pom(const boost::filesystem::path &path_to_save_pom)
 {
     art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
-    deploy_handlers.generate_pom(server_url_, server_repository_, query_.group(), query_.name(), query_.version());
+    std::string pom_entry = deploy_handlers.generate_pom(
+                server_url_,
+                server_repository_,
+                query_.group(),
+                query_.name(),
+                query_.version());
+
+    boost::filesystem::path pom_path = path_to_save_pom / constants::pom_extention;
+    std::ofstream pom_file(pom_path.generic_string());
+    pom_file << pom_entry;
+    pom_file.close();
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
@@ -149,6 +157,9 @@ void Push::operator()()
         throw errors::nothing_to_push();
     }
 
+    boost::filesystem::path version_dir = working_copy()->archives_dir() / query_.version();
+    fs::create_directories(version_dir);
+
     for(std::set<piel::lib::refs::Ref>::const_iterator i = all_refs.begin(), end = all_refs.end(); i != end; ++i)
     {
         std::string log_str;
@@ -164,7 +175,8 @@ void Push::operator()()
 
         LOGI << "reference_index->self().id().string():" << reference_index->self().id().string() << ELOG;
 
-        boost::filesystem::path zip_path_fs = working_copy()->archives_dir() / (i->first + constants::zip_extention);
+        boost::filesystem::path zip_path_fs = version_dir / (i->first + constants::zip_extention);
+
         std::string zip_path = zip_path_fs.generic_string();
         zip_list_.push_back(zip_path);
         {
@@ -183,7 +195,7 @@ void Push::operator()()
 
     if (no_errors)
     {
-        deploy_pom();
+        deploy_pom(version_dir);
     }
 }
 
