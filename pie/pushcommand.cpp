@@ -54,7 +54,6 @@ PushCommand::PushCommand(Application *app, int argc, char **argv)
     , server_api_access_token_()
     , server_repository_()
     , query_()
-    , classifier_vector_()
 {
 }
 
@@ -93,13 +92,11 @@ void PushCommand::show_command_help_message(const po::options_description& desc)
 bool PushCommand::parse_arguments()
 {
     po::options_description desc("Push options");
-    std::string  classifiers_str;
 
     desc.add_options()
         ("token,t",         po::value<std::string>(&server_api_access_token_),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
-        ("filelist,f",      po::value<std::string>(&classifiers_str)->required(),    "List of files to upload (required). Use as: classifier1:file1,classifier2:file2,...")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -159,21 +156,6 @@ bool PushCommand::parse_arguments()
         return false;
     }
 
-    // Gen file list
-    LOGT << "classifiers_str:" << classifiers_str << ELOG;
-
-    al::UploadFileSpec spec;
-
-    boost::optional<al::UploadFileSpec> result_parse = spec.parse(classifiers_str);
-    if (result_parse)
-    {
-        classifier_vector_ = result_parse->get_data();
-    } else {
-        std::cout << "Wrong parse <filelist> argument!" << std::endl;
-        show_command_help_message(desc);
-        return false;
-    }
-
     return true;
 }
 
@@ -195,19 +177,33 @@ bool PushCommand::parse_arguments()
         push.set_server_api_access_token(server_api_access_token_);
         push.set_server_repository(server_repository_);
         push.set_query(query_);
-        push.set_classifiers(classifier_vector_);
 
-        std::string hash = push();
-        std::cout << working_copy_->current_tree_name() << ":" << hash << std::endl;
+        push();
+
     }
-    catch (const piel::lib::errors::attach_to_non_working_copy& e)
+    catch (const piel::lib::errors::archives_directory_not_exists&)
+    {
+        std::cerr << "Archives folder cannot be created!" << std::endl;
+        return -1;
+    }
+    catch (const piel::lib::errors::attach_to_non_working_copy&)
     {
         std::cerr << "Attempt to perform operation outside of working copy!" << std::endl;
         return -1;
     }
-    catch (const piel::cmd::errors::nothing_to_push& e)
+    catch (const piel::cmd::errors::nothing_to_push&)
     {
         std::cerr << "No changes!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::uploading_classifier_error& e)
+    {
+        std::cerr << "Classifier uploading error:" << e.error << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::uploading_pom_error& e)
+    {
+        std::cerr << "POM uploading error:" << e.error << std::endl;
         return -1;
     }
 

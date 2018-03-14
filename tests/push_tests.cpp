@@ -62,17 +62,9 @@ void deploy_pom(const art::lib::GavcQuery& query_)
     }
 }
 
-void upload(const std::string& query_str, const std::string& classifier, const std::string& file_name)
+bool upload(const art::lib::GavcQuery& query_, const std::string& classifier, const std::string& file_name)
 {
     bool no_errors = true;
-
-    art::lib::GavcQuery query_;
-    boost::optional<art::lib::GavcQuery> query_opt = art::lib::GavcQuery::parse(query_str);
-    if (!query_opt) {
-        LOGE << "Wrong query " << query_str << ELOG;
-        return;
-    }
-    query_ = query_opt.get();
 
     LOGI << query_.to_string() << ELOG;
     {
@@ -97,10 +89,7 @@ void upload(const std::string& query_str, const std::string& classifier, const s
         }
     }
 
-    if (no_errors)
-    {
-        deploy_pom(query_);
-    }
+    return no_errors;
 }
 
 bool create_reference(lib::WorkingCopy::Ptr working_copy, const std::string& new_ref_)
@@ -221,12 +210,28 @@ BOOST_AUTO_TEST_CASE(Push_test_1)
     // Publishing to the artifactory server
     LOGI << " Publishing::" << ELOG;
 
+    art::lib::GavcQuery query_;
+    boost::optional<art::lib::GavcQuery> query_opt = art::lib::GavcQuery::parse(query_str);
+
+    BOOST_CHECK(query_opt);
+
+    if (!query_opt) {
+        LOGE << "Wrong query " << query_str << ELOG;
+        return;
+    }
+    query_ = query_opt.get();
+
+    bool no_errors = true;
     for(std::set<piel::lib::refs::Ref>::const_iterator i = all_refs.begin(), end = all_refs.end(); i != end; ++i)
     {
         boost::filesystem::path zip_path_fs = wc_path->first / (i->first + ".zip");
         std::string zip_path = zip_path_fs.string();
         LOGI << " Publishing " << zip_path <<  " as " << i->first << ELOG;
-        upload(query_str, i->first, zip_path);
+        no_errors &= upload(query_, i->first + ".zip", zip_path);
+    }
+    if (no_errors)
+    {
+        deploy_pom(query_);
     }
 
     //*********************************

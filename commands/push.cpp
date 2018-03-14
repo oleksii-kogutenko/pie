@@ -33,12 +33,19 @@
 #include <push.h>
 #include <logging.h>
 #include <fsindexer.h>
-
+#include <treeindexenumerator.h>
 #include <artdeployartifacthandlers.h>
 
 namespace al = art::lib;
 
 namespace piel { namespace cmd {
+
+namespace constants {
+
+    static const std::string zip_extention = ".zip";
+
+};
+
 
 Push::Push(const piel::lib::WorkingCopy::Ptr& working_copy)
     : WorkingCopyCommand(working_copy)
@@ -46,7 +53,7 @@ Push::Push(const piel::lib::WorkingCopy::Ptr& working_copy)
     , server_api_access_token_()
     , server_repository_()
     , query_()
-    , classifier_vector_()
+    , zip_list_()
 {
 }
 
@@ -78,80 +85,106 @@ const Push* Push::set_query(const art::lib::GavcQuery &query)
     return this;
 }
 
-const Push* Push::set_classifiers(const art::lib::ufs::UFSVector& classifiers)
+void Push::generate_arch()
 {
-    classifier_vector_ = classifiers;
-    return this;
+
 }
 
-std::string Push::operator()()
+void Push::deploy_pom()
 {
-    /*
-    piel::lib::IObjectsStorage::Ptr ls  = working_copy()->local_storage();
-    piel::lib::TreeIndex::Ptr current_index  = working_copy()->working_dir_state();
+    art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+    deploy_handlers.generate_pom(server_url_, server_repository_, query_.group(), query_.name(), query_.version());
 
-    piel::lib::IndexesDiff indexes_diff = diff(current_index);
-    if (indexes_diff.empty())
+    piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
+
+    LOGD << "Upload pom to: " << deploy_handlers.gen_uri() << ELOG;
+
+    if (!upload_client.perform())
     {
-        LOGT << "Diff is empty!" << ELOG;
-        throw errors::nothing_to_push();
+        LOGE << "Error on upload pom!"                      << ELOG;
+        LOGE << upload_client.curl_error().presentation()   << ELOG;
+        throw errors::uploading_pom_error(upload_client.curl_error().presentation());
     }
+}
 
-    LOGT << "Non empty diff:" << ELOG;
+bool Push::upload(const std::string& classifier, const std::string& file_name)
+{
+    bool no_errors = true;
 
-    std::cout << indexes_diff.format();
-
-    LOGT << "Continue Push." << ELOG;
-
-    piel::lib::TreeIndex::Ptr reference_index    = working_copy()->current_tree_state();
-
-    piel::lib::TreeIndex::Ptr ref_index = piel::lib::TreeIndex::from_ref(ls, working_copy()->current_tree_name());
-    if (ref_index)
+    LOGI << query_.to_string() << ELOG;
     {
-        reference_index = ref_index;
-    }
-
-    if (!reference_index->empty())
-    {
-        current_index->set_parent(reference_index->self());
-    }
-
-    // Put changes into local storage
-    ls->put(current_index->assets());
-    ls->update_reference(piel::lib::refs::Ref(working_copy()->current_tree_name(), current_index->self()));
-
-    working_copy()->setup_current_tree(working_copy()->current_tree_name(), current_index);
-    */
-    LOGT << "list:" << al::ufs::to_string(classifier_vector_) << ELOG;
-    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it) {
-        LOGT << "element:" << al::ufs::to_string(*it) << ELOG;
-
         art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+
         deploy_handlers.set_url(server_url_);
         deploy_handlers.set_repo(server_repository_);
         deploy_handlers.set_path(query_.group());
         deploy_handlers.set_name(query_.name());
         deploy_handlers.set_version(query_.version());
-        deploy_handlers.set_classifier(al::ufs::to_classifier(*it));
-        deploy_handlers.file(it->file_name);
+        deploy_handlers.set_classifier(classifier);
+        deploy_handlers.file(file_name);
 
-        LOGT << "--" << __LINE__ << "--" << ELOG;
+        piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
-        piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> push_client(deploy_handlers.gen_uri(), &deploy_handlers);
-        LOGT << "--" << __LINE__ << "--" << ELOG;
+        LOGD << "Upload: " << file_name << " as " << classifier << " to: " << deploy_handlers.gen_uri() << ELOG;
 
-        std::cout << "upload to here: " << deploy_handlers.gen_uri() << std::endl;
-
-        if (!push_client.perform())
+        if (!(no_errors &= upload_client.perform()))
         {
-            LOGE << "Error on downloading file attempt!"        << ELOG;
-            LOGE << push_client.curl_error().presentation() << ELOG;
+            LOGE << "Error on upload file!"                     << ELOG;
+            LOGE << upload_client.curl_error().presentation()   << ELOG;
+            throw errors::uploading_classifier_error(upload_client.curl_error().presentation());
         }
-        LOGT << "--" << __LINE__ << "--" << ELOG;
+    }
+    return no_errors;
+}
 
+void Push::operator()()
+{
+    bool no_errors = true;
+    std::set<piel::lib::refs::Ref> all_refs = working_copy()->local_storage()->references();
+
+    zip_list_.clear();
+
+    if (!all_refs.size()) {
+        LOGW << "No references found!" << ELOG;
+        throw errors::nothing_to_push();
     }
 
-    return working_copy()->current_tree_state()->self().id().string();
+    for(std::set<piel::lib::refs::Ref>::const_iterator i = all_refs.begin(), end = all_refs.end(); i != end; ++i)
+    {
+        std::string log_str;
+        if (working_copy()->current_tree_name() == i->first)
+            log_str  = "*" + i->first;
+        else
+            log_str  = " " + i->first;
+
+        LOGI << log_str << ":" << i->second.string() << ELOG;
+
+        piel::lib::TreeIndex::Ptr reference_index = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), i->first);
+        piel::lib::TreeIndexEnumerator enumerator(reference_index);
+
+        LOGI << "reference_index->self().id().string():" << reference_index->self().id().string() << ELOG;
+
+        boost::filesystem::path zip_path_fs = working_copy()->archives_dir() / (i->first + constants::zip_extention);
+        std::string zip_path = zip_path_fs.generic_string();
+        zip_list_.push_back(zip_path);
+        {
+            lib::ZipFile::FilePtr zip = lib::ZipFile::create(zip_path);
+
+            while (enumerator.next())
+            {
+                LOGI << "\t" << enumerator.path << ":"
+                        << enumerator.asset.id().string() << ELOG;
+
+                zip->add_istream(enumerator.path, enumerator.asset.istream());
+            }
+        }
+        no_errors &= upload(i->first + constants::zip_extention, zip_path);
+    }
+
+    if (no_errors)
+    {
+        deploy_pom();
+    }
 }
 
 } } // namespace piel::cmd
