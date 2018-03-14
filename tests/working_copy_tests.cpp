@@ -60,6 +60,16 @@ BOOST_AUTO_TEST_CASE(init_working_copy)
 
     // Second attempt must throw exception
     BOOST_CHECK_THROW(lib::WorkingCopy::init(wc_path->first, ref_name_1), lib::errors::init_existing_working_copy);
+
+    fs::path arc_path = wc_initialized->archives_dir();
+
+    fs::remove(arc_path);
+    std::ofstream f(arc_path.generic_string());
+    f << "test";
+    f.close();
+
+    BOOST_CHECK_THROW(wc_initialized->archives_dir(), lib::errors::archives_directory_not_exists);
+
 }
 
 BOOST_AUTO_TEST_CASE(initial_commit)

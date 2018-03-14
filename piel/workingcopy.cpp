@@ -46,6 +46,7 @@ namespace layout {
         static const std::string current_tre_file;
         static const std::string current_tree_index_file;
         static const std::string config_file;
+        static const std::string archives_dir;
     };
 
     /*static*/ const std::string L::metadata_dir            = ".pie";
@@ -53,6 +54,7 @@ namespace layout {
     /*static*/ const std::string L::current_tre_file        = "reference";
     /*static*/ const std::string L::current_tree_index_file = "index.json";
     /*static*/ const std::string L::config_file             = "config.properties";
+    /*static*/ const std::string L::archives_dir            = "archives";
 
 };
 
@@ -77,6 +79,7 @@ WorkingCopy::WorkingCopy(const boost::filesystem::path& working_dir)
     current_tree_file_      = metadata_dir_ / layout::L::current_tre_file;
     current_tree_index_file_= metadata_dir_ / layout::L::current_tree_index_file;
     config_file_            = metadata_dir_ / layout::L::config_file;
+    archives_dir_           = metadata_dir_ / layout::L::archives_dir;
 }
 
 WorkingCopy::~WorkingCopy()
@@ -179,6 +182,21 @@ fs::path WorkingCopy::storage_dir() const
 fs::path WorkingCopy::config_file() const
 {
     return config_file_;
+}
+
+fs::path WorkingCopy::archives_dir() const
+{
+    try {
+        fs::create_directories(archives_dir_);
+    } catch (...) {
+    }
+
+    if (!fs::is_directory(archives_dir_))
+    {
+        throw errors::archives_directory_not_exists();
+    }
+
+    return archives_dir_;
 }
 
 Properties& WorkingCopy::config()
