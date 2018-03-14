@@ -54,6 +54,7 @@ namespace errors {
     struct init_existing_working_copy {};
     struct attach_to_non_working_copy {};
     struct unable_to_find_reference_file {};
+    struct archives_directory_not_exists {};
 };
 
 class WorkingCopy: private boost::noncopyable
@@ -80,6 +81,7 @@ public:
     boost::filesystem::path metadata_dir() const;
     boost::filesystem::path storage_dir() const;
     boost::filesystem::path config_file() const;
+    boost::filesystem::path archives_dir() const;
     Properties& config();
     Storages& storages();
 
@@ -110,6 +112,7 @@ private:
     boost::filesystem::path current_tree_file_;                 //!< Metadata file what contains working copy current "Pie" name.
     boost::filesystem::path current_tree_index_file_;           //!< Metadata file what contains working copy current "Pie" tree index.
     boost::filesystem::path config_file_;                       //!< Working copy specific pie configuration parameters file.
+    boost::filesystem::path archives_dir_;                      //!< Working copy specific folder for archives.
     Properties              config_;                            //!< Working copy specific pie configuration parameters.
     Storages                storages_;                          //!< "ObjectStorage"s collection.
     std::string             current_tree_name_;                 //!< Working copy current "Tree" name.

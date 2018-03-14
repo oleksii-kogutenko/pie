@@ -33,11 +33,22 @@
 #include <indexesdiff.h>
 #include <gavcquery.h>
 #include "uploadfilesspec.h"
+#include <list>
 
 namespace piel { namespace cmd {
 
 namespace errors {
     struct nothing_to_push {};
+    struct uploading_classifier_error
+    {
+        uploading_classifier_error(const std::string& e) : error(e) {}
+        std::string error;
+    };
+    struct uploading_pom_error
+    {
+        uploading_pom_error(const std::string& e) : error(e) {}
+        std::string error;
+    };
 };
 
 class Push: public WorkingCopyCommand
@@ -46,20 +57,22 @@ public:
     Push(const piel::lib::WorkingCopy::Ptr& working_copy);
     virtual ~Push();
 
-    std::string operator()();
+    void operator()();
 
     const Push* set_server_url(const std::string& url);
     const Push* set_server_api_access_token(const std::string& token);
     const Push* set_server_repository(const std::string& repo);
     const Push* set_query(const art::lib::GavcQuery& query);
-    const Push* set_classifiers(const art::lib::ufs::UFSVector& classifiers);
-
+protected:
+    void generate_arch();
+    bool upload(const std::string& classifier, const std::string& file_name);
+    void deploy_pom();
 private:
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
-    art::lib::ufs::UFSVector classifier_vector_;
+    std::list<std::string> zip_list_;
 };
 
 } } // namespace piel::cmd

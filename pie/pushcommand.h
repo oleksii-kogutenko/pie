@@ -62,8 +62,6 @@ private:
 
     art::lib::GavcQuery query_;
 
-    art::lib::ufs::UFSVector classifier_vector_;
-
     piel::lib::WorkingCopy::Ptr working_copy_;
 };
 

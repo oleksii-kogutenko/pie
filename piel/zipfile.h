@@ -111,6 +111,8 @@ public:
     typedef boost::shared_ptr<ZipEntry>  EntryPtr;   //!< Pointer to ZipEntry.
     typedef boost::shared_ptr<ZipFile>   FilePtr;    //!< Pointer to ZipFile.
     typedef boost::weak_ptr<ZipFile>     WeakFilePtr;    //!< Pointer to ZipFile.
+    typedef boost::shared_ptr<std::istream> IStreamPtr;   //!< Pointer to ZipSourceEntry.
+    typedef boost::weak_ptr<std::istream>   IStreamWeakPtr;   //!< Pointer to ZipSourceEntry.
 
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
@@ -191,6 +193,10 @@ public:
         return add_source(create_buffer_source(entry_name, data, len, freep), mode);
     }
 
+    zip_int64_t add_istream(const std::string& entry_name, IStreamWeakPtr stream_ptr, int mode = -1)
+    {
+        return add_source(create_istream_source(entry_name, stream_ptr), mode);
+    }
 
     bool add_symlink(const std::string& entry_name, const std::string& target, int mode = -1)
     {
@@ -202,6 +208,8 @@ protected:
     SourcePtr create_file_source(zip_int64_t entry_index);
 
     SourcePtr create_buffer_source(const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0);
+
+    SourcePtr create_istream_source(const std::string& entry_name, IStreamWeakPtr source_ptr);
 
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
@@ -387,122 +395,6 @@ private:
     ZipFile::FilePtr owner_;            //!< Reference to zip file.
     std::string name_;                  //!< Entry name.
     zip_file_t* zip_file_;              //!< Internal libzip handle.
-};
-
-//! libzip C api wrapper. Encapsulated api to work with archive entry.
-struct ZipSource {
-
-    //! Destructor.
-    ~ZipSource() {
-        if (to_be_freed_) {
-            zip_source_free(source_);
-        }
-    }
-
-#ifdef ZIP_ENABLE_SEEK_TELL
-    zip_int8_t seek(zip_int64_t offset, int whence) const {
-        return owner_->fseek(zip_file_, offset, whence);
-    }
-
-    zip_int64_t tell() const {
-        return owner_->ftell(zip_file_);
-    }
-#endif//ZIP_ENABLE_SEEK_TELL
-
-    //! Get entry name.
-    //! \return Archive entry name.
-    std::string name() const {
-        return entry_name_;
-    }
-
-    //! Get entry file name.
-    //! \return Archive entry file name.
-    std::string file_name() const {
-        return file_name_;
-    }
-
-    //! Zip entry stat.
-    //! \return libzip zip_stat_t
-    zip_stat_t stat() const {
-        return owner_->stat(entry_name_);
-    }
-
-    //! Get entry extended attributes.
-    //! \return ZipEntryAttribute struct with extenden attributes.
-    ZipEntryAttributes attributes() const {
-        return owner_->file_get_external_attributes(entry_name_);
-    }
-
-    //! Get entry extended attributes.
-    //! \return ZipEntryAttribute struct with extenden attributes.
-    ZipEntryAttributes set_attributes() const {
-        return owner_->file_get_external_attributes(entry_name_);
-    }
-
-    //! Get unix mode.
-    //! \return unix file mode.
-    mode_t mode() const {
-        ZipEntryAttributes attrs = attributes();
-        return attrs.mode();
-    }
-
-    //! Check if the entry is symlink.
-    //! \return true if the entry is unix symlink, false otherwise.
-    bool symlink() const {
-        ZipEntryAttributes attrs = attributes();
-        return attrs.symlink();
-    }
-
-    //! Read symlink target.
-    //! \return The path symlink points to.
-    //! \sa bool symlink() const
-    std::string target();
-
-    //! Construct input stream.
-    //! \return Pointer to archive entry istream.
-    ZipEntrySource::istream_ptr istream();
-
-protected:
-    void set_to_be_freed(bool b) {
-        to_be_freed_ = b;
-    }
-
-    zip_source_t *source() const {
-        return source_;
-    }
-
-    // Frienship is used for control ownership model. ZipEntry instance can be
-    //created by ZipFile instance only.
-    friend class ZipFile;
-
-    //! Constructor.
-    //! \param owner ZipFile instance.
-    //! \param name zip archive entry name.
-    //! \param zip_file zip_file_t libzip handle.
-    ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, const std::string& file_name)
-        : owner_(owner.lock())
-        , entry_name_(entry_name)
-        , file_name_(file_name)
-        , to_be_freed_(true)
-    {
-        source_ = zip_source_file(owner_->zip_, file_name.c_str(), 0, -1);
-    }
-
-    ZipSource(ZipFile::WeakFilePtr owner, const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0)
-        : owner_(owner.lock())
-        , entry_name_(entry_name)
-        , file_name_()
-        , to_be_freed_(true)
-    {
-        source_ = zip_source_buffer(owner_->zip_, data, len, freep);
-    }
-
-private:
-    ZipFile::FilePtr        owner_;            //!< Reference to zip file.
-    std::string             entry_name_;                  //!< Entry name.
-    std::string             file_name_;                  //!< Entry name.
-    zip_source_t            *source_;
-    bool                    to_be_freed_;
 };
 
 } } // namespace piel::lib

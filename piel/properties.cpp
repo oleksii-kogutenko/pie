@@ -119,7 +119,10 @@ Properties Properties::load(std::istream &is)
         std::getline(is, buffer);
         LOGT << "buffer: " << buffer << ELOG;
         qi::phrase_parse( buffer.begin(), buffer.end(), java_properties_grammar, ascii::space, pair );
-        result.data_[pair.first] = pair.second;
+        if (!pair.first.empty())
+        {
+            result.data_[pair.first] = pair.second;
+        }
         LOGT << "'"<< pair.first << "' = '" << pair.second << "'" << ELOG;
     }
 
