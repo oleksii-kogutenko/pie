@@ -79,3 +79,8 @@ add_test (NAME WorkingCopyTests COMMAND working_copy_tests)
 add_executable(logging_tests logging_tests.cpp)
 target_link_libraries(logging_tests ${Piel_LIBRARIES})
 add_test (NAME LoggingTests COMMAND logging_tests)
+
+#############################################################
+add_executable(push_test push_tests.cpp)
+target_link_libraries(push_test ${Piel_LIBRARIES})
+#add_test (NAME PushTest COMMAND push_test)
