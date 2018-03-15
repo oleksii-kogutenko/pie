@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,48 +26,59 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#ifndef GAVC_H_
+#define GAVC_H_
 
-#include <application.h>
 #include <gavcquery.h>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
 
-namespace pie { namespace app {
+namespace piel { namespace cmd {
 
-class GavcCommand: public ICommand
+namespace errors {
+    struct fail_to_parse_maven_metadata {};
+    struct fail_on_request_maven_metadata {
+        fail_on_request_maven_metadata(const std::string& e)
+            : error(e)
+        {}
+        std::string error;
+    };
+    struct error_processing_version {
+        error_processing_version(const std::string& e, const std::string& v)
+            : error(e)
+            , ver(v)
+        {}
+        std::string error;
+        std::string ver;
+    };
+    struct cant_receive_metadata {};
+};
+
+class GAVC
 {
 public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+    GAVC(  const std::string& server_api_access_token
+         , const std::string& server_url
+         , const std::string& server_repository
+         , const art::lib::GavcQuery& query
+         , const bool have_to_download_results);
+    virtual ~GAVC();
 
-    virtual int perform();
-
-    bool have_to_download_results() const { return have_to_download_results_; }
+    void operator()();
 
 protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
-    bool get_from_env(boost::program_options::variables_map& vm,
-                      const std::string& opt_name,
-                      const std::string& env_var,
-                      std::string& var);
-
+    std::string create_url(const std::string& version_to_query) const;
+    void on_object(boost::property_tree::ptree::value_type obj);
+    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
 private:
-    int argc_;
-    char **argv_;
-
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
-
     art::lib::GavcQuery query_;
-
     bool have_to_download_results_;
-
 };
 
-} } // namespace pie::app
+} } // namespace piel::cmd
 
-#endif // GAVCCOMMAND_H
+#endif /* GAVC_H_ */
