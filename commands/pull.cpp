@@ -144,7 +144,15 @@ void Pull::operator()()
         working_copy_->local_storage()->create_reference(piel::lib::refs::Ref(classifier, new_tree_id));
         working_copy_->setup_current_tree(classifier, zip_index);
     }
-    pl::TreeIndex::Ptr current_tree = working_copy_->current_tree_state();
+    pl::TreeIndex::Ptr current_tree;
+    if (classifier_to_checkout_.empty())
+    {
+        current_tree = working_copy_->current_tree_state();
+    } else {
+        current_tree = piel::lib::TreeIndex::from_ref(working_copy_->local_storage(), classifier_to_checkout_);
+        working_copy_->setup_current_tree(classifier_to_checkout_, current_tree);
+    }
+
     pl::AssetsExtractor index_exporter(current_tree, pl::ExtractPolicy__replace_existing);
     index_exporter.extract_into(working_copy_->working_dir());
 }

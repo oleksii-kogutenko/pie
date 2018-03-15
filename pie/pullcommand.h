@@ -62,6 +62,7 @@ private:
 
     art::lib::GavcQuery query_;
     std::string path_to_download_;
+    std::string classifier_to_checkout_;
 };
 
 } } // namespace pie::app

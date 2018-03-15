@@ -57,15 +57,16 @@ public:
 
     void operator()();
 
-    void set_path_to_download(const boost::filesystem::path& path)
-    {
-        path_to_download_ = path;
-    }
-
+    void set_path_to_download(const boost::filesystem::path& path) { path_to_download_ = path; }
     boost::filesystem::path get_path_to_download() const { return path_to_download_; }
+
+    void set_classifier_to_checkout(const std::string& c) { classifier_to_checkout_ = c; }
+    std::string get_classifier_to_checkout() const { return classifier_to_checkout_; }
+
 protected:
     std::string get_classifier_from_filename(const boost::filesystem::path fn);
     std::vector<std::string> split(const std::string &s, char delim);
+
 private:
     piel::lib::WorkingCopy::Ptr working_copy_;
     std::string server_url_;
@@ -73,6 +74,7 @@ private:
     std::string server_repository_;
     art::lib::GavcQuery query_;
     boost::filesystem::path path_to_download_;
+    std::string classifier_to_checkout_;
 };
 
 } } // namespace piel::cmd

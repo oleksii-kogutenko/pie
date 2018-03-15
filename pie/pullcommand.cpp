@@ -56,6 +56,7 @@ PullCommand::PullCommand(Application *app, int argc, char **argv)
     , server_repository_()
     , query_()
     , path_to_download_()
+    , classifier_to_checkout_()
 {
 }
 
@@ -100,6 +101,8 @@ bool PullCommand::parse_arguments()
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("path,p",          po::value<std::string>(&path_to_download_),         "Path to create wc and download to")
+        ("classifier,c",    po::value<std::string>(&classifier_to_checkout_),   "Checkout tree reference after pull command")
+
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -178,6 +181,8 @@ bool PullCommand::parse_arguments()
                              query_);
 
         pull.set_path_to_download(path_to_download_);
+        pull.set_classifier_to_checkout(classifier_to_checkout_);
+
         pull();
 
     }
