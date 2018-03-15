@@ -67,6 +67,13 @@ public:
 
     void operator()();
 
+    void set_path_to_download(const std::string& path)
+    {
+        path_to_download_ = path;
+    }
+
+    std::string get_path_to_download() const { return path_to_download_; }
+
 protected:
     std::string create_url(const std::string& version_to_query) const;
     void on_object(boost::property_tree::ptree::value_type obj);
@@ -76,6 +83,7 @@ private:
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
+    std::string path_to_download_;
     bool have_to_download_results_;
 };
 

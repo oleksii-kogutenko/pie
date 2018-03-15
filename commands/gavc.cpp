@@ -60,6 +60,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , server_api_access_token_(server_api_access_token)
     , server_repository_(server_repository)
     , query_(query)
+    , path_to_download_()
     , have_to_download_results_(have_to_download_results)
 {
 }
@@ -143,7 +144,13 @@ void GAVC::on_object(pt::ptree::value_type obj)
         LOGT << "path: " << path.generic_string() << ELOG;
         LOGT << "filename: " << path.filename()   << ELOG;
 
-        fs::path object_path(path.filename());
+        fs::path object_path;
+        if (path_to_download_.empty()) {
+                object_path = path.filename();
+        } else {
+            object_path = path_to_download_;
+            object_path /= path.filename();
+        }
         LOGT << "object path: " << object_path.generic_string() << ELOG;
 
         std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");

@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef PUSH_COMMIT_H_
-#define PUSH_COMMIT_H_
+#ifndef PUSH_H_
+#define PUSH_H_
 
 #include <workingcopycommand.h>
 #include <indexesdiff.h>
@@ -76,4 +76,4 @@ private:
 
 } } // namespace piel::cmd
 
-#endif /* COMMANDS_COMMIT_H_ */
+#endif /* PUSH_H_ */
