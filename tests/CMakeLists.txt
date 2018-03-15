@@ -1,4 +1,4 @@
-find_package (Boost COMPONENTS system filesystem random log unit_test_framework regex thread REQUIRED)
+find_package (Boost COMPONENTS system filesystem random unit_test_framework regex thread REQUIRED)
 
 set(Piel_LIBRARIES piel commands crypto zip curl pthread ${Boost_LIBRARIES})
 
