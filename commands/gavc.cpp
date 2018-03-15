@@ -41,7 +41,6 @@
 
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
-#include <boost/filesystem.hpp>
 
 namespace al = art::lib;
 namespace pl = piel::lib;
@@ -62,6 +61,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , query_(query)
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
+    , list_of_downloaded_files_()
 {
 }
 
@@ -144,17 +144,14 @@ void GAVC::on_object(pt::ptree::value_type obj)
         LOGT << "path: " << path.generic_string() << ELOG;
         LOGT << "filename: " << path.filename()   << ELOG;
 
-        fs::path object_path;
-        if (path_to_download_.empty()) {
-                object_path = path.filename();
-        } else {
-            object_path = path_to_download_;
-            object_path /= path.filename();
-        }
+        fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
+
         LOGT << "object path: " << object_path.generic_string() << ELOG;
 
         std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
         //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
+
+        list_of_downloaded_files_.push_back(object_path);
 
         bool do_download = true;
         if (fs::exists(object_path))

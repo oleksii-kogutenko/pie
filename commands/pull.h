@@ -26,48 +26,34 @@
  *
  */
 
-#ifndef GAVC_H_
-#define GAVC_H_
+#ifndef PULL_H_
+#define PULL_H_
 
+#include <workingcopycommand.h>
+#include <indexesdiff.h>
 #include <gavcquery.h>
-
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-
 #include <list>
+
+#include <boost/filesystem.hpp>
 
 namespace piel { namespace cmd {
 
 namespace errors {
-    struct fail_to_parse_maven_metadata {};
-    struct fail_on_request_maven_metadata {
-        fail_on_request_maven_metadata(const std::string& e)
-            : error(e)
-        {}
-        std::string error;
+    struct invalid_working_copy {};
+    struct invalid_downloaded_artifact_name {
+        invalid_downloaded_artifact_name(const std::string& n) : name(n) {}
+        std::string name;
     };
-    struct error_processing_version {
-        error_processing_version(const std::string& e, const std::string& v)
-            : error(e)
-            , ver(v)
-        {}
-        std::string error;
-        std::string ver;
-    };
-    struct cant_receive_metadata {};
 };
 
-class GAVC
+class Pull
 {
 public:
-    typedef std::list<boost::filesystem::path> paths_list;
-    GAVC(  const std::string& server_api_access_token
+    Pull(  const std::string& server_api_access_token
          , const std::string& server_url
          , const std::string& server_repository
-         , const art::lib::GavcQuery& query
-         , const bool have_to_download_results);
-    virtual ~GAVC();
+         , const art::lib::GavcQuery& query);
+    virtual ~Pull();
 
     void operator()();
 
@@ -77,23 +63,18 @@ public:
     }
 
     boost::filesystem::path get_path_to_download() const { return path_to_download_; }
-
-    paths_list get_list_of_downloaded_files() const { return list_of_downloaded_files_; }
-
 protected:
-    std::string create_url(const std::string& version_to_query) const;
-    void on_object(boost::property_tree::ptree::value_type obj);
-    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
+    std::string get_classifier_from_filename(const boost::filesystem::path fn);
+    std::vector<std::string> split(const std::string &s, char delim);
 private:
+    piel::lib::WorkingCopy::Ptr working_copy_;
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
     boost::filesystem::path path_to_download_;
-    bool have_to_download_results_;
-    paths_list list_of_downloaded_files_;
 };
 
 } } // namespace piel::cmd
 
-#endif /* GAVC_H_ */
+#endif /* PULL_H_ */
