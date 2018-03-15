@@ -38,7 +38,7 @@ add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
-#include("third-party/CMakeLists.txt")
+set(Boost_libraries_list program_options system filesystem regex thread)
 
 add_subdirectory(piel)
 add_subdirectory(commands)
