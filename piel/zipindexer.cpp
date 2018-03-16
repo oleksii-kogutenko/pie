@@ -65,6 +65,11 @@ ZipIndexer::~ZipIndexer()
                 << " mode: "
                 << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 ) << ELOG;
 
+        if (entry->dir())
+        {
+            LOGT << "The folder " << entry->name() << " will skip" << ELOG;
+            continue;
+        }
         if (result->insert_path( entry->name(), Asset::create_for(entry) ))
         {
             if (entry->symlink())
