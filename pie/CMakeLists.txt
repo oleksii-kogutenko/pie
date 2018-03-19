@@ -4,12 +4,12 @@ file(GLOB SOURCES "*.cpp")
 add_executable(${Module_name} ${SOURCES})
 
 # Components
-target_link_libraries(${Module_name} piel commands pthread zip)
+target_link_libraries(${Module_name} commands piel pthread zip)
 
 # Externals
 #
 # Boost (libboost-all-dev)
-find_package( Boost COMPONENTS program_options system filesystem log regex thread REQUIRED)
+find_package( Boost COMPONENTS ${Boost_libraries_list} REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES})
 

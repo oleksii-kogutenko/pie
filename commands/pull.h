@@ -26,54 +26,57 @@
  *
  */
 
-#ifndef PUSH_H_
-#define PUSH_H_
+#ifndef PULL_H_
+#define PULL_H_
 
 #include <workingcopycommand.h>
 #include <indexesdiff.h>
 #include <gavcquery.h>
-#include "uploadfilesspec.h"
 #include <list>
+
+#include <boost/filesystem.hpp>
 
 namespace piel { namespace cmd {
 
 namespace errors {
-    struct nothing_to_push {};
-    struct uploading_classifier_error
-    {
-        uploading_classifier_error(const std::string& e) : error(e) {}
-        std::string error;
-    };
-    struct uploading_pom_error
-    {
-        uploading_pom_error(const std::string& e) : error(e) {}
-        std::string error;
+    struct invalid_working_copy {};
+    struct invalid_downloaded_artifact_name {
+        invalid_downloaded_artifact_name(const std::string& n) : name(n) {}
+        std::string name;
     };
 };
 
-class Push: public WorkingCopyCommand
+class Pull
 {
 public:
-    Push(const piel::lib::WorkingCopy::Ptr& working_copy);
-    virtual ~Push();
+    Pull(  const std::string& server_api_access_token
+         , const std::string& server_url
+         , const std::string& server_repository
+         , const art::lib::GavcQuery& query);
+    virtual ~Pull();
 
     void operator()();
 
-    const Push* set_server_url(const std::string& url);
-    const Push* set_server_api_access_token(const std::string& token);
-    const Push* set_server_repository(const std::string& repo);
-    const Push* set_query(const art::lib::GavcQuery& query);
+    void set_path_to_download(const boost::filesystem::path& path) { path_to_download_ = path; }
+    boost::filesystem::path get_path_to_download() const { return path_to_download_; }
+
+    void set_classifier_to_checkout(const std::string& c) { classifier_to_checkout_ = c; }
+    std::string get_classifier_to_checkout() const { return classifier_to_checkout_; }
+
 protected:
-    bool upload(const std::string& classifier, const std::string& file_name);
-    void deploy_pom(const boost::filesystem::path& path_to_save_pom);
+    std::string get_classifier_from_filename(const boost::filesystem::path fn);
+    std::vector<std::string> split(const std::string &s, char delim);
+
 private:
+    piel::lib::WorkingCopy::Ptr working_copy_;
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
-    std::list<std::string> zip_list_;
+    boost::filesystem::path path_to_download_;
+    std::string classifier_to_checkout_;
 };
 
 } } // namespace piel::cmd
 
-#endif /* PUSH_H_ */
+#endif /* PULL_H_ */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,54 +26,45 @@
  *
  */
 
-#ifndef PUSH_H_
-#define PUSH_H_
+#ifndef PULLCOMMAND_H
+#define PULLCOMMAND_H
 
-#include <workingcopycommand.h>
-#include <indexesdiff.h>
+#include <application.h>
 #include <gavcquery.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/program_options.hpp>
 #include "uploadfilesspec.h"
-#include <list>
+#include <workingcopy.h>
 
-namespace piel { namespace cmd {
+namespace pie { namespace app {
 
-namespace errors {
-    struct nothing_to_push {};
-    struct uploading_classifier_error
-    {
-        uploading_classifier_error(const std::string& e) : error(e) {}
-        std::string error;
-    };
-    struct uploading_pom_error
-    {
-        uploading_pom_error(const std::string& e) : error(e) {}
-        std::string error;
-    };
-};
-
-class Push: public WorkingCopyCommand
+class PullCommand: public ICommand
 {
 public:
-    Push(const piel::lib::WorkingCopy::Ptr& working_copy);
-    virtual ~Push();
+    PullCommand(Application *app, int argc, char **argv);
+    virtual ~PullCommand();
 
-    void operator()();
-
-    const Push* set_server_url(const std::string& url);
-    const Push* set_server_api_access_token(const std::string& token);
-    const Push* set_server_repository(const std::string& repo);
-    const Push* set_query(const art::lib::GavcQuery& query);
+    virtual int perform();
 protected:
-    bool upload(const std::string& classifier, const std::string& file_name);
-    void deploy_pom(const boost::filesystem::path& path_to_save_pom);
+    bool parse_arguments();
+    void show_command_help_message(const boost::program_options::options_description& desc);
+    bool get_from_env(boost::program_options::variables_map& vm,
+                      const std::string& opt_name,
+                      const std::string& env_var,
+                      std::string& var);
 private:
+    int argc_;
+    char **argv_;
+
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
+
     art::lib::GavcQuery query_;
-    std::list<std::string> zip_list_;
+    std::string path_to_download_;
+    std::string classifier_to_checkout_;
 };
 
-} } // namespace piel::cmd
+} } // namespace pie::app
 
-#endif /* PUSH_H_ */
+#endif // PULLCOMMAND_H

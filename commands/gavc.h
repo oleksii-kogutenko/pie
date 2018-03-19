@@ -26,54 +26,74 @@
  *
  */
 
-#ifndef PUSH_H_
-#define PUSH_H_
+#ifndef GAVC_H_
+#define GAVC_H_
 
-#include <workingcopycommand.h>
-#include <indexesdiff.h>
 #include <gavcquery.h>
-#include "uploadfilesspec.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+
 #include <list>
 
 namespace piel { namespace cmd {
 
 namespace errors {
-    struct nothing_to_push {};
-    struct uploading_classifier_error
-    {
-        uploading_classifier_error(const std::string& e) : error(e) {}
+    struct fail_to_parse_maven_metadata {};
+    struct fail_on_request_maven_metadata {
+        fail_on_request_maven_metadata(const std::string& e)
+            : error(e)
+        {}
         std::string error;
     };
-    struct uploading_pom_error
-    {
-        uploading_pom_error(const std::string& e) : error(e) {}
+    struct error_processing_version {
+        error_processing_version(const std::string& e, const std::string& v)
+            : error(e)
+            , ver(v)
+        {}
         std::string error;
+        std::string ver;
     };
+    struct cant_receive_metadata {};
 };
 
-class Push: public WorkingCopyCommand
+class GAVC
 {
 public:
-    Push(const piel::lib::WorkingCopy::Ptr& working_copy);
-    virtual ~Push();
+    typedef std::list<boost::filesystem::path> paths_list;
+    GAVC(  const std::string& server_api_access_token
+         , const std::string& server_url
+         , const std::string& server_repository
+         , const art::lib::GavcQuery& query
+         , const bool have_to_download_results);
+    virtual ~GAVC();
 
     void operator()();
 
-    const Push* set_server_url(const std::string& url);
-    const Push* set_server_api_access_token(const std::string& token);
-    const Push* set_server_repository(const std::string& repo);
-    const Push* set_query(const art::lib::GavcQuery& query);
+    void set_path_to_download(const boost::filesystem::path& path)
+    {
+        path_to_download_ = path;
+    }
+
+    boost::filesystem::path get_path_to_download() const { return path_to_download_; }
+
+    paths_list get_list_of_downloaded_files() const { return list_of_downloaded_files_; }
+
 protected:
-    bool upload(const std::string& classifier, const std::string& file_name);
-    void deploy_pom(const boost::filesystem::path& path_to_save_pom);
+    std::string create_url(const std::string& version_to_query) const;
+    void on_object(boost::property_tree::ptree::value_type obj);
+    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
 private:
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
-    std::list<std::string> zip_list_;
+    boost::filesystem::path path_to_download_;
+    bool have_to_download_results_;
+    paths_list list_of_downloaded_files_;
 };
 
 } } // namespace piel::cmd
 
-#endif /* PUSH_H_ */
+#endif /* GAVC_H_ */

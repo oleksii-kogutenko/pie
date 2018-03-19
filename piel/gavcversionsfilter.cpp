@@ -122,7 +122,7 @@ struct SpartsTableValuesFilter
 
     bool operator()(const SpartsTableElement& val) const
     {
-        val.second[field_index_] != value_;
+        return val.second[field_index_] != value_;
     }
 
 private:

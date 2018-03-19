@@ -153,6 +153,13 @@ struct ZipSource {
         return attrs.symlink();
     }
 
+    //! Check if the entry is directory.
+    //! \return true if the entry is directory, false otherwise.
+    bool dir() const {
+        ZipEntryAttributes attrs = attributes();
+        return attrs.dir();
+    }
+
     //! Read symlink target.
     //! \return The path symlink points to.
     //! \sa bool symlink() const

@@ -75,7 +75,7 @@ ArtDeployArtifactHandlers::~ArtDeployArtifactHandlers()
     LOGT << ELOG;
 }
 
-void ArtDeployArtifactHandlers::generate_pom(const std::string& uri,
+std::string ArtDeployArtifactHandlers::generate_pom(const std::string& uri,
                                                     const std::string& repo,
                                                     const std::string& path,
                                                     const std::string& name,
@@ -86,11 +86,12 @@ void ArtDeployArtifactHandlers::generate_pom(const std::string& uri,
     set_path(path);
     set_name(name);
     set_version(ver);
-    generate_pom();
+    return generate_pom();
 }
 
-void ArtDeployArtifactHandlers::generate_pom()
+std::string ArtDeployArtifactHandlers::generate_pom()
 {
+    std::string result;
     set_classifier(ArtBaseConstants::pom_classifier);
 
     std::stringstream os;
@@ -107,12 +108,15 @@ void ArtDeployArtifactHandlers::generate_pom()
 
     pt::write_xml(os, tree);
 
+    result = os.str();
+
     LOGT << "------------ +++ POM:XML +++ -------------" << ELOG;
-    LOGT << os.str() << ELOG;
+    LOGT << result << ELOG;
     LOGT << "------------ --- POM:XML --- -------------" << ELOG;
 
-    boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
+    boost::shared_ptr<std::istream> is(new std::stringstream(result));
     push_input_stream(is);
+    return result;
 }
 
 void ArtDeployArtifactHandlers::file(const std::string& fname)

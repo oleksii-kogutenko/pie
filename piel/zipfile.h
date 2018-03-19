@@ -75,6 +75,12 @@ struct ZipEntryAttributes {
     bool symlink() const {
         return (ZIP_OPSYS_UNIX == opsys) & S_ISLNK(mode());
     }
+
+    //! Check is the entry is directory.
+    //! \return true if the entry is directory, false otherwise.
+    bool dir() const {
+        return S_ISDIR(mode());
+    }
 };
 
 //! Data source used for ZipEntrySource::istream.
@@ -357,6 +363,13 @@ struct ZipEntry {
     bool symlink() const {
         ZipEntryAttributes attrs = attributes();
         return attrs.symlink();
+    }
+
+    //! Check if the entry is directory.
+    //! \return true if the entry is directory, false otherwise.
+    bool dir() const {
+        ZipEntryAttributes attrs = attributes();
+        return attrs.dir();
     }
 
     //! Read symlink target.

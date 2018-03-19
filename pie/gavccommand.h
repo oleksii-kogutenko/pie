@@ -49,14 +49,10 @@ public:
 protected:
     bool parse_arguments();
     void show_command_help_message(const boost::program_options::options_description& desc);
-    std::string create_url(const std::string& version_to_query) const;
-    void on_object(boost::property_tree::ptree::value_type obj);
     bool get_from_env(boost::program_options::variables_map& vm,
                       const std::string& opt_name,
                       const std::string& env_var,
                       std::string& var);
-
-    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
 
 private:
     int argc_;
