@@ -91,6 +91,7 @@ public:
     }
 
     bool is_exact_version_query() const;
+    bool is_single_version_query() const;
 
 private:
     gavc::gavc_data data_;

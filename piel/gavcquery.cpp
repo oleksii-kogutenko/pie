@@ -227,7 +227,7 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
     return result;
 }
 
-struct QueryOpsFinder {
+struct QueryOpsFinder_exact_version_query {
     bool operator()(const gavc::OpType& op) {
         return op.first > gavc::Op_const;
     }
@@ -238,7 +238,22 @@ bool GavcQuery::is_exact_version_query() const
     boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
     if (!pops) return false;
 
-    return std::find_if(pops->begin(), pops->end(), QueryOpsFinder()) == pops->end();
+    return std::find_if(pops->begin(), pops->end(), QueryOpsFinder_exact_version_query()) == pops->end();
+}
+
+bool GavcQuery::is_single_version_query() const
+{
+    boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
+    if (!pops) return false;
+
+    bool is_last_op_all = false;
+    for(std::vector<gavc::OpType>::const_iterator i = pops->begin(), end = pops->end(); i != end; ++i)
+    {
+        if (i->first != gavc::Op_const)
+            is_last_op_all = i->first == gavc::Op_all;
+    }
+
+    return !is_last_op_all;
 }
 
 std::string GavcQuery::to_string() const

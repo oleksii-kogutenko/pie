@@ -108,9 +108,9 @@ bool PullCommand::parse_arguments()
 
     query_ = *parsed_query;
 
-    if (!query_.is_exact_version_query())
+    if (!query_.is_single_version_query())
     {
-        std::cerr << "Exact version is needed for the pull command!" << std::endl;
+        std::cerr << "Single version query is needed for the pull command!" << std::endl;
         return false;
     }
 
