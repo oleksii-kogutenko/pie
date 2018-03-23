@@ -92,7 +92,7 @@ bool GavcCommand::parse_arguments()
     boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
     {
-        std::cout << "Wrong gavc query: " << query_str << "!" << std::endl;
+        std::cerr << "Wrong gavc query: " << query_str << "!" << std::endl;
         show_command_help_message(desc);
         return false;
     }
@@ -143,21 +143,21 @@ bool GavcCommand::parse_arguments()
 
     }
     catch (piel::cmd::errors::fail_to_parse_maven_metadata&) {
-        LOGE << "Error on parsing maven metadata. Server response has non expected format." << ELOG;
+        std::cerr << "Error on parsing maven metadata. Server response has non expected format." << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::fail_on_request_maven_metadata& e) {
-        LOGE << "Error on requesting maven metadata." << ELOG;
-        LOGE << e.error << ELOG;
+        std::cerr << "Error on requesting maven metadata." << std::endl;
+        std::cerr << e.error << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::error_processing_version& e) {
-        LOGE << "Error on processing version: " << e.ver << "!"    << ELOG;
-        LOGE <<  e.error << ELOG;
+        std::cerr << "Error on processing version: " << e.ver << "!"    << std::endl;
+        std::cerr <<  e.error << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::cant_receive_metadata& ) {
-        LOGE << "Can't retrieve maven metadata!" << ELOG;
+        std::cerr << "Can't retrieve maven metadata!" << std::endl;
         return -1;
     }
 
