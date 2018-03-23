@@ -74,7 +74,8 @@ Pull::~Pull()
 {
 }
 
-std::vector<std::string> Pull::split(const std::string &s, char delim) {
+std::vector<std::string> Pull::split(const std::string &s, char delim)
+{
     std::vector<std::string> result;
     std::stringstream ss(s);
     std::string item;
@@ -91,6 +92,7 @@ std::string Pull::get_classifier_from_filename(const fs::path fn)
     if (res.size() != 3) {
         throw errors::invalid_downloaded_artifact_name(fn.generic_string());
     }
+
     classifier = res[2];
     if (fn.has_extension()) {
         classifier = classifier.substr(0, classifier.find(fn.extension().generic_string(), 0));
@@ -101,7 +103,6 @@ std::string Pull::get_classifier_from_filename(const fs::path fn)
 
 void Pull::operator()()
 {
-    bool no_errors = true;
     fs::path wc_path = (path_to_download_.empty()) ? fs::current_path() : path_to_download_;
 
     std::string ref;
@@ -120,8 +121,8 @@ void Pull::operator()()
               server_repository_,
               query_,
               true);
-    gavc.set_path_to_download(archives_path);
 
+    gavc.set_path_to_download(archives_path);
     gavc();
 
     GAVC::paths_list list = gavc.get_list_of_downloaded_files();
@@ -134,6 +135,7 @@ void Pull::operator()()
             LOGI << "Skip pom file" << ELOG;
             continue;
         }
+
         std::string classifier = get_classifier_from_filename(*it);
         LOGI << "classifier:" << classifier << ELOG;
 
@@ -144,6 +146,7 @@ void Pull::operator()()
         working_copy_->local_storage()->create_reference(piel::lib::refs::Ref(classifier, new_tree_id));
         working_copy_->setup_current_tree(classifier, zip_index);
     }
+
     pl::TreeIndex::Ptr current_tree;
     if (classifier_to_checkout_.empty())
     {
