@@ -67,7 +67,7 @@ void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
 
 /*virtual*/ size_t ArtBaseDownloadHandlers::handle_output(char *ptr, size_t size)
 {
-    LOGT << "recieved buffer for id: " << id_ << " at:" << ptr << " size: " << size << LOGE;
+    LOGT << "recieved buffer for id: " << id_ << " at:" << (void*)ptr << " size: " << size << LOGE;
 
     if (dest_)
     {
