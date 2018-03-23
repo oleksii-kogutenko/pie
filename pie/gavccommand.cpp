@@ -58,27 +58,6 @@ GavcCommand::~GavcCommand()
 {
 }
 
-bool GavcCommand::get_from_env(po::variables_map& vm,
-                               const std::string& opt_name,
-                               const std::string& env_var,
-                               std::string& var)
-{
-    if (!vm.count(opt_name)) {
-        const char *value = ::getenv(env_var.c_str());
-        if (value)
-        {
-            LOGT << "Got " << env_var << " environment variable. Value: " << value << "." << ELOG;
-            var = std::string(value);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void GavcCommand::show_command_help_message(const po::options_description& desc)
 {
     std::cerr << "Usage: gavc <gavc query> [options]" << std::endl;

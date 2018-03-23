@@ -48,10 +48,7 @@ public:
 protected:
     bool parse_arguments();
     void show_command_help_message(const boost::program_options::options_description& desc);
-    bool get_from_env(boost::program_options::variables_map& vm,
-                      const std::string& opt_name,
-                      const std::string& env_var,
-                      std::string& var);
+
 private:
     int argc_;
     char **argv_;

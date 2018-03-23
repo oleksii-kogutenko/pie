@@ -227,36 +227,50 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
     return result;
 }
 
+struct QueryOpsFinder {
+    bool operator()(const gavc::OpType& op) {
+        return op.first > gavc::Op_const;
+    }
+};
+
+bool GavcQuery::is_exact_version_query() const
+{
+    boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
+    if (!pops) return false;
+
+    return std::find_if(pops->begin(), pops->end(), QueryOpsFinder()) == pops->end();
+}
+
 std::string GavcQuery::to_string() const
 {
-	std::ostringstream result;
+    std::ostringstream result;
 
-	if (!group().empty())
-	{
+    if (!group().empty())
+    {
         result << group();
-	}
-	if (!name().empty())
-	{
+    }
+    if (!name().empty())
+    {
         result << GavcConstants::delimiter;
         result << name();
-	}
-	if (!version().empty())
-	{
+    }
+    if (!version().empty())
+    {
         result << GavcConstants::delimiter;
         result << version();
-	}
-	if (!classifier().empty())
-	{
+    }
+    if (!classifier().empty())
+    {
         result << GavcConstants::delimiter;
         result << classifier();
-	}
-	if (!extension().empty())
-	{
+    }
+    if (!extension().empty())
+    {
         result << GavcConstants::extension_prefix;
         result << extension();
-	}
+    }
 
-	LOGT << result.str() << ELOG;
+    LOGT << result.str() << ELOG;
 
     return result.str();
 }

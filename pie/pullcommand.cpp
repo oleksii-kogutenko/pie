@@ -64,30 +64,9 @@ PullCommand::~PullCommand()
 {
 }
 
-bool PullCommand::get_from_env(po::variables_map& vm,
-                               const std::string& opt_name,
-                               const std::string& env_var,
-                               std::string& var)
-{
-    if (!vm.count(opt_name)) {
-        const char *value = ::getenv(env_var.c_str());
-        if (value)
-        {
-            LOGT << "Got " << env_var << " environment variable. Value: " << value << "." << ELOG;
-            var = std::string(value);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void PullCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: gavc <gavc query> [options]" << std::endl;
+    std::cerr << "Usage: pull <gavc query> [options]" << std::endl;
     std::cout << "Note: Use specific version in the <gavc query>" << std::endl;
     std::cout << desc;
 }
@@ -100,9 +79,8 @@ bool PullCommand::parse_arguments()
         ("token,t",         po::value<std::string>(&server_api_access_token_),  "Token to access server remote api (required). Can be set using GAVC_SERVER_API_ACCESS_TOKEN environment variable.")
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
-        ("path,p",          po::value<std::string>(&path_to_download_),         "Path to create wc and download to")
-        ("classifier,c",    po::value<std::string>(&classifier_to_checkout_),   "Checkout tree reference after pull command")
-
+        ("path,p",          po::value<std::string>(&path_to_download_),         "New working copy directory.")
+        ("classifier,c",    po::value<std::string>(&classifier_to_checkout_),   "Tree name what will be checkout after pulling data.")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -123,22 +101,16 @@ bool PullCommand::parse_arguments()
     boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
     {
-        std::cout << "Wrong gavc query: " << query_str << "!" << std::endl;
+        std::cerr << "Wrong gavc query: " << query_str << "!" << std::endl;
         show_command_help_message(desc);
         return false;
     }
 
-    //[bool pie::app::PullCommand::parse_arguments()] query_:test_dir:dir2:4
     query_ = *parsed_query;
 
-    try
+    if (!query_.is_exact_version_query())
     {
-        int version;
-        version = boost::lexical_cast<int>(query_.version());
-    }
-    catch(boost::bad_lexical_cast&)
-    {
-        std::cout << "'" << query_.version() << "' Version must be numeric value" << std::endl;
+        std::cerr << "Exact version is needed for the pull command!" << std::endl;
         return false;
     }
 
@@ -184,7 +156,6 @@ bool PullCommand::parse_arguments()
         pull.set_classifier_to_checkout(classifier_to_checkout_);
 
         pull();
-
     }
     catch (const piel::lib::errors::init_existing_working_copy&)
     {
@@ -202,29 +173,29 @@ bool PullCommand::parse_arguments()
         return -1;
     }
     catch (piel::cmd::errors::fail_to_parse_maven_metadata&) {
-        LOGE << "Error on parsing maven metadata. Server response has non expected format." << ELOG;
+        std::cerr << "Error on parsing maven metadata. Server response has non expected format." << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::fail_on_request_maven_metadata& e) {
-        LOGE << "Error on requesting maven metadata." << ELOG;
-        LOGE << e.error << ELOG;
+        std::cerr << "Error on requesting maven metadata." << std::endl;
+        std::cerr << e.error << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::error_processing_version& e) {
-        LOGE << "Error on processing version: " << e.ver << "!"    << ELOG;
-        LOGE <<  e.error << ELOG;
+        std::cerr << "Error on processing version: " << e.ver << "!" << std::endl;
+        std::cerr << e.error << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::cant_receive_metadata& ) {
-        LOGE << "Can't retrieve maven metadata!" << ELOG;
+        std::cerr << "Can't retrieve maven metadata!" << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::invalid_working_copy& ) {
         std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
         return -1;
     }
-    catch (piel::cmd::errors::invalid_downloaded_artifact_name&) {
-        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
+    catch (piel::cmd::errors::invalid_downloaded_artifact_name& e) {
+        std::cerr << "Unexpected downloaded file name: " << e.name  << "!" << std::endl;
         return -1;
     }
     catch (const piel::lib::errors::unable_to_find_reference_file& e)

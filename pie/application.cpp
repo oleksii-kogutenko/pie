@@ -57,6 +57,26 @@ bool ICommand::show_help(boost::program_options::options_description &desc, int 
     return false;
 }
 
+/*static*/ bool ICommand::get_from_env(boost::program_options::variables_map& vm,
+                               const std::string& opt_name,
+                               const std::string& env_var,
+                               std::string& var)
+{
+    if (!vm.count(opt_name)) {
+        const char *value = ::getenv(env_var.c_str());
+        if (value)
+        {
+            var = std::string(value);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 /*virtual*/ void ICommand::show_command_help_message(const boost::program_options::options_description& desc)
 {
     std::cout << desc;

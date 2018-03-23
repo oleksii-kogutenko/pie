@@ -38,6 +38,7 @@ namespace pie { namespace app {
 // Forward
 class Application;
 
+////////////////////////////////////////////////////////////////////////////////
 struct ICommand {
     ICommand(Application *app) : app_(app) {}
 
@@ -50,11 +51,16 @@ struct ICommand {
 protected:
     bool show_help(boost::program_options::options_description& desc, int argc, char **argv);
     virtual void show_command_help_message(const boost::program_options::options_description& desc);
+    static bool get_from_env(boost::program_options::variables_map& vm,
+                             const std::string& opt_name,
+                             const std::string& env_var,
+                             std::string& var);
 
 private:
     Application *app_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct UnknownCommand: public ICommand {
     UnknownCommand(Application *app, int argc, char **argv);
     int perform();
@@ -63,12 +69,14 @@ private:
     char **argv_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 struct ICommmandConstructor {
     virtual boost::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const = 0;
     virtual std::string name() const = 0;
     virtual std::string description() const = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 template<class Command>
 class CommmandConstructor: public ICommmandConstructor {
 public:
@@ -89,6 +97,7 @@ private:
     std::string description_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 class CommandsFactory {
 public:
     typedef std::map<std::string, boost::shared_ptr<ICommmandConstructor> > Constructors;
@@ -105,6 +114,7 @@ private:
     Constructors constructors_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 class Application
 {
 public:

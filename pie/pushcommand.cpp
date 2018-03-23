@@ -61,31 +61,10 @@ PushCommand::~PushCommand()
 {
 }
 
-bool PushCommand::get_from_env(po::variables_map& vm,
-                               const std::string& opt_name,
-                               const std::string& env_var,
-                               std::string& var)
-{
-    if (!vm.count(opt_name)) {
-        const char *value = ::getenv(env_var.c_str());
-        if (value)
-        {
-            LOGT << "Got " << env_var << " environment variable. Value: " << value << "." << ELOG;
-            var = std::string(value);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void PushCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: gavc <gavc query> [options]" << std::endl;
-    std::cout << "Note: Use specific version in the <gavc query>" << std::endl;
+    std::cerr << "Usage: push <gavc query> [options]" << std::endl;
+    std::cout << "Note: Use exact version in the <gavc query>" << std::endl;
     std::cout << desc;
 }
 
@@ -122,17 +101,11 @@ bool PushCommand::parse_arguments()
         return false;
     }
 
-    //[bool pie::app::PushCommand::parse_arguments()] query_:test_dir:dir2:4
     query_ = *parsed_query;
 
-    try
+    if (!query_.is_exact_version_query())
     {
-        int version;
-        version = boost::lexical_cast<int>(query_.version());
-    }
-    catch(boost::bad_lexical_cast&)
-    {
-        std::cout << "'" << query_.version() << "' Version must be numeric value" << std::endl;
+        std::cerr << "Exact version is needed for the push command!" << std::endl;
         return false;
     }
 
