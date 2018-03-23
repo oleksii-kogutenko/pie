@@ -57,7 +57,7 @@ void Tree::operator()()
 {
     if (!show_all_)
     {
-        std::cout << working_copy()->current_tree_name() << std::endl;
+        std::cout << working_copy()->current_tree_name();
 
         if (verbose_)
             std::cout << ":" << working_copy()->current_tree_state()->self().id().string();
