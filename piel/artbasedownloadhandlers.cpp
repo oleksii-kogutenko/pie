@@ -29,6 +29,7 @@
 #include <iostream>
 #include <artconstants.h>
 #include <artbasedownloadhandlers.h>
+#include <logging.h>
 
 //      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
 CURLH_T_(art::lib::ArtBaseDownloadHandlers,\
@@ -66,7 +67,7 @@ void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
 
 /*virtual*/ size_t ArtBaseDownloadHandlers::handle_output(char *ptr, size_t size)
 {
-    std::cout << "id: " << id_ << " size: " << size << std::endl;
+    LOGT << "recieved buffer for id: " << id_ << " at:" << ptr << " size: " << size << LOGE;
 
     if (dest_)
     {
