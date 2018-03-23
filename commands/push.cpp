@@ -119,7 +119,7 @@ bool Push::upload(const std::string& classifier, const std::string& file_name)
 {
     bool no_errors = true;
 
-    LOGI << query_.to_string() << ELOG;
+    LOGD << query_.to_string() << ELOG;
     {
         art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
 
@@ -168,12 +168,12 @@ void Push::operator()()
         else
             log_str  = " " + i->first;
 
-        LOGI << log_str << ":" << i->second.string() << ELOG;
+        LOGD << log_str << ":" << i->second.string() << ELOG;
 
         piel::lib::TreeIndex::Ptr reference_index = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), i->first);
         piel::lib::TreeIndexEnumerator enumerator(reference_index);
 
-        LOGI << "reference_index->self().id().string():" << reference_index->self().id().string() << ELOG;
+        LOGD << "reference_index->self().id().string():" << reference_index->self().id().string() << ELOG;
 
         boost::filesystem::path zip_path_fs = version_dir / (i->first + constants::zip_extention);
 
@@ -184,7 +184,7 @@ void Push::operator()()
 
             while (enumerator.next())
             {
-                LOGI << "\t" << enumerator.path << ":"
+                LOGD << "\t" << enumerator.path << ":"
                         << enumerator.asset.id().string() << ELOG;
 
                 zip->add_istream(enumerator.path, enumerator.asset.istream());

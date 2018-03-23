@@ -127,17 +127,17 @@ void Pull::operator()()
 
     GAVC::paths_list list = gavc.get_list_of_downloaded_files();
 
-    LOGI << "List of downloaded file..." << ELOG;
+    LOGD << "List of downloaded file..." << ELOG;
 
     for(GAVC::paths_list::const_iterator it = list.begin(), end = list.end(); it != end; ++it)
     {
         if (it->extension() == constants::pom_extention) {
-            LOGI << "Skip pom file" << ELOG;
+            LOGD << "Skip pom file" << ELOG;
             continue;
         }
 
         std::string classifier = get_classifier_from_filename(*it);
-        LOGI << "classifier:" << classifier << ELOG;
+        LOGD << "classifier:" << classifier << ELOG;
 
         pl::TreeIndex::Ptr zip_index = pl::ZipIndexer::build(*it);
         working_copy_->local_storage()->put(zip_index->assets());

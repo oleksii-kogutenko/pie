@@ -39,18 +39,15 @@ typedef boost::weak_ptr<ZipSourceIStream>   SourceIStreamWeakPtr;   //!< Pointer
 
 struct ZipSourceIStream {
 
-    ~ZipSourceIStream() {
-        LOGI << __PRETTY_FUNCTION__ << ELOG;
+    ~ZipSourceIStream()
+    {
     }
 
     zip_source_t* init(zip_t *zip, ZipFile::IStreamWeakPtr stream, SourceIStreamWeakPtr owner)
     {
         stream_ = stream.lock();
         size_ = 0;
-        LOGI << __PRETTY_FUNCTION__ << ELOG;
-        size_ = 0;
         if (stream_) {
-            LOGI << "stream_:" << stream_.get() << ELOG;
             std::streamsize pos = stream_->tellg();
             stream_->seekg(0, std::ios_base::end);
             size_ = stream_->tellg();
@@ -69,19 +66,19 @@ protected:
         , owner_()
         , libzip_error_()
     {
-        LOGI << __PRETTY_FUNCTION__ << ELOG;
     }
 
     static zip_int64_t read_data_callback(void *user_data, void *data, zip_uint64_t len, zip_source_cmd_t cmd);
+
     void lock()
     {
-        LOGI << __PRETTY_FUNCTION__ << ELOG;
     }
+
     void unlock()
     {
-        LOGI << __PRETTY_FUNCTION__ << ELOG;
         owner_.reset();
     }
+
 private:
     ZipFile::IStreamPtr     stream_;
     std::streamsize         size_;
