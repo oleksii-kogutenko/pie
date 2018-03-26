@@ -328,9 +328,9 @@ zip_int64_t ZipFile::add_source(const SourcePtr& source, int mode)
     if ( mode >=0 ) {
         ZipEntryAttributes attr;
         // TODO: errors processing
-        ::zip_file_get_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, &attr.opsys, &attr.attributes);
+        //::zip_file_get_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, &attr.opsys, &attr.attributes);
         attr.set_mode(mode);
-        ::zip_file_set_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, attr.opsys, attr.attributes);
+        ::zip_file_set_external_attributes(zip_, zip_uint64_t(entry_index), ZIP_FL_UNCHANGED, ZIP_OPSYS_UNIX, attr.attributes);
     }
     return entry_index;
 }

@@ -38,6 +38,7 @@
 #include <boost_filesystem_ext.hpp>
 
 namespace al = art::lib;
+namespace pl = piel::lib;
 namespace fs = boost::filesystem;
 
 namespace piel { namespace cmd {
@@ -190,7 +191,12 @@ void Push::operator()()
                 LOGD << "\t" << enumerator.path << ":"
                         << enumerator.asset.id().string() << ELOG;
 
-                zip->add_istream(enumerator.path, enumerator.asset.istream());
+                std::string asset_mode_str = reference_index->get_attr_(enumerator.path, pl::PredefinedAttributes::asset_mode);
+
+                int asset_mode = pl::PredefinedAttributes::parse_asset_mode(asset_mode_str,
+                        pl::PredefinedAttributes::default_asset_mode);
+
+                zip->add_istream(enumerator.path, enumerator.asset.istream(), asset_mode);
             }
         }
         no_errors &= upload(i->first + constants::zip_extention, zip_path);
