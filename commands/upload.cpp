@@ -101,7 +101,7 @@ void Upload::operator()()
 
         deploy_handlers.set_url(server_url_);
         deploy_handlers.set_repo(server_repository_);
-        deploy_handlers.set_path(query_.group());
+        deploy_handlers.set_path(query_.group_path());
         deploy_handlers.set_name(query_.name());
         deploy_handlers.set_version(query_.version());
         deploy_handlers.set_classifier(al::ufs::to_classifier(*it));

@@ -37,6 +37,9 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 //! Versions based queries
 //
@@ -288,6 +291,14 @@ std::string GavcQuery::to_string() const
     LOGT << result.str() << ELOG;
 
     return result.str();
+}
+
+std::string GavcQuery::group_path() const
+{
+    std::string g = group();
+    std::vector<std::string> parts;
+    boost::split(parts, g, boost::is_any_of("."));
+    return boost::join(parts, "/");
 }
 
 std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, const std::string& repository) const

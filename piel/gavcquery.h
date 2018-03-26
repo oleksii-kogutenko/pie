@@ -82,6 +82,8 @@ public:
     std::string classifier() const      { return data_.classifier; }
     std::string extension() const       { return data_.extension; }
 
+    std::string group_path() const;
+
     boost::optional<std::vector<gavc::OpType> > query_version_ops() const;
     std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
 

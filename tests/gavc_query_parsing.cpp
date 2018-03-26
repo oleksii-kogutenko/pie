@@ -126,6 +126,7 @@ BOOST_AUTO_TEST_CASE(Query_GA)
     GavcQuery q = *op;
 
     BOOST_CHECK_EQUAL("adk.trunk",  q.group());
+    BOOST_CHECK_EQUAL("adk/trunk",  q.group_path());
     BOOST_CHECK_EQUAL("adk",        q.name());
     BOOST_CHECK_EQUAL("",           q.version());
     BOOST_CHECK_EQUAL("",           q.classifier());
