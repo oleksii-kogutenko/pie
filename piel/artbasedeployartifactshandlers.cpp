@@ -108,7 +108,7 @@ size_t ArtBaseDeployArtifactsHandlers::handle_input(char *ptr, size_t size)
         first_call_ = false;
         uploader_.push_input_stream(prepare_header());
     }
-    return  uploader_.putto(ptr, size);
+    return uploader_.putto(ptr, size);
 }
 
 size_t ArtBaseDeployArtifactsHandlers::handle_output(char *ptr, size_t size)
