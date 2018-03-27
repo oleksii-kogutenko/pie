@@ -1,3 +1,2 @@
-1) Checksums must be uploaded on upload commands.
-2) File modes in uploaded zips.
-
+- Checksums must be uploaded on upload commands.
+- symlinks ???

@@ -28,6 +28,7 @@
 
 #include <mavenpom.h>
 #include <artbaseconstants.h>
+#include <logging.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -79,7 +80,10 @@ void MavenPom::set_version(const std::string& version)
 
 /*static*/ MavenPom MavenPom::load(std::istream& is)
 {
-
+    MavenPom result;
+    // TODO: Implement
+    LOGF << "MavenPom::load is not implemented!" << ELOG;
+    return result;
 }
 
 void MavenPom::store(std::ostream& os) const
