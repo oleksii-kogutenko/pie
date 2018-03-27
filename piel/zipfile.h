@@ -206,6 +206,7 @@ public:
 
     bool add_symlink(const std::string& entry_name, const std::string& target, int mode = -1)
     {
+        return false;
     }
 
 protected:

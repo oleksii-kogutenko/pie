@@ -21,8 +21,9 @@ LogApp& error(LogApp& val);
 LogApp& fatal(LogApp& val);
 SingleLevelLogProxy& send(SingleLevelLogProxy& val);
 
-struct SingleLevelLogProxy
+class SingleLevelLogProxy
 {
+public:
     SingleLevelLogProxy(LogApp* log, const LogAppManipulator& manipulator)
         : log_(log)
         , manipulator_(manipulator)

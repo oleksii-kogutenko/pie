@@ -99,7 +99,6 @@ inline std::string copy_into(boost::shared_ptr<std::ostream> osp, boost::shared_
     digest_builder.init();
 
     BufferType copy_buffer(piel::lib::CommonConstants::io_buffer_size);
-    std::streamsize readed = 0;
     do {
         BufferType::size_type readed = isp->read(copy_buffer.data(), copy_buffer.size()).gcount();
         if (readed) {

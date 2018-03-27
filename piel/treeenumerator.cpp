@@ -32,8 +32,8 @@ namespace piel { namespace lib {
 
 TreeEnumerator::TreeEnumerator(const IObjectsStorage::Ptr& storage, const TreeIndex::Ptr& head)
     : index(head)
-    , next_(head)
     , storage_(storage)
+    , next_(head)
 {
 }
 

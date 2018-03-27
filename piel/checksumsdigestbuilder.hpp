@@ -141,8 +141,8 @@ template<typename CTX> class DigestContext
 public:
     //! Constructor.
     DigestContext()
-        : ctx_()
-        , digest_(CTX::t::len())
+        : digest_(CTX::t::len())
+        , ctx_()
     {}
 
     //! Init internal data.

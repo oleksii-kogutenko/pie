@@ -77,7 +77,6 @@ protected:
 private:
     boost::property_tree::ptree tree_;
     StreamsSequencePartitionallyOutputHelper uploader_;
-    size_t      send_size_;
     std::stringstream os_;
     Attributes  answer_;
     std::string url_;

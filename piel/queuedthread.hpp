@@ -50,7 +50,13 @@ public:
         join();
     }
 
-    QueuedThread():quit_(false), queue_(new Queue()), thread_(), mutex_(), cond_() {
+    QueuedThread()
+        : quit_(false)
+        , queue_(new Queue())
+        , mutex_()
+        , cond_()
+        , thread_()
+    {
     }
 
 protected:

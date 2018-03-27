@@ -125,6 +125,8 @@ BOOST_AUTO_TEST_CASE(art_test_deploy_artifact_1)
     }
 
 }
+*/
+
 /*
 BOOST_AUTO_TEST_CASE(art_test_deploy_artifact)
 {
@@ -177,7 +179,6 @@ BOOST_AUTO_TEST_CASE(art_test_deploy_artifact)
 
 BOOST_AUTO_TEST_CASE(art_test)
 {
-
     LOGT << "MkDir test" << ELOG;
 
     art::lib::ArtCreateDirectoryHandlers mkdir_handlers(server_api_access_token_);

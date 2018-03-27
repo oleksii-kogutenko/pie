@@ -94,8 +94,8 @@ SingleLevelLogProxy& send(SingleLevelLogProxy& val)
 }
 
 LogApp::LogApp(const std::string& _name, LogDispatcherPtr d)
-    : name_(_name)
-    , log_stream_("")
+    : log_stream_("")
+    , name_(_name)
 {
     dispatcher_ = d;
 }

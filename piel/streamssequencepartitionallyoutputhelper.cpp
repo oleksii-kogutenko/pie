@@ -47,7 +47,6 @@ namespace art { namespace lib {
 StreamsSequencePartitionallyOutputHelper::StreamsSequencePartitionallyOutputHelper()
     : is_queue_()
     , current_is_()
-    , put_size_(0)
 {
 }
 

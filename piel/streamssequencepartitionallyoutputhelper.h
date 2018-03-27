@@ -59,7 +59,6 @@ private:
 private:
     ISPtrQueue   is_queue_;
     ISPtr       current_is_;
-    size_t      put_size_;
 };
 
 } } // namespace art::lib
