@@ -54,8 +54,6 @@ public:
     virtual std::string get_path();
 
     void file(const std::string& fname);
-    std::string generate_pom();
-    std::string generate_pom(const std::string& uri, const std::string& repo, const std::string& path, const std::string& name, const std::string& ver);
 
     void set_name(const std::string& s) { name_ = s; }
     void set_version(const std::string& s) { version_ = s; }
@@ -64,6 +62,7 @@ public:
     std::string get_name() { return name_; }
     std::string get_version() { return version_; }
     std::string get_classifier() { return classifier_; }
+
 private:
     piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
 

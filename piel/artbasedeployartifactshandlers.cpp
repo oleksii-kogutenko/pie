@@ -61,7 +61,6 @@ ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string
     , first_call_(true)
 
 {
-    LOGT << __PRETTY_FUNCTION__ << ELOG;
 }
 
 ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string& api_token, const std::string& url, const std::string& repo, const std::string& path)
@@ -146,7 +145,6 @@ void ArtBaseDeployArtifactsHandlers::update_attributes(const std::string& key, c
 
 void ArtBaseDeployArtifactsHandlers::set_url(const std::string& url)
 {
-    LOGT << __PRETTY_FUNCTION__ << url << ELOG;
     url_ = trim(url);
     std::string value = get_url();
     if (!value.empty()) {
@@ -154,13 +152,10 @@ void ArtBaseDeployArtifactsHandlers::set_url(const std::string& url)
                          ArtBaseConstants::uri_attribute,
                          pt::ptree(value)));
     }
-
-    LOGT << "set_url:" << get_url() << ELOG;
 }
 
 void ArtBaseDeployArtifactsHandlers::set_repo(const std::string& repo)
 {
-    LOGT << __PRETTY_FUNCTION__ << repo << ELOG;
     repo_ = trim(repo);
     std::string value = get_repo();
     if (!value.empty()) {
@@ -168,13 +163,10 @@ void ArtBaseDeployArtifactsHandlers::set_repo(const std::string& repo)
                          ArtBaseConstants::repo_attribute,
                          pt::ptree(value)));
     }
-
-    LOGT << "set_repo:" << get_repo() << ELOG;
 }
 
 void ArtBaseDeployArtifactsHandlers::set_path(const std::string& path)
 {
-    LOGT << __PRETTY_FUNCTION__ << path << ELOG;
     path_ = trim(path);
     std::string value = get_path();
     if (!value.empty()) {
@@ -182,20 +174,12 @@ void ArtBaseDeployArtifactsHandlers::set_path(const std::string& path)
                          ArtBaseConstants::path_attribute,
                          pt::ptree(value)));
     }
-
-    LOGT << "set_path:" << get_path() << ELOG;
 }
-
 
 std::string ArtBaseDeployArtifactsHandlers::gen_uri()
 {
-    std::string ret_val = get_url();
-
-    ret_val.append(ArtBaseConstants::uri_delimiter).append(get_repo()).append(ArtBaseConstants::uri_delimiter).append(get_path());
-
-    LOGT << "URI: " << ret_val << ELOG;
-
-    return ret_val;
+    std::string ret_val;
+    return ret_val.append(ArtBaseConstants::uri_delimiter).append(get_repo()).append(ArtBaseConstants::uri_delimiter).append(get_path());
 }
 
 } } // namespace art::lib

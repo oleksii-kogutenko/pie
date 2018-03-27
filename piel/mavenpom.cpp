@@ -27,17 +27,75 @@
  */
 
 #include <mavenpom.h>
+#include <artbaseconstants.h>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
+namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
 
 MavenPom::MavenPom()
+    : group_()
+    , name_()
+    , version_()
 {
-
 }
 
 MavenPom::~MavenPom()
 {
+}
 
+std::string MavenPom::group() const
+{
+    return group_;
+}
+
+std::string MavenPom::name() const
+{
+    return name_;
+}
+
+std::string MavenPom::version() const
+{
+    return version_;
+}
+
+void MavenPom::set_group(const std::string& group)
+{
+    group_ = group;
+}
+
+void MavenPom::set_name(const std::string& name)
+{
+    name_ = name_;
+}
+
+void MavenPom::set_version(const std::string& version)
+{
+    version_ = version;
+}
+
+/*static*/ MavenPom MavenPom::load(std::istream& is)
+{
+
+}
+
+void MavenPom::store(std::ostream& os) const
+{
+    pt::ptree tree_project;
+    pt::ptree tree;
+
+    tree_project.put(art::lib::ArtBaseConstants::pom_modelVersion,    art::lib::ArtBaseConstants::pom_modelVersion_ver);
+    tree_project.put(art::lib::ArtBaseConstants::pom_groupId,         group());
+    tree_project.put(art::lib::ArtBaseConstants::pom_artifactId,      name());
+    tree_project.put(art::lib::ArtBaseConstants::pom_version,         version());
+    tree_project.put(art::lib::ArtBaseConstants::pom_packaging,       art::lib::ArtBaseConstants::pom_packaging_pack);
+
+    tree.add_child(art::lib::ArtBaseConstants::pom_project, tree_project);
+
+    pt::write_xml(os, tree);
 }
 
 } } // namespace piel::lib

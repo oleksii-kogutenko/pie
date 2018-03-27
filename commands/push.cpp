@@ -33,7 +33,9 @@
 #include <push.h>
 #include <logging.h>
 #include <fsindexer.h>
+#include <artbaseconstants.h>
 #include <treeindexenumerator.h>
+#include <mavenpom.h>
 #include <artdeployartifacthandlers.h>
 #include <boost_filesystem_ext.hpp>
 
@@ -91,21 +93,29 @@ const Push* Push::set_query(const art::lib::GavcQuery &query)
 
 void Push::deploy_pom(const boost::filesystem::path &path_to_save_pom)
 {
-    art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+    pl::MavenPom pom;
+    pom.set_group(query_.group());
+    pom.set_name(query_.name());
+    pom.set_version(query_.version());
 
-    std::string pom_entry = deploy_handlers.generate_pom(
-                server_url_,
-                server_repository_,
-                query_.group(),
-                query_.name(),
-                query_.version());
-
-    deploy_handlers.set_path(query_.group_path());
+    std::ostringstream os;
+    pom.store(os);
 
     boost::filesystem::path pom_path = path_to_save_pom / constants::pom_extention;
-    std::ofstream pom_file(pom_path.generic_string());
-    pom_file << pom_entry;
-    pom_file.close();
+    {
+        std::ofstream osf(pom_path.generic_string());
+        pom.store(osf);
+    }
+
+    art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+
+    deploy_handlers.set_url(server_url_);
+    deploy_handlers.set_repo(server_repository_);
+    deploy_handlers.set_path(query_.group_path());
+    deploy_handlers.set_name(query_.name());
+    deploy_handlers.set_version(query_.version());
+    deploy_handlers.set_classifier(art::lib::ArtBaseConstants::pom_classifier);
+    deploy_handlers.push_input_stream(boost::shared_ptr<std::istream>(new std::istringstream(os.str())));
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 

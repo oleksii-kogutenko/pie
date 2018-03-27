@@ -29,6 +29,8 @@
 #ifndef PIEL_MAVENPOM_H_
 #define PIEL_MAVENPOM_H_
 
+#include <string>
+
 namespace piel { namespace lib {
 
 class MavenPom
@@ -36,6 +38,22 @@ class MavenPom
 public:
     MavenPom();
     ~MavenPom();
+
+    std::string group() const;
+    std::string name() const;
+    std::string version() const;
+
+    void set_group(const std::string& group);
+    void set_name(const std::string& name);
+    void set_version(const std::string& version);
+
+    static MavenPom load(std::istream& is);
+    void store(std::ostream& os) const;
+
+private:
+    std::string group_;
+    std::string name_;
+    std::string version_;
 };
 
 } } // namespace piel::lib

@@ -29,6 +29,8 @@
 #include "test_utils.hpp"
 #include <artdeployartifacthandlers.h>
 #include <gavcquery.h>
+#include <mavenpom.h>
+#include <artbaseconstants.h>
 
 #define DBOOST_AUTO_TEST_CASE(x) void x(void)
 
@@ -48,8 +50,23 @@ static const std::string query_str = "test_dir:push_test:1";
 
 void deploy_pom(const art::lib::GavcQuery& query_)
 {
+    piel::lib::MavenPom pom;
+    pom.set_group(query_.group());
+    pom.set_name(query_.name());
+    pom.set_version(query_.version());
+
+    std::ostringstream os;
+    pom.store(os);
+
     art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
-    deploy_handlers.generate_pom(server_url_, server_repository_, query_.group(), query_.name(), query_.version());
+
+    deploy_handlers.set_url(server_url_);
+    deploy_handlers.set_repo(server_repository_);
+    deploy_handlers.set_path(query_.group_path());
+    deploy_handlers.set_name(query_.name());
+    deploy_handlers.set_version(query_.version());
+    deploy_handlers.set_classifier(art::lib::ArtBaseConstants::pom_classifier);
+    deploy_handlers.push_input_stream(boost::shared_ptr<std::istream>(new std::istringstream(os.str())));
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
@@ -72,7 +89,7 @@ bool upload(const art::lib::GavcQuery& query_, const std::string& classifier, co
 
         deploy_handlers.set_url(server_url_);
         deploy_handlers.set_repo(server_repository_);
-        deploy_handlers.set_path(query_.group());
+        deploy_handlers.set_path(query_.group_path());
         deploy_handlers.set_name(query_.name());
         deploy_handlers.set_version(query_.version());
         deploy_handlers.set_classifier(classifier);

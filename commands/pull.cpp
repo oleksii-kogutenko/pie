@@ -38,7 +38,6 @@
 #include <logging.h>
 #include <fsindexer.h>
 #include <treeindexenumerator.h>
-#include <artdeployartifacthandlers.h>
 #include <assetsextractor.h>
 
 #include <boost_filesystem_ext.hpp>
