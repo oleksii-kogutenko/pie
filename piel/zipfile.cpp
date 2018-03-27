@@ -34,7 +34,7 @@ namespace piel { namespace lib {
 struct ZipSource;
 struct ZipSourceIStream;
 
-typedef boost::shared_ptr<ZipSourceIStream> SourceIStreamPtr;   //!< Pointer to ZipSourceEntry.
+typedef boost::shared_ptr<ZipSourceIStream> SourceIStreamPtr;       //!< Pointer to ZipSourceEntry.
 typedef boost::weak_ptr<ZipSourceIStream>   SourceIStreamWeakPtr;   //!< Pointer to ZipSourceEntry.
 
 struct ZipSourceIStream {
@@ -59,7 +59,9 @@ struct ZipSourceIStream {
     }
 
 protected:
+
     friend struct ZipSource;
+
     ZipSourceIStream()
         : stream_()
         , size_(0)

@@ -78,10 +78,7 @@ std::string Commit::operator()()
     }
 
     LOGT << "Non empty diff:" << ELOG;
-
-    std::cout << indexes_diff.format();
-
-    LOGT << "Continue commit." << ELOG;
+    LOGT << indexes_diff.format() << ELOG;
 
     piel::lib::TreeIndex::Ptr reference_index    = working_copy()->current_tree_state();
 

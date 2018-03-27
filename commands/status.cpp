@@ -76,6 +76,7 @@ namespace fmt {
 
 Status::Status(const piel::lib::WorkingCopy::Ptr& working_copy)
     : WorkingCopyCommand(working_copy)
+    , piel::lib::IOstreamsHolder()
 {
 }
 
@@ -105,7 +106,7 @@ std::string Status::operator()()
         {
             if (fmt::is_printable(i->second.first))
             {
-                std::cout << fmt::element_state(i->second.first) << " " << i->first << std::endl;
+                cout() << fmt::element_state(i->second.first) << " " << i->first << std::endl;
 
                 final_status_str = Status_dirty;
             }
@@ -118,10 +119,10 @@ std::string Status::operator()()
                 {
                     if (!fmt::is_printable(i->second.first))
                     {
-                        std::cout << fmt::element_state(i->second.first) << " " << i->first << std::endl;
+                        cout() << fmt::element_state(i->second.first) << " " << i->first << std::endl;
                     }
 
-                    std::cout << fmt::tab(1)
+                    cout() << fmt::tab(1)
                               << fmt::element_state(j->second.first)
                               << " attribute: "
                               << j->first

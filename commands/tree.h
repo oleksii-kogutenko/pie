@@ -30,10 +30,11 @@
 #define COMMANDS_TREE_H_
 
 #include <workingcopycommand.h>
+#include <iostreamsholder.h>
 
 namespace piel { namespace cmd {
 
-class Tree: public WorkingCopyCommand
+class Tree: public WorkingCopyCommand, public piel::lib::IOstreamsHolder
 {
 public:
     Tree(const piel::lib::WorkingCopy::Ptr& working_copy);

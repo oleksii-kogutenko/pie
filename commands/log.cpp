@@ -36,6 +36,7 @@ namespace piel { namespace cmd {
 Log::Log(const piel::lib::IObjectsStorage::Ptr& storage,
         const piel::lib::TreeIndex::Ptr& ref_index, const piel::lib::refs::Range& range)
     : IObjectsStorageCommand(storage)
+    , piel::lib::IOstreamsHolder()
     , range_(range)
     , ref_index_(ref_index)
 {
@@ -47,12 +48,12 @@ Log::~Log()
 
 void Log::format_log_element(const piel::lib::TreeIndex::Ptr& index) const
 {
-    std::cout << "--------------------------------------------------------------------------------" << std::endl;
-    std::cout << "author: " << index->get_author_()                                                 << std::endl;
-    std::cout << "email: " << index->get_email_()                                                   << std::endl;
-    std::cout << "id: "<< index->self().id().string()                                               << std::endl;
-    std::cout                                                                                       << std::endl;
-    std::cout << index->get_message_()                                                              << std::endl;
+    cout() << "--------------------------------------------------------------------------------" << std::endl;
+    cout() << "author: " << index->get_author_()                                                 << std::endl;
+    cout() << "email: " << index->get_email_()                                                   << std::endl;
+    cout() << "id: "<< index->self().id().string()                                               << std::endl;
+    cout()                                                                                       << std::endl;
+    cout() << index->get_message_()                                                              << std::endl;
 }
 
 void Log::operator()()

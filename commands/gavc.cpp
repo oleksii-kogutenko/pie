@@ -55,7 +55,8 @@ GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_repository
            , const art::lib::GavcQuery& query
            , const bool have_to_download_results)
-    : server_url_(server_url)
+    : piel::lib::IOstreamsHolder()
+    , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
     , server_repository_(server_repository)
     , query_(query)
@@ -187,7 +188,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
 
             pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
 
-            std::cout << "Downloading file from: " << download_uri << std::endl;
+            cout() << "Downloading file from: " << download_uri << std::endl;
 
             if (!download_client.perform())
             {
@@ -202,7 +203,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
 
     } else {
 
-        std::cout << "Download url: " << download_uri << std::endl;
+        cout() << "Download url: " << download_uri << std::endl;
 
     }
 }

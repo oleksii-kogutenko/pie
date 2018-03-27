@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2018, Dmytro Iakovliev daemondzk@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,62 +26,48 @@
  *
  */
 
-#include <tree.h>
+#include <iostreamsholder.h>
 
-namespace piel { namespace cmd {
+namespace piel { namespace lib {
 
-Tree::Tree(const piel::lib::WorkingCopy::Ptr& working_copy)
-    : WorkingCopyCommand(working_copy)
-    , piel::lib::IOstreamsHolder()
-    , show_all_(false)
-    , verbose_(false)
+IOstreamsHolder::IOstreamsHolder()
+    : cout_(0), cerr_(0), cin_(0)
 {
 }
 
-Tree::~Tree()
+IOstreamsHolder::~IOstreamsHolder()
 {
 }
 
-const Tree* Tree::set_show_all(bool flag)
+std::ostream& IOstreamsHolder::cout() const
 {
-    show_all_ = flag;
-    return this;
+    if (cout_)
+        return *cout_;
+    else
+        return std::cout;
 }
 
-const Tree* Tree::set_verbose(bool flag)
+std::ostream& IOstreamsHolder::cerr() const
 {
-    verbose_ = flag;
-    return this;
+    if (cerr_)
+        return *cerr_;
+    else
+        return std::cerr;
 }
 
-void Tree::operator()()
+std::istream& IOstreamsHolder::cin() const
 {
-    if (!show_all_)
-    {
-        cout() << working_copy()->current_tree_name();
-
-        if (verbose_)
-            cout() << ":" << working_copy()->current_tree_state()->self().id().string();
-
-        cout() << std::endl;
-
-        return;
-    }
-
-    std::set<piel::lib::refs::Ref> all_refs = working_copy()->local_storage()->references();
-
-    for(std::set<piel::lib::refs::Ref>::const_iterator i = all_refs.begin(), end = all_refs.end(); i != end; ++i)
-    {
-        if (working_copy()->current_tree_name() == i->first)
-            cout() << "*" << i->first;
-        else
-            cout() << " " << i->first;
-
-        if (verbose_)
-            cout() << ":" << i->second.string();
-
-        cout() << std::endl;
-    }
+    if (cin_)
+        return *cin_;
+    else
+        return std::cin;
 }
 
-} } // namespace piel::cmd
+void IOstreamsHolder::setup_iostreams(std::ostream *cout, std::ostream *cerr, std::istream *cin)
+{
+    cout_   = cout;
+    cerr_   = cerr;
+    cin_    = cin;
+}
+
+} } // namespace piel::lib

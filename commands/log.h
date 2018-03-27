@@ -31,10 +31,11 @@
 
 #include <treeindex.h>
 #include <iobjectsstoragecommand.h>
+#include <iostreamsholder.h>
 
 namespace piel { namespace cmd {
 
-class Log: public IObjectsStorageCommand
+class Log: public IObjectsStorageCommand, public piel::lib::IOstreamsHolder
 {
 public:
     Log(const piel::lib::IObjectsStorage::Ptr& storage,

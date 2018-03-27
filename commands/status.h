@@ -30,10 +30,11 @@
 #define COMMANDS_STATUS_H_
 
 #include <workingcopycommand.h>
+#include <iostreamsholder.h>
 
 namespace piel { namespace cmd {
 
-class Status: public WorkingCopyCommand
+class Status: public WorkingCopyCommand, public piel::lib::IOstreamsHolder
 {
 public:
     static const std::string Status_clean;

@@ -30,6 +30,7 @@
 #define GAVC_H_
 
 #include <gavcquery.h>
+#include <iostreamsholder.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
@@ -58,7 +59,7 @@ namespace errors {
     struct cant_receive_metadata {};
 };
 
-class GAVC
+class GAVC: public piel::lib::IOstreamsHolder
 {
 public:
     typedef std::list<boost::filesystem::path> paths_list;
@@ -84,6 +85,7 @@ protected:
     std::string create_url(const std::string& version_to_query) const;
     void on_object(boost::property_tree::ptree::value_type obj);
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
+
 private:
     std::string server_url_;
     std::string server_api_access_token_;

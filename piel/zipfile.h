@@ -319,7 +319,7 @@ struct ZipEntry {
     //! \param buf Data buffer.
     //! \param size Data buffer size.
     //! \return number of readed bytes.
-    zip_int64_t read(void *buf, zip_int64_t size) const {
+    zip_int64_t read(void *buf, ::zip_int64_t size) const {
         return owner_->fread(zip_file_, buf, size);
     }
 
