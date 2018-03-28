@@ -103,6 +103,7 @@ struct SpartsTableComparator
         case gavc::Op_oldest:
             return !comparator_->compare_part(lhs.second[field_index_], rhs.second[field_index_]);
         }
+        return false;
     }
 
 private:
