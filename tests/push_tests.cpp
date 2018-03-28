@@ -28,6 +28,7 @@
 #include <treeindexenumerator.h>
 #include "test_utils.hpp"
 #include <artdeployartifacthandlers.h>
+#include <artdeployartifactchecksumhandlers.h>
 #include <gavcquery.h>
 #include <mavenpom.h>
 #include <artbaseconstants.h>
@@ -46,7 +47,7 @@ static const char* server_api_access_token_ = "";
 static const char* server_url_ = "";
 static const char* server_repository_ = "";
 
-static const std::string query_str = "test_dir:push_test:1";
+static const std::string query_str = "test_dir:push_test:4";
 
 void deploy_pom(const art::lib::GavcQuery& query_)
 {
@@ -58,6 +59,8 @@ void deploy_pom(const art::lib::GavcQuery& query_)
     std::ostringstream os;
     pom.store(os);
 
+    LOGI << "POM: " << os.str() << ELOG;
+
     art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
 
     deploy_handlers.set_url(server_url_);
@@ -68,6 +71,18 @@ void deploy_pom(const art::lib::GavcQuery& query_)
     deploy_handlers.set_classifier(art::lib::ArtBaseConstants::pom_classifier);
     deploy_handlers.push_input_stream(boost::shared_ptr<std::istream>(new std::istringstream(os.str())));
 
+    //---------
+    /*art::lib::ArtDeployArtifactCheckSumHandlers deploy_checksum_handlers(deploy_handlers);
+    piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers>
+            upload_checksum_client(deploy_checksum_handlers.gen_uri(), &deploy_checksum_handlers);
+    LOGD << "Upload checksum pom: " << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
+
+    if (!(upload_checksum_client.perform()))
+    {
+        LOGE << "Error on upload file!"                     << ELOG;
+        LOGE << upload_checksum_client.curl_error().presentation()   << ELOG;
+    }*/
+    //---------
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
     LOGD << "Upload pom to: " << deploy_handlers.gen_uri() << ELOG;
@@ -104,6 +119,34 @@ bool upload(const art::lib::GavcQuery& query_, const std::string& classifier, co
             LOGE << "Error on upload file!"                     << ELOG;
             LOGE << upload_client.curl_error().presentation()   << ELOG;
         }
+
+        //---------
+        LOGI << ELOG;
+        art::lib::ArtDeployArtifactCheckSumHandlers deploy_md5_handlers(deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
+        LOGI << ELOG;
+        piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers>
+                upload_md5_client(deploy_md5_handlers.gen_uri(), &deploy_md5_handlers);
+        LOGD << "Upload md5: " << file_name << " as " << classifier << " to: " << deploy_md5_handlers.gen_uri() << ELOG;
+
+        if (!(no_errors &= upload_md5_client.perform()))
+        {
+            LOGE << "Error on upload file!"                     << ELOG;
+            LOGE << upload_md5_client.curl_error().presentation()   << ELOG;
+        }
+        //---------
+        LOGI << ELOG;
+        art::lib::ArtDeployArtifactCheckSumHandlers deploy_sha1_handlers(deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
+        LOGI << ELOG;
+        piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers>
+                upload_sha1_client(deploy_sha1_handlers.gen_uri(), &deploy_sha1_handlers);
+        LOGD << "Upload md5: " << file_name << " as " << classifier << " to: " << deploy_sha1_handlers.gen_uri() << ELOG;
+
+        if (!(no_errors &= upload_sha1_client.perform()))
+        {
+            LOGE << "Error on upload file!"                     << ELOG;
+            LOGE << upload_sha1_client.curl_error().presentation()   << ELOG;
+        }
+        //---------
     }
 
     return no_errors;

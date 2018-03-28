@@ -49,6 +49,15 @@ CURLH_T_(art::lib::ArtDeployArtifactHandlers,\
 
 namespace art { namespace lib {
 
+ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const ArtDeployArtifactHandlers& handler)
+    : ArtBaseDeployArtifactsHandlers(handler)
+    , str_digests_(handler.str_digests_)
+    , name_(handler.name_)
+    , version_(handler.version_)
+    , classifier_(handler.classifier_)
+{
+}
+
 ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const std::string& api_token)
     : ArtBaseDeployArtifactsHandlers(api_token)
     , str_digests_()
@@ -72,6 +81,7 @@ ArtDeployArtifactHandlers::~ArtDeployArtifactHandlers()
 
 void ArtDeployArtifactHandlers::file(const std::string& fname)
 {
+    LOGI << __PRETTY_FUNCTION__ << ":" << fname << ELOG;
     boost::shared_ptr<std::istream> file_ptr(new std::ifstream(fname));
     push_input_stream(file_ptr);
 

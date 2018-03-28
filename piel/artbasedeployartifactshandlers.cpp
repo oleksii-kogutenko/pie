@@ -49,6 +49,18 @@ CURLH_T_(art::lib::ArtBaseDeployArtifactsHandlers,\
 
 namespace art { namespace lib {
 
+ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const ArtBaseDeployArtifactsHandlers& handle)
+    : ArtBaseApiHandlers(handle)
+    , tree_(handle.tree_)
+    , uploader_(handle.uploader_)
+    , answer_(handle.answer_)
+    , url_(handle.url_)
+    , repo_(handle.repo_)
+    , path_(handle.path_)
+    , first_call_(handle.first_call_)
+{
+}
+
 ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
     , tree_()
@@ -58,7 +70,6 @@ ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string
     , repo_()
     , path_()
     , first_call_(true)
-
 {
 }
 
@@ -96,6 +107,9 @@ boost::shared_ptr<std::istream> ArtBaseDeployArtifactsHandlers::prepare_header()
     pt::write_json(os, tree_, false);
 
     boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
+
+    LOGI << __PRETTY_FUNCTION__ << ":" << os.str() << ELOG;
+
     return is;
 }
 
@@ -176,8 +190,9 @@ void ArtBaseDeployArtifactsHandlers::set_path(const std::string& path)
 
 std::string ArtBaseDeployArtifactsHandlers::gen_uri()
 {
-    std::string ret_val;
-    return ret_val.append(ArtBaseConstants::uri_delimiter).append(get_repo()).append(ArtBaseConstants::uri_delimiter).append(get_path());
+    std::string ret_val = get_url().append(ArtBaseConstants::uri_delimiter).append(get_repo()).append(ArtBaseConstants::uri_delimiter).append(get_path());
+    LOGI << __PRETTY_FUNCTION__ << ":" << ret_val << ELOG;
+    return ret_val;
 }
 
 } } // namespace art::lib

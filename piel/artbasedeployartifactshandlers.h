@@ -39,11 +39,14 @@
 
 namespace art { namespace lib {
 
+class ArtDeployArtifactCheckSumHandlers;
+
 class ArtBaseDeployArtifactsHandlers : public ArtBaseApiHandlers
 {
     typedef std::map<std::string, std::string> Attributes;
-
+    friend class ArtDeployArtifactCheckSumHandlers;
 public:
+    ArtBaseDeployArtifactsHandlers(const ArtBaseDeployArtifactsHandlers& handle);
     ArtBaseDeployArtifactsHandlers(const std::string& api_token);
     ArtBaseDeployArtifactsHandlers(const std::string& api_token, const std::string& uri, const std::string& repo, const std::string& path);
     virtual ~ArtBaseDeployArtifactsHandlers(){}

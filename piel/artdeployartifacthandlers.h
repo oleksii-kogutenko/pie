@@ -46,6 +46,7 @@ class ArtDeployArtifactHandlers : public ArtBaseDeployArtifactsHandlers
 public:
     ArtDeployArtifactHandlers(const std::string& api_token);
     ArtDeployArtifactHandlers(const std::string& api_token, const std::string& uri, const std::string& repo, const std::string& path, const std::string& fname);
+    ArtDeployArtifactHandlers(const ArtDeployArtifactHandlers& handler);
     virtual ~ArtDeployArtifactHandlers();
 
     virtual size_t handle_input(char *ptr, size_t size);
@@ -63,9 +64,9 @@ public:
     std::string get_version() { return version_; }
     std::string get_classifier() { return classifier_; }
 
-private:
+protected:
     piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
-
+private:
     std::string   name_;
     std::string   version_;
     std::string   classifier_;

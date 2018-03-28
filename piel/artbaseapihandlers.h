@@ -52,6 +52,10 @@ public:
     //! \param api_token Artifactory server REST api access token.
     ArtBaseApiHandlers(const std::string& api_token);
 
+    //! Copy Constructor.
+    //! \param .
+    ArtBaseApiHandlers(const ArtBaseApiHandlers& handler);
+
     //! Destructor.
     virtual ~ArtBaseApiHandlers();
 

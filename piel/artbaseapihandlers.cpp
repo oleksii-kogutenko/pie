@@ -49,6 +49,16 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const std::string& api_token)
 
 }
 
+ArtBaseApiHandlers::ArtBaseApiHandlers(const ArtBaseApiHandlers& handler)
+    : api_token_(handler.api_token_)
+    , response_buffer_(handler.response_buffer_)
+    , stream_(handler.stream_)
+    , headers_(handler.headers_)
+    , before_input_callback_(handler.before_input_callback_)
+    , before_output_callback_(handler.before_output_callback_)
+{
+}
+
 /*virtual*/ ArtBaseApiHandlers::~ArtBaseApiHandlers()
 {
 
