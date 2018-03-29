@@ -107,18 +107,21 @@ struct CurlError {
     CurlError()
         : code_(CURLE_OK)
         , message_()
+        , http_code_(200)
     {
     }
 
-    CurlError(CURLcode code, const std::string& message)
+    CurlError(CURLcode code, long http_code, const std::string& message)
         : code_(code)
         , message_(message)
+        , http_code_(http_code)
     {
     }
 
     CurlError(const CurlError& src)
         : code_(src.code_)
         , message_(src.message_)
+        , http_code_(src.http_code_)
     {
     }
 
@@ -132,11 +135,18 @@ struct CurlError {
         return message_;
     }
 
+    long http_code() const
+    {
+        return http_code_;
+    }
+
     std::string presentation() const
     {
         std::ostringstream oss;
         oss << "libcurl error code: ";
         oss << code_;
+        oss << "http code: ";
+        oss << http_code_;
         oss << " message: ";
         oss << message_;
         return oss.str();
@@ -145,7 +155,7 @@ struct CurlError {
 private:
     CURLcode code_;
     std::string message_;
-
+    long http_code_;
 };
 
 //! libcurl curl_easy_* api wrapper.
@@ -273,14 +283,16 @@ bool CurlEasyClient<Handlers>::perform()
 #endif
     curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_);
     CURLcode code = ::curl_easy_perform(curl_);
-    bool result = CURLE_OK == code;
+    long http_code = 0;
+    curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, &http_code);
+    bool result = CURLE_OK == code && http_code < 400;
     if (!result)
     {
-        curl_error_ = CurlError(code, std::string(errbuf_));
+        curl_error_ = CurlError(code, http_code, std::string(errbuf_));
     }
     else
     {
-        curl_error_ = CurlError();
+        curl_error_ = CurlError(code, http_code, "No errors");
     }
     return result;
 }
