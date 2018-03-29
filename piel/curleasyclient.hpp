@@ -145,7 +145,7 @@ struct CurlError {
         std::ostringstream oss;
         oss << "libcurl error code: ";
         oss << code_;
-        oss << "http code: ";
+        oss << " http code: ";
         oss << http_code_;
         oss << " message: ";
         oss << message_;
@@ -262,7 +262,6 @@ bool CurlEasyClient<Handlers>::perform()
         {
             chunk = ::curl_slist_append(chunk, (*i).c_str());
         }
-        // TODO: process errors
         ::curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, chunk);
     }
     if (CurlEasyHandlersTraits<Handlers>::have_handle_header) {
@@ -278,6 +277,7 @@ bool CurlEasyClient<Handlers>::perform()
         ::curl_easy_setopt(curl_, CURLOPT_READFUNCTION, handle_read);
         ::curl_easy_setopt(curl_, CURLOPT_UPLOAD, 1L);
     }
+    ::curl_easy_setopt(curl_, CURLOPT_FAILONERROR, 1L);
 #ifdef DEBUG_VERBOSE_CURL
     curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
 #endif
@@ -292,7 +292,7 @@ bool CurlEasyClient<Handlers>::perform()
     }
     else
     {
-        curl_error_ = CurlError(code, http_code, "No errors");
+        curl_error_ = CurlError(code, http_code, "OK");
     }
     return result;
 }
