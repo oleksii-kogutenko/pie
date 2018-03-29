@@ -28,6 +28,7 @@
 
 #include <checksumsdigestbuilder.hpp>
 #include <commonconstants.h>
+#include <logging.h>
 
 namespace piel { namespace lib {
 

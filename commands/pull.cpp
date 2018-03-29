@@ -79,17 +79,19 @@ std::vector<std::string> Pull::split(const std::string &s, char delim)
     std::stringstream ss(s);
     std::string item;
     while (getline(ss, item, delim)) {
+        LOGT << "split item: " << item << ELOG;
         result.push_back(item);
     }
     return result;
 }
 
-std::string Pull::get_classifier_from_filename(const fs::path fn)
+std::string Pull::get_classifier_from_filename(const fs::path& fn)
 {
     std::string classifier;
-    std::vector<std::string> res = split(fn.generic_string(), constants::classifier_delimiter);
+    std::vector<std::string> res = split(fn.stem().generic_string(), constants::classifier_delimiter);
+
     if (res.size() != 3) {
-        throw errors::invalid_downloaded_artifact_name(fn.generic_string());
+        throw errors::invalid_downloaded_artifact_name(fn.stem().generic_string());
     }
 
     classifier = res[2];

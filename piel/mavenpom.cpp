@@ -70,7 +70,7 @@ void MavenPom::set_group(const std::string& group)
 
 void MavenPom::set_name(const std::string& name)
 {
-    name_ = name_;
+    name_ = name;
 }
 
 void MavenPom::set_version(const std::string& version)
@@ -100,6 +100,12 @@ void MavenPom::store(std::ostream& os) const
     tree.add_child(art::lib::ArtBaseConstants::pom_project, tree_project);
 
     pt::write_xml(os, tree);
+
+    std::ostringstream oss;
+    pt::write_xml(oss, tree);
+
+    LOGT << "POM payload:" << ELOG;
+    LOGT << oss.str() << ELOG;
 }
 
 } } // namespace piel::lib

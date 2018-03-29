@@ -32,8 +32,10 @@
 #include <workingcopycommand.h>
 #include <indexesdiff.h>
 #include <gavcquery.h>
-#include "uploadfilesspec.h"
+#include <uploadfilesspec.h>
 #include <list>
+#include <artdeployartifacthandlers.h>
+#include <upload.h>
 
 namespace piel { namespace cmd {
 
@@ -63,9 +65,11 @@ public:
     const Push* set_server_api_access_token(const std::string& token);
     const Push* set_server_repository(const std::string& repo);
     const Push* set_query(const art::lib::GavcQuery& query);
+
 protected:
     bool upload(const std::string& classifier, const std::string& file_name);
     void deploy_pom(const boost::filesystem::path& path_to_save_pom);
+
 private:
     std::string server_url_;
     std::string server_api_access_token_;

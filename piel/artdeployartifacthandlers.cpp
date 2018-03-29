@@ -51,7 +51,6 @@ namespace art { namespace lib {
 
 ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const ArtDeployArtifactHandlers& handler)
     : ArtBaseDeployArtifactsHandlers(handler)
-    , str_digests_(handler.str_digests_)
     , name_(handler.name_)
     , version_(handler.version_)
     , classifier_(handler.classifier_)
@@ -60,7 +59,6 @@ ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const ArtDeployArtifactHand
 
 ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const std::string& api_token)
     : ArtBaseDeployArtifactsHandlers(api_token)
-    , str_digests_()
 {
 }
 
@@ -70,7 +68,6 @@ ArtDeployArtifactHandlers::ArtDeployArtifactHandlers(const std::string& api_toke
                                                      const std::string& path,
                                                      const std::string& fname)
     : ArtBaseDeployArtifactsHandlers(api_token, url, repo, path)
-    , str_digests_()
 {
     file(fname);
 }
@@ -81,47 +78,8 @@ ArtDeployArtifactHandlers::~ArtDeployArtifactHandlers()
 
 void ArtDeployArtifactHandlers::file(const std::string& fname)
 {
-    LOGI << __PRETTY_FUNCTION__ << ":" << fname << ELOG;
     boost::shared_ptr<std::istream> file_ptr(new std::ifstream(fname));
     push_input_stream(file_ptr);
-
-    std::ifstream in(fname, std::ifstream::ate | std::ifstream::binary);
-
-    if (!in.is_open()) {
-        LOGE << "Wrong to open file:" << fname << ELOG;
-        return;
-    }
-
-    size_t file_size = in.tellg();
-
-    in.seekg(0);
-
-    piel::lib::ChecksumsDigestBuilder digest_builder;
-    digest_builder.init();
-
-    str_digests_ = digest_builder.str_digests_for(in);
-
-    in.close();
-
-    std::stringstream ss;
-
-    ss << file_size;
-    update_attributes(ArtBaseConstants::size, ss.str());
-    update_attributes(ArtBaseConstants::mime_type, ArtBaseConstants::mime_type_text);
-}
-
-void ArtDeployArtifactHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
-{
-    pt::ptree checksum;
-    checksum.insert(checksum.end(),
-                    std::make_pair(
-                        ArtBaseConstants::checksums_md5,
-                        pt::ptree(str_digests_[piel::lib::Md5::t::name()])));
-    checksum.insert(checksum.end(),
-                    std::make_pair(
-                        ArtBaseConstants::checksums_sha1,
-                        pt::ptree(str_digests_[piel::lib::Sha::t::name()])));
-    tree.add_child(ArtBaseConstants::checksums, checksum);
 }
 
 size_t ArtDeployArtifactHandlers::handle_input(char *ptr, size_t size)
@@ -131,9 +89,9 @@ size_t ArtDeployArtifactHandlers::handle_input(char *ptr, size_t size)
 
 std::string ArtDeployArtifactHandlers::get_path()
 {
-    std::string p = ArtBaseDeployArtifactsHandlers::get_path();
+    std::string path = ArtBaseDeployArtifactsHandlers::get_path();
 
-    p.append(ArtBaseConstants::uri_delimiter)
+    path.append(ArtBaseConstants::uri_delimiter)
      .append(get_name()).append(ArtBaseConstants::uri_delimiter)
      .append(get_version()).append(ArtBaseConstants::uri_delimiter)
      .append(get_name()).append("-")
@@ -143,12 +101,11 @@ std::string ArtDeployArtifactHandlers::get_path()
     std::vector<std::string> name_ext;
     boost::split(name_ext, classifier, boost::is_any_of("."));
 
-    if (name_ext[0].size()) p.append("-");
+    if (name_ext[0].size()) path.append("-");
 
-    p.append(classifier);
+    path.append(classifier);
 
-    LOGT << p << ELOG;
-    return p;
+    return path;
 }
 
 } } // namespace art::lib

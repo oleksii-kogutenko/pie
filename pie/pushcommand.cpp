@@ -179,6 +179,11 @@ bool PushCommand::parse_arguments()
         std::cerr << "POM uploading error:" << e.error << std::endl;
         return -1;
     }
+    catch (const piel::cmd::errors::uploading_checksum_error& e)
+    {
+        std::cerr << "Uploading checksum error:" << e.error << std::endl;
+        return -1;
+    }
 
     if (!working_copy_->is_valid())
     {

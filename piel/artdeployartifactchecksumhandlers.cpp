@@ -49,53 +49,39 @@ CURLH_T_(art::lib::ArtDeployArtifactCheckSumHandlers,\
 
 namespace art { namespace lib {
 
-ArtDeployArtifactCheckSumHandlers::ArtDeployArtifactCheckSumHandlers(const ArtDeployArtifactHandlers &handler, std::string digest)
-    : ArtDeployArtifactHandlers(handler)
+std::string ArtDeployArtifactCheckSumHandlers::basic_digest_name(const std::string& digest) const
+{
+    if (digest == ArtBaseConstants::checksums_md5)
+        return piel::lib::Md5::t::name();
+    else if(digest == ArtBaseConstants::checksums_sha1)
+        return piel::lib::Sha::t::name();
+    else if (digest == ArtBaseConstants::checksums_sha256)
+        return piel::lib::Sha256::t::name();
+    else
+        return "";
+}
+
+ArtDeployArtifactCheckSumHandlers::ArtDeployArtifactCheckSumHandlers(ArtDeployArtifactHandlers* processed_handler, const std::string& digest)
+    : ArtDeployArtifactHandlers(processed_handler->api_token())
     , digest_(digest)
+    , processed_handler_(processed_handler)
 {
+    piel::lib::ChecksumsDigestBuilder::StrDigests digests = processed_handler->str_digests();
+
+    LOGT << "URI: " << processed_handler_->gen_uri()        << ELOG;
+    LOGT << "Checksum URI: " << gen_uri()                   << ELOG;
+    LOGT << "Checksum " << digest << ":" << digests[basic_digest_name(digest)] << ELOG;
+
+    push_input_stream(boost::shared_ptr<std::istream>(new std::istringstream(digests[basic_digest_name(digest)])));
 }
 
-ArtDeployArtifactCheckSumHandlers::~ArtDeployArtifactCheckSumHandlers()
+/*virtual*/ ArtDeployArtifactCheckSumHandlers::~ArtDeployArtifactCheckSumHandlers()
 {
-}
-/*
-void ArtDeployArtifactCheckSumHandlers::gen_additional_tree(boost::property_tree::ptree& tree)
-{
-    pt::ptree checksum;
-    checksum.insert(checksum.end(),
-                    std::make_pair(
-                        ArtBaseConstants::checksums_md5,
-                        pt::ptree(str_digests_[piel::lib::Md5::t::name()])));
-    checksum.insert(checksum.end(),
-                    std::make_pair(
-                        ArtBaseConstants::checksums_sha1,
-                        pt::ptree(str_digests_[piel::lib::Sha::t::name()])));
-    tree.add_child(ArtBaseConstants::checksums, checksum);
-}
-*/
-boost::shared_ptr<std::istream> ArtDeployArtifactCheckSumHandlers::prepare_header()
-{
-    std::stringstream os;
-
-    std::string check_name = (digest_ == art::lib::ArtBaseConstants::checksums_md5) ? piel::lib::Md5::t::name() : piel::lib::Sha::t::name();
-    LOGI << "----- " << piel::lib::Md5::t::name() << "===" << digest_ << "-->" << check_name << ELOG;
-
-    os << str_digests_[/*piel::lib::Md5::t::name()*/check_name];
-    boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
-
-    LOGI << __PRETTY_FUNCTION__ << "[" << digest_<< "]:" << os.str() << ELOG;
-    return is;
-}
-
-size_t ArtDeployArtifactCheckSumHandlers::handle_input(char *ptr, size_t size)
-{
-    return ArtBaseDeployArtifactsHandlers::handle_input(ptr, size);
 }
 
 /*virtual*/ std::string ArtDeployArtifactCheckSumHandlers::gen_uri()
 {
-    std::string ret_val = ArtDeployArtifactHandlers::gen_uri().append(".").append(digest_);
-    return ret_val;
+    return processed_handler_->gen_uri().append(".").append(digest_);
 }
 
 } } // namespace art::lib

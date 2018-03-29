@@ -50,7 +50,6 @@ public:
     virtual ~ArtDeployArtifactHandlers();
 
     virtual size_t handle_input(char *ptr, size_t size);
-    virtual void gen_additional_tree(boost::property_tree::ptree &);
 
     virtual std::string get_path();
 
@@ -64,8 +63,6 @@ public:
     std::string get_version() { return version_; }
     std::string get_classifier() { return classifier_; }
 
-protected:
-    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
 private:
     std::string   name_;
     std::string   version_;

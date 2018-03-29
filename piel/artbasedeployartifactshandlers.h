@@ -54,8 +54,6 @@ public:
     virtual size_t handle_input(char *ptr, size_t size);
     virtual size_t handle_output(char *ptr, size_t size);
 
-    virtual boost::shared_ptr<std::istream> prepare_header();
-
     virtual void set_url(const std::string& url);
     virtual void set_repo(const std::string& repo);
     virtual void set_path(const std::string& path);
@@ -66,13 +64,10 @@ public:
 
     virtual std::string gen_uri();
 
-    virtual void gen_additional_tree(boost::property_tree::ptree &) {}
-
-    void update_attributes(const std::string& key, const std::string& value);
-    void update_attributes(const std::string& key, const char* value);
-
     void push_input_stream(boost::shared_ptr<std::istream> is);
     size_t putto(char* ptr, size_t size);
+
+    piel::lib::ChecksumsDigestBuilder::StrDigests& str_digests(bool reset = false);
 
 protected:
     std::string trim(const std::string& src);
@@ -85,8 +80,8 @@ private:
     std::string url_;
     std::string repo_;
     std::string path_;
-
-    bool    first_call_;
+    bool first_call_;
+    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests_;
 };
 
 } } // namespace art::lib

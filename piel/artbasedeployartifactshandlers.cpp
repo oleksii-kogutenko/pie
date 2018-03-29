@@ -45,7 +45,7 @@ namespace pt = boost::property_tree;
 
 //      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
 CURLH_T_(art::lib::ArtBaseDeployArtifactsHandlers,\
-        true,             false,         true,           true,          false,          false);
+        true,             false,          true,           true,          false,          false);
 
 namespace art { namespace lib {
 
@@ -82,6 +82,7 @@ ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string
     , repo_()
     , path_()
     , first_call_(true)
+    , str_digests_()
 {
     set_url(url);
     set_repo(repo);
@@ -98,26 +99,20 @@ size_t ArtBaseDeployArtifactsHandlers::putto(char* ptr, size_t size)
     return uploader_.putto(ptr, size);
 }
 
-boost::shared_ptr<std::istream> ArtBaseDeployArtifactsHandlers::prepare_header()
+piel::lib::ChecksumsDigestBuilder::StrDigests& ArtBaseDeployArtifactsHandlers::str_digests(bool reset)
 {
-    std::stringstream os;
-
-    gen_additional_tree(tree_);
-
-    pt::write_json(os, tree_, false);
-
-    boost::shared_ptr<std::istream> is(new std::stringstream(os.str()));
-
-    LOGI << __PRETTY_FUNCTION__ << ":" << os.str() << ELOG;
-
-    return is;
+    if (str_digests_.empty() || reset)
+    {
+        str_digests_ = uploader_.digest_builder().finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
+    }
+    return str_digests_;
 }
 
 size_t ArtBaseDeployArtifactsHandlers::handle_input(char *ptr, size_t size)
 {
-    if (first_call_) {
+    if (first_call_)
+    {
         first_call_ = false;
-        uploader_.push_input_stream(prepare_header());
     }
     return uploader_.putto(ptr, size);
 }
@@ -132,9 +127,9 @@ size_t ArtBaseDeployArtifactsHandlers::handle_output(char *ptr, size_t size)
 
     for(pt::ptree::const_iterator it = tree.begin(), end = tree.end(); it != end; ++it) {
         LOGT << "answer[" << (*it).first.c_str() << "]=" << (*it).second.data() << ELOG;
-
         answer_[(*it).first.c_str()] = (*it).second.data();
     }
+
     return size;
 }
 
@@ -145,54 +140,28 @@ std::string ArtBaseDeployArtifactsHandlers::trim(const std::string &src)
     return dest;
 }
 
-void ArtBaseDeployArtifactsHandlers::update_attributes(const std::string& key, const std::string& value)
-{
-    tree_.insert(tree_.end(), std::make_pair(key, pt::ptree(value)));
-}
-
-void ArtBaseDeployArtifactsHandlers::update_attributes(const std::string& key, const char* value)
-{
-    tree_.insert(tree_.end(), std::make_pair(key, pt::ptree(value)));
-}
-
 void ArtBaseDeployArtifactsHandlers::set_url(const std::string& url)
 {
     url_ = trim(url);
-    std::string value = get_url();
-    if (!value.empty()) {
-        tree_.insert(tree_.end(), std::make_pair(
-                         ArtBaseConstants::uri_attribute,
-                         pt::ptree(value)));
-    }
 }
 
 void ArtBaseDeployArtifactsHandlers::set_repo(const std::string& repo)
 {
     repo_ = trim(repo);
-    std::string value = get_repo();
-    if (!value.empty()) {
-        tree_.insert(tree_.end(), std::make_pair(
-                         ArtBaseConstants::repo_attribute,
-                         pt::ptree(value)));
-    }
 }
 
 void ArtBaseDeployArtifactsHandlers::set_path(const std::string& path)
 {
     path_ = trim(path);
-    std::string value = get_path();
-    if (!value.empty()) {
-        tree_.insert(tree_.end(), std::make_pair(
-                         ArtBaseConstants::path_attribute,
-                         pt::ptree(value)));
-    }
 }
 
 std::string ArtBaseDeployArtifactsHandlers::gen_uri()
 {
-    std::string ret_val = get_url().append(ArtBaseConstants::uri_delimiter).append(get_repo()).append(ArtBaseConstants::uri_delimiter).append(get_path());
-    LOGI << __PRETTY_FUNCTION__ << ":" << ret_val << ELOG;
-    return ret_val;
+    return get_url()
+            .append(ArtBaseConstants::uri_delimiter)
+            .append(get_repo())
+            .append(ArtBaseConstants::uri_delimiter)
+            .append(get_path());
 }
 
 } } // namespace art::lib

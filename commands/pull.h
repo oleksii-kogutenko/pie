@@ -64,7 +64,7 @@ public:
     std::string get_classifier_to_checkout() const { return classifier_to_checkout_; }
 
 protected:
-    std::string get_classifier_from_filename(const boost::filesystem::path fn);
+    std::string get_classifier_from_filename(const boost::filesystem::path& fn);
     std::vector<std::string> split(const std::string &s, char delim);
 
 private:

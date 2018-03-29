@@ -104,6 +104,9 @@ public:
     //! \return Map with server returned headers.
     std::map<std::string, std::string>& headers();
 
+    //! Get server API token
+    std::string api_token() const;
+
 private:
     std::string api_token_;                         //!< Artifactory server REST api access token.
     std::string response_buffer_;                   //!< Buffer to collect server responce data.

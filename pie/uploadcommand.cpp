@@ -127,7 +127,7 @@ bool UploadCommand::parse_arguments()
 
     query_ = *parsed_query;
 
-    if (!query_.is_exact_version_query()) 
+    if (!query_.is_exact_version_query())
     {
         std::cerr << "Exact version is needed for the upload command!" << std::endl;
         return false;
@@ -209,6 +209,11 @@ bool UploadCommand::parse_arguments()
     catch (const piel::cmd::errors::pom_upload_error&)
     {
         std::cerr << "POM upload error!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::uploading_checksum_error& e)
+    {
+        std::cerr << "Uploading checksum error:" << e.error << std::endl;
         return -1;
     }
 

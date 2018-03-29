@@ -44,6 +44,7 @@ const std::string ArtBaseConstants::size            = "size";
 const std::string ArtBaseConstants::checksums       = "checksums";
 const std::string ArtBaseConstants::checksums_md5   = "md5";
 const std::string ArtBaseConstants::checksums_sha1  = "sha1";
+const std::string ArtBaseConstants::checksums_sha256= "sha256";
 const std::string ArtBaseConstants::mime_type       = "mimeType";
 const std::string ArtBaseConstants::mime_type_text  = "application/text";
 

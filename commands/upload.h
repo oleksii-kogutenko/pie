@@ -32,7 +32,8 @@
 #include <command.h>
 #include <indexesdiff.h>
 #include <gavcquery.h>
-#include "uploadfilesspec.h"
+#include <uploadfilesspec.h>
+#include <artdeployartifacthandlers.h>
 
 namespace piel { namespace cmd {
 
@@ -40,6 +41,11 @@ namespace errors {
     struct nothing_to_upload {};
     struct file_upload_error {};
     struct pom_upload_error {};
+    struct uploading_checksum_error
+    {
+        uploading_checksum_error(const std::string& e) : error(e) {}
+        std::string error;
+    };
 };
 
 class Upload: public Command
@@ -55,8 +61,12 @@ public:
     const Upload* set_server_repository(const std::string& repo);
     const Upload* set_query(const art::lib::GavcQuery& query);
     const Upload* set_classifiers(const art::lib::ufs::UFSVector& classifiers);
+
+    static void upload_checksums_for(art::lib::ArtDeployArtifactHandlers *deploy_handlers, std::string checksum_name);
+
 protected:
     void deploy_pom();
+
 private:
     std::string server_url_;
     std::string server_api_access_token_;

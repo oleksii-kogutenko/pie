@@ -37,6 +37,7 @@
 #include <treeindexenumerator.h>
 #include <mavenpom.h>
 #include <artdeployartifacthandlers.h>
+#include <artdeployartifactchecksumhandlers.h>
 #include <boost_filesystem_ext.hpp>
 
 namespace al = art::lib;
@@ -127,6 +128,10 @@ void Push::deploy_pom(const boost::filesystem::path &path_to_save_pom)
         LOGE << upload_client.curl_error().presentation()   << ELOG;
         throw errors::uploading_pom_error(upload_client.curl_error().presentation());
     }
+
+    Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
+    Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
+    Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
 }
 
 bool Push::upload(const std::string& classifier, const std::string& file_name)
@@ -155,6 +160,10 @@ bool Push::upload(const std::string& classifier, const std::string& file_name)
             LOGE << upload_client.curl_error().presentation()   << ELOG;
             throw errors::uploading_classifier_error(upload_client.curl_error().presentation());
         }
+
+        Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
+        Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
+        Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
     }
     return no_errors;
 }

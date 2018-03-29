@@ -35,7 +35,7 @@
 #include <fsindexer.h>
 #include <mavenpom.h>
 #include <artbaseconstants.h>
-
+#include <artdeployartifactchecksumhandlers.h>
 #include <artdeployartifacthandlers.h>
 
 namespace al = art::lib;
@@ -53,6 +53,23 @@ Upload::Upload()
 
 Upload::~Upload()
 {
+}
+
+// Also used by Push
+/*static*/ void Upload::upload_checksums_for(art::lib::ArtDeployArtifactHandlers *deploy_handlers, std::string checksum_name)
+{
+    art::lib::ArtDeployArtifactCheckSumHandlers deploy_checksum_handlers(deploy_handlers, checksum_name);
+    piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers>
+            upload_checksum_client(deploy_checksum_handlers.gen_uri(), &deploy_checksum_handlers);
+
+    LOGD << "Upload checksum: " << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
+
+    if (!(upload_checksum_client.perform()))
+    {
+        LOGE << "Error on upload file " << checksum_name << " checksum!"    << ELOG;
+        LOGE << upload_checksum_client.curl_error().presentation()          << ELOG;
+        throw errors::uploading_checksum_error(upload_checksum_client.curl_error().presentation());
+    }
 }
 
 const Upload* Upload::set_server_url(const std::string& url)
@@ -97,7 +114,7 @@ void Upload::operator()()
         throw errors::nothing_to_upload();
     }
 
-    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end && no_errors; ++it) 
+    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end && no_errors; ++it)
     {
         art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
 
@@ -119,6 +136,10 @@ void Upload::operator()()
             LOGE << upload_client.curl_error().presentation()   << ELOG;
             throw errors::file_upload_error();
         }
+
+        upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
+        upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
+        upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
     }
 
     if (no_errors)
@@ -157,6 +178,10 @@ void Upload::deploy_pom()
         LOGE << upload_client.curl_error().presentation()   << ELOG;
         throw errors::pom_upload_error();
     }
+
+    upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
+    upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
+    upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
 }
 
 } } // namespace piel::cmd

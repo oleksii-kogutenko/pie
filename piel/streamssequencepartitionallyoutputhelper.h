@@ -35,6 +35,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <queue>
+#include <checksumsdigestbuilder.hpp>
 
 namespace art { namespace lib {
 
@@ -42,23 +43,25 @@ class StreamsSequencePartitionallyOutputHelper
 {
     typedef boost::shared_ptr<std::istream> ISPtr;
     typedef std::queue<ISPtr> ISPtrQueue;
+
 public:
     StreamsSequencePartitionallyOutputHelper();
     ~StreamsSequencePartitionallyOutputHelper(){}
 
-    /*boost::shared_ptr<std::istream> istream() const
-    {
-        return is_;
-    }*/
-
     void push_input_stream(boost::shared_ptr<std::istream> is);
 
     size_t putto(char* ptr, size_t size);
+
+    piel::lib::ChecksumsDigestBuilder& digest_builder();
+
 private:
     bool next();
+
 private:
-    ISPtrQueue   is_queue_;
-    ISPtr       current_is_;
+    ISPtrQueue                          is_queue_;
+    ISPtr                               current_is_;
+    piel::lib::ChecksumsDigestBuilder   digest_builder_;
+
 };
 
 } } // namespace art::lib

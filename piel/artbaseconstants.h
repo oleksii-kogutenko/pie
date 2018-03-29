@@ -47,8 +47,10 @@ struct ArtBaseConstants {
     static const std::string download_uri;
     static const std::string size;
     static const std::string checksums;
+
     static const std::string checksums_md5;
     static const std::string checksums_sha1;
+    static const std::string checksums_sha256;
 
     static const std::string mime_type;
     static const std::string mime_type_text;

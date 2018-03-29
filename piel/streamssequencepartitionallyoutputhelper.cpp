@@ -47,7 +47,9 @@ namespace art { namespace lib {
 StreamsSequencePartitionallyOutputHelper::StreamsSequencePartitionallyOutputHelper()
     : is_queue_()
     , current_is_()
+    , digest_builder_()
 {
+    digest_builder_.init();
 }
 
 void StreamsSequencePartitionallyOutputHelper::push_input_stream(boost::shared_ptr<std::istream> is)
@@ -65,15 +67,25 @@ bool StreamsSequencePartitionallyOutputHelper::next()
     return res;
 }
 
+piel::lib::ChecksumsDigestBuilder& StreamsSequencePartitionallyOutputHelper::digest_builder()
+{
+    return digest_builder_;
+}
+
 size_t StreamsSequencePartitionallyOutputHelper::putto(char* ptr, size_t size)
 {
     size_t filled_size = 0;
+
     while (filled_size < size) {
         size_t readed = 0;
 
         if (current_is_) {
             readed += boost::numeric_cast<size_t>(current_is_->read(ptr + filled_size,
                                         boost::numeric_cast<std::streamsize>(size - filled_size)).gcount());
+
+            if (readed > 0) {
+                digest_builder_.update(ptr + filled_size, readed);
+            }
         }
 
         if (!readed){
@@ -87,6 +99,7 @@ size_t StreamsSequencePartitionallyOutputHelper::putto(char* ptr, size_t size)
 
         filled_size += readed;
     }
+
     return filled_size;
 }
 

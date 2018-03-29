@@ -45,15 +45,17 @@ namespace art { namespace lib {
 class ArtDeployArtifactCheckSumHandlers : public ArtDeployArtifactHandlers
 {
 public:
-    ArtDeployArtifactCheckSumHandlers(const ArtDeployArtifactHandlers& handler, std::string digest);
+    ArtDeployArtifactCheckSumHandlers(ArtDeployArtifactHandlers *processed_handler, const std::string& digest);
     virtual ~ArtDeployArtifactCheckSumHandlers();
 
-    virtual boost::shared_ptr<std::istream> prepare_header();
-    virtual size_t handle_input(char *ptr, size_t size);
-    //virtual void gen_additional_tree(boost::property_tree::ptree &);
     virtual std::string gen_uri();
+
+protected:
+    std::string basic_digest_name(const std::string& digest) const;
+
 private:
-    std::string digest_;
+    std::string                 digest_;
+    ArtDeployArtifactHandlers   *processed_handler_;
 };
 
 } } // namespace art::lib

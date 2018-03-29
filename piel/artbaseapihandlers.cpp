@@ -158,4 +158,9 @@ std::map<std::string, std::string>& ArtBaseApiHandlers::headers()
     return *stream_.get();
 }
 
+std::string ArtBaseApiHandlers::api_token() const
+{
+    return api_token_;
+}
+
 } } // namespace art::lib
