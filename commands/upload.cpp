@@ -62,7 +62,7 @@ Upload::~Upload()
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers>
             upload_checksum_client(deploy_checksum_handlers.gen_uri(), &deploy_checksum_handlers);
 
-    LOGD << "Upload checksum: " << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
+    LOGD << "Upload checksum: " << checksum_name << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
 
     if (!(upload_checksum_client.perform()))
     {
