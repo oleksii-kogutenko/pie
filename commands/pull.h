@@ -33,6 +33,7 @@
 #include <indexesdiff.h>
 #include <gavcquery.h>
 #include <list>
+#include <iostreamsholder.h>
 
 #include <boost/filesystem.hpp>
 
@@ -46,7 +47,7 @@ namespace errors {
     };
 };
 
-class Pull
+class Pull: public piel::lib::IOstreamsHolder
 {
 public:
     Pull(  const std::string& server_api_access_token

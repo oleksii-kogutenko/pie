@@ -60,7 +60,8 @@ Pull::Pull(const std::string& server_api_access_token
      , const std::string& server_url
      , const std::string& server_repository
      , const art::lib::GavcQuery& query)
-    : working_copy_()
+    : piel::lib::IOstreamsHolder()
+    , working_copy_()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
     , server_repository_(server_repository)
@@ -140,25 +141,40 @@ void Pull::operator()()
         std::string classifier = get_classifier_from_filename(*it);
         LOGD << "classifier:" << classifier << ELOG;
 
+        cout() << "Import tree: " << classifier;
+
         pl::TreeIndex::Ptr zip_index = pl::ZipIndexer::build(*it);
         working_copy_->local_storage()->put(zip_index->assets());
 
         piel::lib::AssetId new_tree_id = zip_index->self().id();
         working_copy_->local_storage()->create_reference(piel::lib::refs::Ref(classifier, new_tree_id));
         working_copy_->setup_current_tree(classifier, zip_index);
+
+        cout() << " COMPLETE" << std::endl;
     }
 
-    pl::TreeIndex::Ptr current_tree;
-    if (classifier_to_checkout_.empty())
+    pl::TreeIndex::Ptr current_tree = piel::lib::TreeIndex::from_ref(working_copy_->local_storage(), classifier_to_checkout_);
+    if (!classifier_to_checkout_.empty() && !current_tree)
     {
-        current_tree = working_copy_->current_tree_state();
-    } else {
-        current_tree = piel::lib::TreeIndex::from_ref(working_copy_->local_storage(), classifier_to_checkout_);
+        cout() << "Can't find requested tree to checkout! Latest imported will be used." << std::endl;
+    }
+
+    if (classifier_to_checkout_.empty() || !current_tree)
+    {
+        classifier_to_checkout_ = working_copy_->current_tree_name();
+        current_tree            = working_copy_->current_tree_state();
+    }
+    else
+    {
         working_copy_->setup_current_tree(classifier_to_checkout_, current_tree);
     }
 
+    cout() << "Checkout " << classifier_to_checkout_;
+
     pl::AssetsExtractor index_exporter(current_tree, pl::ExtractPolicy__replace_existing);
     index_exporter.extract_into(working_copy_->working_dir());
+
+    cout() << " COMPLETE" << std::endl;
 }
 
 } } // namespace piel::cmd
