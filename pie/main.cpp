@@ -28,7 +28,6 @@
 
 #include <application.h>
 #include <gavccommand.h>
-
 #include <initworkingcopycommand.h>
 #include <createcommand.h>
 #include <destroycommand.h>
@@ -42,23 +41,30 @@
 #include <uploadcommand.h>
 #include <pullcommand.h>
 
+namespace pa = pie::app;
+
 int main(int argc, char **argv)
 {
-    pie::app::Application application(argc, argv);
+    pa::Application app(argc, argv);
 
-    application.register_command(new pie::app::CommmandConstructor<pie::app::GavcCommand>("gavc", "GAVC query implementation."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::InitWorkingCopyCommand>("init", "Initialize working copy in current directory."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CreateCommand>("create", "Create new tree."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::DestroyCommand>("destroy", "Destroy tree."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CheckoutCommand>("checkout", "Checkout tree state into working copy."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::StatusCommand>("status", "Show working copy status in comparsion to referenced tree."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::ResetCommand>("reset", "Reset working copy content to the tree state."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::CommitCommand>("commit", "Commit tree state into current tree."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::TreeCommand>("tree", "Show tree names."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::LogCommand>("log", "Show tree log."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::PushCommand>("push", "Push to artifactory server."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::UploadCommand>("upload", "Upload to artifactory server."));
-    application.register_command(new pie::app::CommmandConstructor<pie::app::PullCommand>("pull", "Pull from artifactory server."));
+#define C_(x,y,z) app.register_command( new pa::CommmandConstructor< x >( y, z ) )
 
-    return application.run();
+    C_ ( pa::GavcCommand,               "gavc",     "GAVC query implementation." );
+    C_ ( pa::UploadCommand,             "upload",   "Upload to artifactory server." );
+    C_ ( pa::PullCommand,               "pull",     "Pull from artifactory server." );
+    C_ ( pa::PushCommand,               "push",     "Push to artifactory server." );
+
+    C_ ( pa::InitWorkingCopyCommand,    "init",     "Initialize working copy in current directory." );
+    C_ ( pa::CreateCommand,             "create",   "Create new tree." );
+    C_ ( pa::DestroyCommand,            "destroy",  "Destroy tree." );
+    C_ ( pa::CheckoutCommand,           "checkout", "Checkout tree state into working copy." );
+    C_ ( pa::StatusCommand,             "status",   "Show working copy status in comparsion to referenced tree." );
+    C_ ( pa::ResetCommand,              "reset",    "Reset working copy content to the tree state." );
+    C_ ( pa::CommitCommand,             "commit",   "Commit tree state into current tree." );
+    C_ ( pa::TreeCommand,               "tree",     "Show tree names." );
+    C_ ( pa::LogCommand,                "log",      "Show tree log." );
+
+#undef C_
+
+    return app.run();
 }
