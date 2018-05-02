@@ -38,7 +38,6 @@
 #include <fstream>
 #include <vector>
 
-using namespace art::lib;
 using namespace piel::lib;
 
 BOOST_AUTO_TEST_CASE(outputstream_check_string_pattern1)

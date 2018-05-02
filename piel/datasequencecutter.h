@@ -37,7 +37,7 @@
 #include <queue>
 #include <checksumsdigestbuilder.hpp>
 
-namespace art { namespace lib {
+namespace piel { namespace lib {
 
 class DataSequenceCutter
 {

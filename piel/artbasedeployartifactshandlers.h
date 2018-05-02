@@ -74,7 +74,7 @@ protected:
 
 private:
     boost::property_tree::ptree tree_;
-    DataSequenceCutter uploader_;
+    piel::lib::DataSequenceCutter uploader_;
     std::stringstream os_;
     Attributes  answer_;
     std::string url_;

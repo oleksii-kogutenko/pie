@@ -42,8 +42,7 @@
 
 namespace pt = boost::property_tree;
 
-
-namespace art { namespace lib {
+namespace piel { namespace lib {
 
 DataSequenceCutter::DataSequenceCutter()
     : is_queue_()
