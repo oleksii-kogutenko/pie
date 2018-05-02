@@ -33,11 +33,11 @@
 #ifndef ARTBASEAPIDEPLOYARTIFACTHANDLERS_H
 #define ARTBASEAPIDEPLOYARTIFACTHANDLERS_H
 
-#include <streamssequencepartitionallyoutputhelper.h>
 #include <checksumsdigestbuilder.hpp>
 
 #include <fstream>
 #include <artbasedeployartifactshandlers.h>
+#include <datasequencecutter.h>
 
 namespace art { namespace lib {
 

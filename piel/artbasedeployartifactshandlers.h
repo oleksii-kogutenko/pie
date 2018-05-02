@@ -35,7 +35,7 @@
 
 #include <artbaseapihandlers.h>
 #include <boost_property_tree_ext.hpp>
-#include <streamssequencepartitionallyoutputhelper.h>
+#include <datasequencecutter.h>
 
 namespace art { namespace lib {
 
@@ -74,7 +74,7 @@ protected:
 
 private:
     boost::property_tree::ptree tree_;
-    StreamsSequencePartitionallyOutputHelper uploader_;
+    DataSequenceCutter uploader_;
     std::stringstream os_;
     Attributes  answer_;
     std::string url_;

@@ -30,40 +30,78 @@
  *
  */
 
-#ifndef STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
-#define STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H
+#include <datasequencecutter.h>
 
-#include <boost/shared_ptr.hpp>
-#include <queue>
-#include <checksumsdigestbuilder.hpp>
+#include <cstring>
+#include <logging.h>
+
+#include <boost_property_tree_ext.hpp>
+#include <boost_filesystem_ext.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
+namespace pt = boost::property_tree;
+
 
 namespace art { namespace lib {
 
-class StreamsSequencePartitionallyOutputHelper
+DataSequenceCutter::DataSequenceCutter()
+    : is_queue_()
+    , current_is_()
+    , digest_builder_()
 {
-    typedef boost::shared_ptr<std::istream> ISPtr;
-    typedef std::queue<ISPtr> ISPtrQueue;
+    digest_builder_.init();
+}
 
-public:
-    StreamsSequencePartitionallyOutputHelper();
-    ~StreamsSequencePartitionallyOutputHelper(){}
+void DataSequenceCutter::push_input_stream(boost::shared_ptr<std::istream> is)
+{
+    is_queue_.push(is);
+}
 
-    void push_input_stream(boost::shared_ptr<std::istream> is);
+bool DataSequenceCutter::next()
+{
+    bool res = !is_queue_.empty();
+    if (res) {
+        current_is_ = is_queue_.front();
+        is_queue_.pop();
+    }
+    return res;
+}
 
-    size_t putto(char* ptr, size_t size);
+piel::lib::ChecksumsDigestBuilder& DataSequenceCutter::digest_builder()
+{
+    return digest_builder_;
+}
 
-    piel::lib::ChecksumsDigestBuilder& digest_builder();
+size_t DataSequenceCutter::putto(char* ptr, size_t size)
+{
+    size_t filled_size = 0;
 
-private:
-    bool next();
+    while (filled_size < size) {
+        size_t readed = 0;
 
-private:
-    ISPtrQueue                          is_queue_;
-    ISPtr                               current_is_;
-    piel::lib::ChecksumsDigestBuilder   digest_builder_;
+        if (current_is_) {
+            readed += boost::numeric_cast<size_t>(current_is_->read(ptr + filled_size,
+                                        boost::numeric_cast<std::streamsize>(size - filled_size)).gcount());
 
-};
+            if (readed > 0) {
+                digest_builder_.update(ptr + filled_size, readed);
+            }
+        }
+
+        if (!readed){
+            if (next()) {
+                continue;
+            }
+            else {
+                return filled_size;
+            }
+        }
+
+        filled_size += readed;
+    }
+
+    return filled_size;
+}
 
 } } // namespace art::lib
-
-#endif // STREAMSSEQUENCEPARTITIONALLYOUTPUTHELPER_H

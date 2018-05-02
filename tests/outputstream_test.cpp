@@ -27,12 +27,12 @@
  */
 
 #define BOOST_TEST_MODULE OutPutStreamTest
-//#include <boost/test/included/unit_test.hpp>
+
 #include <boost/test/unit_test.hpp>
 #include "test_utils.hpp"
 
 #include <logging.h>
-#include "streamssequencepartitionallyoutputhelper.h"
+#include <datasequencecutter.h>
 
 #include <sstream>
 #include <fstream>
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(outputstream_check_string_pattern1)
 {
     LOGT << "outputstream_check_pattern1" << ELOG;
 
-    StreamsSequencePartitionallyOutputHelper os;
+    DataSequenceCutter os;
 
     const std::string pattern = "ABCDEFGH";
     boost::shared_ptr<std::istream> ss_ptr1 (new std::istringstream(pattern));
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(outputstream_check_string_patterns)
 {
     LOGT << "outputstream_check_string_patterns" << ELOG;
 
-    StreamsSequencePartitionallyOutputHelper os;
+    DataSequenceCutter os;
 
     const std::string pattern = "ABCDEFGH";
     size_t read_size = pattern.size() -1;
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(outputstream_check_file)
 {
     LOGT << "outputstream_check_file" << ELOG;
 
-    StreamsSequencePartitionallyOutputHelper os;
+    DataSequenceCutter os;
 
     test_utils::TempFileHolder::Ptr test_file = test_utils::create_random_temp_file();
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(outputstream_check_files)
 {
     LOGT << "outputstream_check_files" << ELOG;
 
-    StreamsSequencePartitionallyOutputHelper os;
+    DataSequenceCutter os;
 
     test_utils::TempFileHolder::Ptr test_file1 = test_utils::create_random_temp_file();
     test_utils::TempFileHolder::Ptr test_file2 = test_utils::create_random_temp_file();
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(outputstream_check_string_files)
 {
     LOGT << "outputstream_check_string_files" << ELOG;
 
-    StreamsSequencePartitionallyOutputHelper os;
+    DataSequenceCutter os;
 
     const std::string pattern = "ABCDEFGH";
     test_utils::TempFileHolder::Ptr test_file1 = test_utils::create_random_temp_file();
