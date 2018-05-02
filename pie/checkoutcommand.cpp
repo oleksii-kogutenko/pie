@@ -117,7 +117,7 @@ int CheckoutCommand::perform()
         std::cerr << "Can't find reference " << ref_ << " for checkout! Please use -b option if you want to create new tree based on current state." << std::endl;
         return -1;
     }
-    catch (const piel::cmd::errors::there_are_non_commited_changes& e)
+    catch (const piel::cmd::errors::there_are_non_commit_changes& e)
     {
         std::cerr << "Can't checkout " << ref_ << ". There are non commit changes in workspace!" << std::endl;
         return -1;

@@ -73,8 +73,8 @@ std::string Checkout::operator()()
             piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
             if (!diff.empty())
             {
-                LOGT << "There are non commited changes!" << ELOG;
-                throw errors::there_are_non_commited_changes();
+                LOGT << "There are non commit changes!" << ELOG;
+                throw errors::there_are_non_commit_changes();
             }
         }
 
