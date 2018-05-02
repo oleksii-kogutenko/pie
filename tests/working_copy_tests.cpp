@@ -98,11 +98,18 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
     commit_1.set_message("Commit to " + ref_name_1);
     commit_1();
 
+    lib::test_utils::DirState commit_1_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
+
     cmd::Create create(wc, ref_name_2);
     create();
 
+    // Here we have only metadata in directory
     cmd::Commit commit_2(wc);
     commit_2.set_message("Initial commit to " + ref_name_2);
+    BOOST_CHECK_THROW(commit_2(), cmd::errors::nothing_to_commit); // because create will cleaned directory
+
+    // Random changes
+    lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), commit_1_state);
     commit_2();
 
     cmd::Checkout checkout_1(wc, ref_name_1);

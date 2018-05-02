@@ -27,6 +27,7 @@
  */
 
 #include <create.h>
+#include <checkout.h>
 #include <logging.h>
 
 namespace piel { namespace cmd {
@@ -48,6 +49,20 @@ void Create::operator()()
         throw errors::non_empty_reference_already_exists();
     }
 
+    // Check for non commit changes
+    piel::lib::TreeIndex::Ptr current_index = working_copy()->working_dir_state();
+    piel::lib::TreeIndex::Ptr reference_index = working_copy()->current_tree_state();
+
+    piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(reference_index, current_index);
+    if (!diff.empty())
+    {
+        LOGT << "There are non commit changes!" << ELOG;
+        throw errors::there_are_non_commit_changes();
+    }
+
+    // Remove working directory content (exclude metadata)
+    boost::filesystem::remove_directory_content(working_copy()->working_dir(), working_copy()->metadata_dir());
+
     piel::lib::TreeIndex::Ptr initial_tree_index(new piel::lib::TreeIndex());
 
     initial_tree_index->initial_for(new_ref_);
@@ -57,7 +72,7 @@ void Create::operator()()
     working_copy()->local_storage()->create_reference(piel::lib::refs::Ref(new_ref_, new_tree_id));
     working_copy()->setup_current_tree(new_ref_, initial_tree_index);
 
-    LOGT << "Created new tree: " << new_ref_  << ":" << new_tree_id.string() << ELOG;
+    LOGT << "Created new empty tree: " << new_ref_  << ":" << new_tree_id.string() << ELOG;
 }
 
 } } // namespace piel::cmd

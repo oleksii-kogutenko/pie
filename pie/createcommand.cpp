@@ -28,6 +28,7 @@
 
 #include <createcommand.h>
 #include <create.h>
+#include <checkout.h>
 
 #include <boost_filesystem_ext.hpp>
 
@@ -99,6 +100,12 @@ int CreateCommand::perform()
         std::cerr << "Non empty reference: " << ref_ << " already exists!" << std::endl;
         return -1;
     }
+    catch (const piel::cmd::errors::there_are_non_commit_changes& e)
+    {
+        std::cerr << "Can't checkout " << ref_ << ". There are non commit changes in workspace!" << std::endl;
+        return -1;
+    }
+
 
     if (!working_copy_->is_valid())
     {
