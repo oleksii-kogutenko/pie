@@ -29,6 +29,7 @@
 #include <commit.h>
 #include <logging.h>
 #include <fsindexer.h>
+#include <setconfig.h>
 
 namespace piel { namespace cmd {
 

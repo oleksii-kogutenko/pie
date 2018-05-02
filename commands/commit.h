@@ -30,7 +30,6 @@
 #define COMMANDS_COMMIT_H_
 
 #include <workingcopycommand.h>
-#include <setconfig.h>
 #include <indexesdiff.h>
 
 namespace piel { namespace cmd {
