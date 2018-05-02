@@ -50,18 +50,18 @@ int main(int argc, char **argv)
 #define C_(x,y,z) app.register_command( new pa::CommmandConstructor< x >( y, z ) )
 
     C_ ( pa::GavcCommand,               "gavc",     "GAVC query implementation." );
-    C_ ( pa::UploadCommand,             "upload",   "Upload to artifactory server." );
-    C_ ( pa::PullCommand,               "pull",     "Pull from artifactory server." );
-    C_ ( pa::PushCommand,               "push",     "Push to artifactory server." );
+    C_ ( pa::UploadCommand,             "upload",   "Upload to Artifactory server." );
+    C_ ( pa::PullCommand,               "pull",     "Pull from Artifactory server." );
+    C_ ( pa::PushCommand,               "push",     "Push to Artifactory server." );
 
     C_ ( pa::InitWorkingCopyCommand,    "init",     "Initialize working copy in current directory." );
     C_ ( pa::CreateCommand,             "create",   "Create new tree." );
     C_ ( pa::DestroyCommand,            "destroy",  "Destroy tree." );
-    C_ ( pa::CheckoutCommand,           "checkout", "Checkout tree state into working copy." );
-    C_ ( pa::StatusCommand,             "status",   "Show working copy status in comparsion to referenced tree." );
+    C_ ( pa::CheckoutCommand,           "checkout", "Checkout the tree state into working copy." );
+    C_ ( pa::StatusCommand,             "status",   "Show working copy status in compare with current tree state." );
     C_ ( pa::ResetCommand,              "reset",    "Reset working copy content to the tree state." );
-    C_ ( pa::CommitCommand,             "commit",   "Commit tree state into current tree." );
-    C_ ( pa::TreeCommand,               "tree",     "Show tree names." );
+    C_ ( pa::CommitCommand,             "commit",   "Commit current working copy state as new head tree state." );
+    C_ ( pa::TreeCommand,               "tree",     "Show trees names." );
     C_ ( pa::LogCommand,                "log",      "Show tree log." );
 
 #undef C_
