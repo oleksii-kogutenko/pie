@@ -46,12 +46,12 @@ public:
 
     std::string operator()();
     const Checkout* set_force(bool force);
-    const Checkout* create_new_branch(bool create_new_branch);
+    const Checkout* create_new_tree(bool create_new_tree);
 
 private:
     std::string ref_to_;
     bool force_;
-    bool create_new_branch_;
+    bool create_new_tree_;
 
 };
 

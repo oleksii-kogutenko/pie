@@ -96,7 +96,7 @@ int CheckoutCommand::perform()
 
         piel::cmd::Checkout checkout(working_copy_, ref_);
 
-        checkout.create_new_branch(vm.count("create"));
+        checkout.create_new_tree(vm.count("create"));
 
         std::string checkout_result = checkout();
 

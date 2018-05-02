@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(checkout_tests)
     cmd::Checkout checkout(wc, ref_name_2);
     BOOST_CHECK_THROW(checkout(), cmd::errors::no_such_reference);
 
-    checkout.create_new_branch(true);
+    checkout.create_new_tree(true);
     checkout();
 }
 

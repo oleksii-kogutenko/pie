@@ -39,7 +39,7 @@ Checkout::Checkout(const piel::lib::WorkingCopy::Ptr& working_copy, const std::s
     : WorkingCopyCommand(working_copy)
     , ref_to_(ref_to)
     , force_(false)
-    , create_new_branch_(false)
+    , create_new_tree_(false)
 {
 }
 
@@ -53,9 +53,9 @@ const Checkout* Checkout::set_force(bool force)
     return this;
 }
 
-const Checkout* Checkout::create_new_branch(bool create_new_branch)
+const Checkout* Checkout::create_new_tree(bool create_new_branch)
 {
-    create_new_branch_ = create_new_branch;
+    create_new_tree_ = create_new_branch;
     return this;
 }
 
@@ -94,7 +94,7 @@ std::string Checkout::operator()()
     {
         LOGT << "Resolved empty reference: " << ref_to_ << ELOG;
 
-        if (!create_new_branch_)
+        if (!create_new_tree_)
         {
             throw errors::no_such_reference();
         }
