@@ -26,20 +26,18 @@
  *
  */
 
-#ifndef COMMANDS_CONFIG_H_
-#define COMMANDS_CONFIG_H_
+#include <configcommand.h>
 
-namespace piel {
-namespace cmd {
+namespace pie { namespace app {
 
-class Config
+ConfigCommand::ConfigCommand()
 {
-public:
-    Config();
-    virtual ~Config();
-};
 
-} // namespace cmd
-} // namespace piel
+}
 
-#endif /* COMMANDS_CONFIG_H_ */
+ConfigCommand::~ConfigCommand()
+{
+
+}
+
+} } // namespace pie::app

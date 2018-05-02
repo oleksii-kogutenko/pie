@@ -30,6 +30,7 @@
 #define COMMANDS_COMMIT_H_
 
 #include <workingcopycommand.h>
+#include <setconfig.h>
 #include <indexesdiff.h>
 
 namespace piel { namespace cmd {
@@ -53,13 +54,6 @@ protected:
 
 private:
     std::string message_;
-};
-
-struct PredefinedConfigs {
-    static piel::lib::Properties::DefaultFromEnv author;
-    static piel::lib::Properties::DefaultFromEnv email;
-    static piel::lib::Properties::DefaultFromEnv commiter;
-    static piel::lib::Properties::DefaultFromEnv commiter_email;
 };
 
 } } // namespace piel::cmd

@@ -40,10 +40,7 @@ public:
     WorkingCopyCommand(const piel::lib::WorkingCopy::Ptr& working_copy);
     virtual ~WorkingCopyCommand();
 
-    inline piel::lib::WorkingCopy::Ptr working_copy() const
-    {
-        return working_copy_;
-    }
+    piel::lib::WorkingCopy::Ptr working_copy() const;
 
 private:
     piel::lib::WorkingCopy::Ptr working_copy_;

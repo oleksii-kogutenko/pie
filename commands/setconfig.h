@@ -26,21 +26,44 @@
  *
  */
 
-#include "config.h"
+#ifndef COMMANDS_SETCONFIG_H_
+#define COMMANDS_SETCONFIG_H_
 
-namespace piel {
-namespace cmd {
+#include <workingcopycommand.h>
 
-Config::Config()
+namespace piel { namespace cmd {
+
+namespace errors {
+    struct attempt_to_set_unsupported_config {};
+};
+
+class SetConfig: public WorkingCopyCommand
 {
-    // TODO Auto-generated constructor stub
+public:
+    SetConfig(const piel::lib::WorkingCopy::Ptr& working_copy);
+    virtual ~SetConfig();
 
-}
+    /*static*/ std::map<std::string,std::string> supported() const;
 
-Config::~Config()
-{
-    // TODO Auto-generated destructor stub
-}
+    void operator()();
 
-} // namespace cmd
-} // namespace piel
+    void set_global(bool global);
+    void set_name(const std::string& prop);
+    void set_value(const std::string& value);
+
+    /* Supported configuration parameters */
+    static piel::lib::Properties::DefaultFromEnv author;
+    static piel::lib::Properties::DefaultFromEnv email;
+    static piel::lib::Properties::DefaultFromEnv commiter;
+    static piel::lib::Properties::DefaultFromEnv commiter_email;
+
+private:
+    bool        global_;
+    std::string prop_to_set_;
+    std::string value_to_set_;
+
+};
+
+} } // namespace piel::cmd
+
+#endif /* COMMANDS_SETCONFIG_H_ */

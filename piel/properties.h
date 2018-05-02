@@ -49,13 +49,15 @@ public:
         typedef MapType::value_type::first_type name_type;
         typedef MapType::value_type::second_type value_type;
 
-        explicit Property(const name_type& name, const value_type& value)
+        explicit Property(const name_type& name, const value_type& value, const std::string& description)
              : value_(name, value)
+             , description_(description)
         {
         }
 
         Property(const Property& src)
             : value_(src.name(), src.value())
+            , description_(src.description())
         {
         }
 
@@ -73,6 +75,11 @@ public:
             return value_.second;
         }
 
+        std::string description() const
+        {
+            return description_;
+        }
+
         DefaultFromEnv default_from_env(const std::string& env_var)
         {
             return DefaultFromEnv(*this, env_var);
@@ -80,6 +87,7 @@ public:
 
     private:
         MapType::value_type value_;
+        std::string description_;
     };
 
     struct DefaultFromEnv : public Property
@@ -134,7 +142,7 @@ public:
     template<class P>
     Property get(const P& prop) const
     {
-        return Property(prop.name(), get(prop.name(), prop.value()));
+        return Property(prop.name(), get(prop.name(), prop.value()), prop.description());
     }
 
     const MapType& data() const;

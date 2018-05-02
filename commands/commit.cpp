@@ -32,18 +32,6 @@
 
 namespace piel { namespace cmd {
 
-/*static*/ piel::lib::Properties::DefaultFromEnv PredefinedConfigs::author =
-        piel::lib::Properties::Property("author",         "unknown").default_from_env("PIE_AUTHOR");
-
-/*static*/ piel::lib::Properties::DefaultFromEnv PredefinedConfigs::email =
-        piel::lib::Properties::Property("email",          "unknown").default_from_env("PIE_EMAIL");
-
-/*static*/ piel::lib::Properties::DefaultFromEnv PredefinedConfigs::commiter =
-        piel::lib::Properties::Property("commiter",       "unknown").default_from_env("PIE_COMMITER");
-
-/*static*/ piel::lib::Properties::DefaultFromEnv PredefinedConfigs::commiter_email =
-        piel::lib::Properties::Property("commiter_email", "unknown").default_from_env("PIE_COMMITER_EMAIL");
-
 Commit::Commit(const piel::lib::WorkingCopy::Ptr& working_copy)
     : WorkingCopyCommand(working_copy)
 {
@@ -94,10 +82,10 @@ std::string Commit::operator()()
     }
 
     // Fill from config
-    current_index->set_author_(         working_copy()->config().get(PredefinedConfigs::author).value());
-    current_index->set_email_(          working_copy()->config().get(PredefinedConfigs::email).value());
-    current_index->set_commiter_(       working_copy()->config().get(PredefinedConfigs::commiter).value());
-    current_index->set_commiter_email_( working_copy()->config().get(PredefinedConfigs::commiter_email).value());
+    current_index->set_author_(         working_copy()->config().get(SetConfig::author).value());
+    current_index->set_email_(          working_copy()->config().get(SetConfig::email).value());
+    current_index->set_commiter_(       working_copy()->config().get(SetConfig::commiter).value());
+    current_index->set_commiter_email_( working_copy()->config().get(SetConfig::commiter_email).value());
 
     // Set message
     current_index->set_message_(message_);

@@ -26,26 +26,18 @@
  *
  */
 
-#include <workingcopycommand.h>
+#ifndef PIE_CONFIGCOMMAND_H_
+#define PIE_CONFIGCOMMAND_H_
 
-namespace piel { namespace cmd {
+namespace pie { namespace app {
 
-WorkingCopyCommand::WorkingCopyCommand(const piel::lib::WorkingCopy::Ptr& working_copy)
-    : Command()
-    , working_copy_(working_copy)
+class ConfigCommand
 {
+public:
+    ConfigCommand();
+    virtual ~ConfigCommand();
+};
 
-}
+} } // namespace pie::app
 
-WorkingCopyCommand::~WorkingCopyCommand()
-{
-
-}
-
-piel::lib::WorkingCopy::Ptr WorkingCopyCommand::working_copy() const
-{
-    return working_copy_;
-}
-
-
-} } // namespace piel::cmd
+#endif /* PIE_CONFIGCOMMAND_H_ */
