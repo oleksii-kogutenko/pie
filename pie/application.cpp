@@ -94,7 +94,7 @@ int UnknownCommand::perform()
     std::cerr << "Incorrect command line or unknown command."               << std::endl;
 
     std::cout << "Usage:"                                                   << std::endl;
-    std::cout << "\t" << argv_[0] << " <command name> [command args]"       << std::endl;
+    std::cout << "\t" << argv_[0] << " <command name> [command arguments]"  << std::endl;
     std::cout << "Help:"                                                    << std::endl;
     std::cout << "\t" << argv_[0] << " <command name> --help|-h"            << std::endl;
     std::cout << "\t\t- Will out detailed list of the command arguments."   << std::endl;
