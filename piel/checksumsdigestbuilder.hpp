@@ -109,6 +109,8 @@ struct IDigestContext {
     typedef std::vector<uchar> Digest;                      //!< Type of a digest data container.
     typedef DigestFormatter<Digest::value_type> Formatter;  //!< Type of a digest formatter.
 
+    virtual ~IDigestContext() {}
+
     //! Init internal data.
     virtual void init() = 0;
 

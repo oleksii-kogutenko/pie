@@ -70,7 +70,7 @@ public:
 
 private:
     std::string id_;                                                //!< Download id.
-    std::string api_token_;                                         //!< Artifactory server REST api access token.
+    std::string api_token_;                                         //!< Artifactory server REST API access token.
     std::ostream* dest_;                                            //!< Destination stream.
     piel::lib::ChecksumsDigestBuilder checksums_builder_;           //!< Checksums digest builder for the content.
     boost::signals2::signal<void (const BufferInfo& m)> on_buffer_; //!< Signal processed buffer
