@@ -36,6 +36,7 @@
 #include <list>
 #include <artdeployartifacthandlers.h>
 #include <upload.h>
+#include <iostreamsholder.h>
 
 namespace piel { namespace cmd {
 
@@ -53,7 +54,7 @@ namespace errors {
     };
 };
 
-class Push: public WorkingCopyCommand
+class Push: public WorkingCopyCommand, public piel::lib::IOstreamsHolder
 {
 public:
     Push(const piel::lib::WorkingCopy::Ptr& working_copy);

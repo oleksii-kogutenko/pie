@@ -56,6 +56,7 @@ namespace constants {
 
 Push::Push(const piel::lib::WorkingCopy::Ptr& working_copy)
     : WorkingCopyCommand(working_copy)
+    , piel::lib::IOstreamsHolder()
     , server_url_()
     , server_api_access_token_()
     , server_repository_()
@@ -122,12 +123,16 @@ void Push::deploy_pom(const boost::filesystem::path &path_to_save_pom)
 
     LOGD << "Upload pom to: " << deploy_handlers.gen_uri() << ELOG;
 
+    cout() << "Uploadng pom to: " << deploy_handlers.gen_uri();
+
     if (!upload_client.perform())
     {
         LOGE << "Error on upload pom!"                      << ELOG;
         LOGE << upload_client.curl_error().presentation()   << ELOG;
         throw errors::uploading_pom_error(upload_client.curl_error().presentation());
     }
+
+    cout() << " COMPLETE" << std::endl;
 
     Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
     Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
@@ -154,12 +159,16 @@ bool Push::upload(const std::string& classifier, const std::string& file_name)
 
         LOGD << "Upload: " << file_name << " as " << classifier << " to: " << deploy_handlers.gen_uri() << ELOG;
 
+        cout() << "Uploadng archive to: " << deploy_handlers.gen_uri();
+
         if (!(no_errors &= upload_client.perform()))
         {
             LOGE << "Error on upload file!"                     << ELOG;
             LOGE << upload_client.curl_error().presentation()   << ELOG;
             throw errors::uploading_classifier_error(upload_client.curl_error().presentation());
         }
+
+        cout() << " COMPLETE" << std::endl;
 
         Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
         Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
