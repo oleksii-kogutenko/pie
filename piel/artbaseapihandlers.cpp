@@ -26,7 +26,7 @@
  *
  */
 
-#include <artconstants.h>
+#include <artbaseconstants.h>
 #include <artbaseapihandlers.h>
 #include <logging.h>
 
@@ -67,7 +67,7 @@ ArtBaseApiHandlers::ArtBaseApiHandlers(const ArtBaseApiHandlers& handler)
 /*virtual*/ piel::lib::CurlEasyHandlers::headers_type ArtBaseApiHandlers::custom_header()
 {
     piel::lib::CurlEasyHandlers::headers_type result;
-    result.push_back(std::string(ArtConstants::rest_api_header__access_key).append(api_token_));
+    result.push_back(std::string(ArtBaseConstants::rest_api_header__access_key).append(api_token_));
     return result;
 }
 

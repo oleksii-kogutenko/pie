@@ -27,7 +27,6 @@
  */
 
 #include <iostream>
-#include <artconstants.h>
 #include <artbasedownloadhandlers.h>
 #include <logging.h>
 

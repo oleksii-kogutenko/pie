@@ -27,7 +27,6 @@
  */
 
 #include <mavenpom.h>
-#include <artbaseconstants.h>
 #include <logging.h>
 
 #include <boost/property_tree/ptree.hpp>
@@ -36,6 +35,26 @@
 namespace pt = boost::property_tree;
 
 namespace piel { namespace lib {
+
+struct MavenPomConstants {
+    static const std::string pom_modelVersion;
+    static const std::string pom_modelVersion_ver;
+    static const std::string pom_groupId;
+    static const std::string pom_artifactId;
+    static const std::string pom_version;
+    static const std::string pom_packaging;
+    static const std::string pom_packaging_pack;
+    static const std::string pom_project;
+};
+
+const std::string MavenPomConstants::pom_modelVersion        = "modelVersion";
+const std::string MavenPomConstants::pom_modelVersion_ver    = "4.0.0";
+const std::string MavenPomConstants::pom_groupId             = "groupId";
+const std::string MavenPomConstants::pom_artifactId          = "artifactId";
+const std::string MavenPomConstants::pom_version             = "version";
+const std::string MavenPomConstants::pom_project             = "project";
+const std::string MavenPomConstants::pom_packaging           = "packaging";
+const std::string MavenPomConstants::pom_packaging_pack      = "pom";
 
 MavenPom::MavenPom()
     : group_()
@@ -91,13 +110,13 @@ void MavenPom::store(std::ostream& os) const
     pt::ptree tree_project;
     pt::ptree tree;
 
-    tree_project.put(art::lib::ArtBaseConstants::pom_modelVersion,    art::lib::ArtBaseConstants::pom_modelVersion_ver);
-    tree_project.put(art::lib::ArtBaseConstants::pom_groupId,         group());
-    tree_project.put(art::lib::ArtBaseConstants::pom_artifactId,      name());
-    tree_project.put(art::lib::ArtBaseConstants::pom_version,         version());
-    tree_project.put(art::lib::ArtBaseConstants::pom_packaging,       art::lib::ArtBaseConstants::pom_packaging_pack);
+    tree_project.put(MavenPomConstants::pom_modelVersion,    MavenPomConstants::pom_modelVersion_ver);
+    tree_project.put(MavenPomConstants::pom_groupId,         group());
+    tree_project.put(MavenPomConstants::pom_artifactId,      name());
+    tree_project.put(MavenPomConstants::pom_version,         version());
+    tree_project.put(MavenPomConstants::pom_packaging,       MavenPomConstants::pom_packaging_pack);
 
-    tree.add_child(art::lib::ArtBaseConstants::pom_project, tree_project);
+    tree.add_child(MavenPomConstants::pom_project, tree_project);
 
     pt::write_xml(os, tree);
 

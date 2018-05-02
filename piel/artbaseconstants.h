@@ -38,31 +38,16 @@
 namespace art { namespace lib {
 
 struct ArtBaseConstants {
-    static const std::string uri_attribute;
-    static const std::string repo_attribute;
-    static const std::string path_attribute;
-    static const std::string created_date_attribute;
-    static const std::string uri_delimiter;
 
-    static const std::string download_uri;
-    static const std::string size;
-    static const std::string checksums;
+    static const std::string rest_api_header__access_key;
+    static const std::string rest_api_header__gavc_details;
+    static const std::string rest_api_header__gavc_details_value;
+
+    static const std::string uri_delimiter;
 
     static const std::string checksums_md5;
     static const std::string checksums_sha1;
     static const std::string checksums_sha256;
-
-    static const std::string mime_type;
-    static const std::string mime_type_text;
-
-    static const std::string pom_modelVersion;
-    static const std::string pom_modelVersion_ver;
-    static const std::string pom_groupId;
-    static const std::string pom_artifactId;
-    static const std::string pom_version;
-    static const std::string pom_packaging;
-    static const std::string pom_packaging_pack;
-    static const std::string pom_project;
 
     static const std::string pom_classifier;
 };

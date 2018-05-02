@@ -26,7 +26,7 @@
  *
  */
 
-#include <artconstants.h>
+#include <artbaseconstants.h>
 #include <artgavchandlers.h>
 
 //      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
@@ -49,7 +49,8 @@ ArtGavcHandlers::~ArtGavcHandlers()
 /*virtual*/ piel::lib::CurlEasyHandlers::headers_type ArtGavcHandlers::custom_header()
 {
     piel::lib::CurlEasyHandlers::headers_type result = ArtBaseApiHandlers::custom_header();
-    result.push_back(std::string(ArtConstants::rest_api_header__gavc_details).append("info, properties"));
+    result.push_back(std::string(ArtBaseConstants::rest_api_header__gavc_details)
+                         .append(ArtBaseConstants::rest_api_header__gavc_details_value));
     return result;
 }
 

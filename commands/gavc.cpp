@@ -33,6 +33,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <gavc.h>
+#include <artbaseconstants.h>
 #include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
 #include <logging.h>
@@ -96,24 +97,30 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
 
     pt::ptree checksums = obj_tree.get_child(section);
 
-    boost::optional<std::string> op_sha1    = pt::find_value(checksums, pt::FindPropertyHelper("sha1"));
+    boost::optional<std::string> op_sha1 =
+            pt::find_value(checksums, pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_sha1));
+
     if (op_sha1)
     {
-        result["sha1"] = *op_sha1;
+        result[art::lib::ArtBaseConstants::checksums_sha1] = *op_sha1;
         LOGT << section << " sha1: " << *op_sha1 << ELOG;
     }
 
-    boost::optional<std::string> op_sha256  = pt::find_value(checksums, pt::FindPropertyHelper("sha256"));
+    boost::optional<std::string> op_sha256 = pt::find_value(checksums,
+            pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_sha256));
+
     if (op_sha256)
     {
-        result["sha256"] = *op_sha256;
+        result[art::lib::ArtBaseConstants::checksums_sha256] = *op_sha256;
         LOGT << section << " sha256: " << *op_sha256 << ELOG;
     }
 
-    boost::optional<std::string> op_md5     = pt::find_value(checksums, pt::FindPropertyHelper("md5"));
+    boost::optional<std::string> op_md5 = pt::find_value(checksums,
+            pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_md5));
+
     if (op_md5)
     {
-        result["md5"] = *op_md5;
+        result[art::lib::ArtBaseConstants::checksums_md5] = *op_md5;
         LOGT << section << " md5: " << *op_md5 << ELOG;
     }
 
@@ -163,16 +170,16 @@ void GAVC::on_object(pt::ptree::value_type obj)
             pl::ChecksumsDigestBuilder::StrDigests str_digests =
                     digest_builder.str_digests_for(is);
 
-            LOGT   << "Sha256 server: "    << server_checksums["sha256"]
+            LOGT   << "Sha256 server: "    << server_checksums[art::lib::ArtBaseConstants::checksums_sha256]
                     << " local: "     << str_digests[piel::lib::Sha256::t::name()] << ELOG;
-            LOGT   << "Sha1 server: "      << server_checksums["sha1"]
+            LOGT   << "Sha1 server: "      << server_checksums[art::lib::ArtBaseConstants::checksums_sha1]
                     << " local: "     << str_digests[piel::lib::Sha::t::name()] << ELOG;
-            LOGT   << "Md5 server: "       << server_checksums["md5"]
+            LOGT   << "Md5 server: "       << server_checksums[art::lib::ArtBaseConstants::checksums_md5]
                     << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
 
-            do_download = !(  server_checksums["sha256"] == str_digests[piel::lib::Sha256::t::name()]
-                           && server_checksums["sha1"]   == str_digests[piel::lib::Sha::t::name()]
-                           && server_checksums["md5"]    == str_digests[piel::lib::Md5::t::name()]
+            do_download = !(  server_checksums[art::lib::ArtBaseConstants::checksums_sha256] == str_digests[piel::lib::Sha256::t::name()]
+                           && server_checksums[art::lib::ArtBaseConstants::checksums_sha1]   == str_digests[piel::lib::Sha::t::name()]
+                           && server_checksums[art::lib::ArtBaseConstants::checksums_md5]    == str_digests[piel::lib::Md5::t::name()]
                            );
         }
 
