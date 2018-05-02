@@ -240,7 +240,7 @@ void GAVC::operator()()
 
     if (!get_metadata_client.perform())
     {
-        throw errors::fail_on_request_maven_metadata(get_metadata_client.curl_error().presentation());
+        throw errors::no_server_maven_metadata(get_metadata_client.curl_error().presentation());
     }
 
     // Try to parse server response.
@@ -251,11 +251,12 @@ void GAVC::operator()()
     }
     catch (...)
     {
-        throw errors::fail_to_parse_maven_metadata();
+        throw errors::unable_to_parse_maven_metadata();
     }
 
-    if (!metadata_op) {
-        throw errors::cant_receive_metadata();
+    if (!metadata_op)
+    {
+        throw errors::cant_get_maven_metadata();
     }
 
     al::MavenMetadata metadata = *metadata_op;
@@ -283,5 +284,21 @@ void GAVC::operator()()
     }
 
 }
+
+void GAVC::set_path_to_download(const boost::filesystem::path& path)
+{
+    path_to_download_ = path;
+}
+
+boost::filesystem::path GAVC::get_path_to_download() const
+{
+    return path_to_download_;
+}
+
+GAVC::paths_list GAVC::get_list_of_downloaded_files() const
+{
+    return list_of_downloaded_files_;
+}
+
 
 } } // namespace piel::cmd

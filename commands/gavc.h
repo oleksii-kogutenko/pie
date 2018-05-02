@@ -41,9 +41,9 @@
 namespace piel { namespace cmd {
 
 namespace errors {
-    struct fail_to_parse_maven_metadata {};
-    struct fail_on_request_maven_metadata {
-        fail_on_request_maven_metadata(const std::string& e)
+    struct unable_to_parse_maven_metadata {};
+    struct no_server_maven_metadata {
+        no_server_maven_metadata(const std::string& e)
             : error(e)
         {}
         std::string error;
@@ -56,30 +56,27 @@ namespace errors {
         std::string error;
         std::string ver;
     };
-    struct cant_receive_metadata {};
+    struct cant_get_maven_metadata {};
 };
 
 class GAVC: public piel::lib::IOstreamsHolder
 {
 public:
     typedef std::list<boost::filesystem::path> paths_list;
+
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
          , const std::string& server_repository
          , const art::lib::GavcQuery& query
          , const bool have_to_download_results);
+
     virtual ~GAVC();
 
     void operator()();
 
-    void set_path_to_download(const boost::filesystem::path& path)
-    {
-        path_to_download_ = path;
-    }
-
-    boost::filesystem::path get_path_to_download() const { return path_to_download_; }
-
-    paths_list get_list_of_downloaded_files() const { return list_of_downloaded_files_; }
+    void set_path_to_download(const boost::filesystem::path& path);
+    boost::filesystem::path get_path_to_download() const;
+    paths_list get_list_of_downloaded_files() const;
 
 protected:
     std::string create_url(const std::string& version_to_query) const;

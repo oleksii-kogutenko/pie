@@ -172,11 +172,11 @@ bool PullCommand::parse_arguments()
         std::cerr << "Attempt to perform operation outside of working copy!" << std::endl;
         return -1;
     }
-    catch (piel::cmd::errors::fail_to_parse_maven_metadata&) {
+    catch (piel::cmd::errors::unable_to_parse_maven_metadata&) {
         std::cerr << "Error on parsing maven metadata. Server response has non expected format." << std::endl;
         return -1;
     }
-    catch (piel::cmd::errors::fail_on_request_maven_metadata& e) {
+    catch (piel::cmd::errors::no_server_maven_metadata& e) {
         std::cerr << "Error on requesting maven metadata." << std::endl;
         std::cerr << e.error << std::endl;
         return -1;
@@ -186,7 +186,7 @@ bool PullCommand::parse_arguments()
         std::cerr << e.error << std::endl;
         return -1;
     }
-    catch (piel::cmd::errors::cant_receive_metadata& ) {
+    catch (piel::cmd::errors::cant_get_maven_metadata& ) {
         std::cerr << "Can't retrieve maven metadata!" << std::endl;
         return -1;
     }
