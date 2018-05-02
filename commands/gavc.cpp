@@ -97,8 +97,8 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
 
     pt::ptree checksums = obj_tree.get_child(section);
 
-    boost::optional<std::string> op_sha1 =
-            pt::find_value(checksums, pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_sha1));
+    boost::optional<std::string> op_sha1 = pt::find_value(checksums,
+            pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_sha1));
 
     if (op_sha1)
     {
