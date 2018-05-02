@@ -26,11 +26,18 @@
  *
  */
 
+#include <setconfig.h>
 #include <configcommand.h>
+
+namespace po = boost::program_options;
 
 namespace pie { namespace app {
 
-ConfigCommand::ConfigCommand()
+ConfigCommand::ConfigCommand(Application *app, int argc, char **argv)
+    : ICommand(app)
+    , argc_(argc)
+    , argv_(argv)
+    , working_copy_()
 {
 
 }
@@ -39,5 +46,69 @@ ConfigCommand::~ConfigCommand()
 {
 
 }
+
+void ConfigCommand::show_command_help_message(const po::options_description& desc)
+{
+    std::cerr << "Usage: config --<parameter name> <parameter value>" << std::endl;
+    std::cout << desc;
+}
+
+int ConfigCommand::perform()
+{
+    std::string value_to_set_;
+
+    po::options_description desc("Set configuration parameter value");
+
+    typedef std::map<std::string,std::string>::const_iterator ConstIter;
+    for (ConstIter iter = piel::cmd::SetConfig::supported().begin(), end = piel::cmd::SetConfig::supported().end(); iter != end; ++iter)
+    {
+        desc.add_options()(iter->first.c_str(), po::value<std::string>(&value_to_set_), iter->second.c_str());
+    }
+
+    if (show_help(desc, argc_, argv_))
+    {
+        return -1;
+    }
+
+    po::variables_map vm;
+    po::parsed_options parsed
+        = po::command_line_parser(argc_, argv_).options(desc).allow_unregistered().run();
+    po::store(parsed, vm);
+    po::notify(vm);
+
+    try
+    {
+        working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
+
+        for (ConstIter iter = piel::cmd::SetConfig::supported().begin(), end = piel::cmd::SetConfig::supported().end(); iter != end; ++iter)
+        {
+            if (vm.count(iter->first))
+            {
+                piel::cmd::SetConfig set_config(working_copy_);
+
+                set_config.set_name(iter->first);
+                set_config.set_value(value_to_set_);
+
+                std::cout << "Set " << iter->first << ": " << value_to_set_ << std::endl;
+
+                set_config();
+            }
+        }
+    }
+    catch (const piel::cmd::errors::attempt_to_set_unsupported_config&)
+    {
+        std::cerr << "Attempt to set unsupported configuration parameter!" << std::endl;
+        return -1;
+    }
+
+    if (!working_copy_->is_valid())
+    {
+        std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
 
 } } // namespace pie::app

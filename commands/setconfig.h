@@ -43,7 +43,7 @@ public:
     SetConfig(const piel::lib::WorkingCopy::Ptr& working_copy);
     virtual ~SetConfig();
 
-    /*static*/ std::map<std::string,std::string> supported() const;
+    static std::map<std::string,std::string>& supported();
 
     void operator()();
 

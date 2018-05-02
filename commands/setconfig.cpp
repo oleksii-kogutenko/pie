@@ -52,15 +52,15 @@ SetConfig::~SetConfig()
 {
 }
 
-/*static*/ std::map<std::string,std::string> SetConfig::supported() const
+/*static*/ std::map<std::string,std::string>& SetConfig::supported()
 {
-    std::map<std::string,std::string> result;
-
-    result.insert(std::make_pair(author.name(), author.description()));
-    result.insert(std::make_pair(email.name(), email.description()));
-    result.insert(std::make_pair(commiter.name(), commiter.description()));
-    result.insert(std::make_pair(commiter_email.name(), commiter_email.description()));
-
+    static std::map<std::string,std::string> result;
+    if (result.empty()) {
+        result.insert(std::make_pair(author.name(), author.description()));
+        result.insert(std::make_pair(email.name(), email.description()));
+        result.insert(std::make_pair(commiter.name(), commiter.description()));
+        result.insert(std::make_pair(commiter_email.name(), commiter_email.description()));
+    }
     return result;
 }
 
@@ -81,9 +81,7 @@ void SetConfig::set_value(const std::string& value)
 
 void SetConfig::operator()()
 {
-    std::map<std::string,std::string> supported_configs = supported();
-
-    if (supported_configs.end() == supported_configs.find(prop_to_set_)) {
+    if (supported().end() == supported().find(prop_to_set_)) {
         throw errors::attempt_to_set_unsupported_config();
     }
 

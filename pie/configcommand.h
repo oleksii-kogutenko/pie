@@ -29,13 +29,27 @@
 #ifndef PIE_CONFIGCOMMAND_H_
 #define PIE_CONFIGCOMMAND_H_
 
+#include <application.h>
+#include <workingcopy.h>
+
 namespace pie { namespace app {
 
-class ConfigCommand
+class ConfigCommand: public ICommand
 {
 public:
-    ConfigCommand();
+    ConfigCommand(Application *app, int argc, char **argv);
     virtual ~ConfigCommand();
+
+    int perform();
+
+protected:
+    void show_command_help_message(const boost::program_options::options_description& desc);
+
+private:
+    int argc_;
+    char **argv_;
+
+    piel::lib::WorkingCopy::Ptr working_copy_;
 };
 
 } } // namespace pie::app

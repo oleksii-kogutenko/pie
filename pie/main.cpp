@@ -40,6 +40,7 @@
 #include <pushcommand.h>
 #include <uploadcommand.h>
 #include <pullcommand.h>
+#include <configcommand.h>
 
 namespace pa = pie::app;
 
@@ -63,6 +64,7 @@ int main(int argc, char **argv)
     C_ ( pa::CommitCommand,             "commit",   "Commit current working copy state as new head tree state." );
     C_ ( pa::TreeCommand,               "tree",     "Show trees names." );
     C_ ( pa::LogCommand,                "log",      "Show tree log." );
+    C_ ( pa::ConfigCommand,             "config",   "Setup configuration parameter." );
 
 #undef C_
 
