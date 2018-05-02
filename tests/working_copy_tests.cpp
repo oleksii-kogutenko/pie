@@ -98,15 +98,24 @@ BOOST_AUTO_TEST_CASE(create_new_ref)
     commit_1.set_message("Commit to " + ref_name_1);
     commit_1();
 
+    // Save state
     lib::test_utils::DirState commit_1_state = lib::test_utils::get_directory_state(wc->working_dir(), wc->metadata_dir());
 
+    // Make workspace random changes
+    lib::test_utils::update_temp_dir(wc->working_dir(), wc->metadata_dir());
+
     cmd::Create create(wc, ref_name_2);
+    // Attempt to call create on non clean workspace (with local content changes)
+    BOOST_CHECK_THROW(create(), cmd::errors::there_are_non_commit_changes);
+
+    // Reset changes
+    lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), commit_1_state);
     create();
 
     // Here we have only metadata in directory
     cmd::Commit commit_2(wc);
     commit_2.set_message("Initial commit to " + ref_name_2);
-    BOOST_CHECK_THROW(commit_2(), cmd::errors::nothing_to_commit); // because create will cleaned directory
+    BOOST_CHECK_THROW(commit_2(), cmd::errors::nothing_to_commit); // because the workspace was clean by create
 
     // Random changes
     lib::test_utils::make_directory_state(wc->working_dir(), wc->metadata_dir(), commit_1_state);
