@@ -121,18 +121,22 @@ void Push::deploy_pom(const boost::filesystem::path &path_to_save_pom)
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
-    LOGD << "Upload pom to: " << deploy_handlers.gen_uri() << ELOG;
+    LOGD << "Upload POM to: " << deploy_handlers.gen_uri() << ELOG;
 
-    cout() << "Uploadng pom to: " << deploy_handlers.gen_uri();
+    cout() << "Uploading POM to: " << deploy_handlers.gen_uri();
 
     if (!upload_client.perform())
     {
-        LOGE << "Error on upload pom!"                      << ELOG;
+        cout() << " ERROR" << std::endl;
+
+        LOGE << "Error on upload POM!"                      << ELOG;
         LOGE << upload_client.curl_error().presentation()   << ELOG;
         throw errors::uploading_pom_error(upload_client.curl_error().presentation());
     }
-
-    cout() << " COMPLETE" << std::endl;
+    else
+    {
+        cout() << " COMPLETE" << std::endl;
+    }
 
     Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
     Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
@@ -159,16 +163,20 @@ bool Push::upload(const std::string& classifier, const std::string& file_name)
 
         LOGD << "Upload: " << file_name << " as " << classifier << " to: " << deploy_handlers.gen_uri() << ELOG;
 
-        cout() << "Uploadng archive to: " << deploy_handlers.gen_uri();
+        cout() << "Uploading archive to: " << deploy_handlers.gen_uri();
 
         if (!(no_errors &= upload_client.perform()))
         {
-            LOGE << "Error on upload file!"                     << ELOG;
-            LOGE << upload_client.curl_error().presentation()   << ELOG;
-            throw errors::uploading_classifier_error(upload_client.curl_error().presentation());
-        }
+            cout() << " ERROR" << std::endl;
 
-        cout() << " COMPLETE" << std::endl;
+            LOGE << "Error on upload archive!"                  << ELOG;
+            LOGE << upload_client.curl_error().presentation()   << ELOG;
+
+            throw errors::uploading_classifier_error(upload_client.curl_error().presentation());
+
+        } else {
+            cout() << " COMPLETE" << std::endl;
+        }
 
         Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
         Upload::upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);

@@ -170,11 +170,11 @@ void Upload::deploy_pom()
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 
-    LOGD << "Upload pom to: " << deploy_handlers.gen_uri() << ELOG;
+    LOGD << "Upload POM to: " << deploy_handlers.gen_uri() << ELOG;
 
     if (!upload_client.perform())
     {
-        LOGE << "Error on upload pom!"                      << ELOG;
+        LOGE << "Error on upload POM!"                      << ELOG;
         LOGE << upload_client.curl_error().presentation()   << ELOG;
         throw errors::pom_upload_error();
     }

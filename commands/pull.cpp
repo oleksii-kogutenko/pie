@@ -50,7 +50,6 @@ namespace piel { namespace cmd {
 
 namespace constants {
 
-    static const std::string zip_extention = ".zip";
     static const std::string pom_extention = ".pom";
     static const char classifier_delimiter = '-';
 
@@ -129,12 +128,12 @@ void Pull::operator()()
 
     GAVC::paths_list list = gavc.get_list_of_downloaded_files();
 
-    LOGD << "List of downloaded file..." << ELOG;
+    LOGD << "List of download file..." << ELOG;
 
     for(GAVC::paths_list::const_iterator it = list.begin(), end = list.end(); it != end; ++it)
     {
         if (it->extension() == constants::pom_extention) {
-            LOGD << "Skip pom file" << ELOG;
+            LOGD << "Skip POM file." << ELOG;
             continue;
         }
 
