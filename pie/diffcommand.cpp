@@ -28,6 +28,7 @@
 
 #include <diffcommand.h>
 #include <diff.h>
+#include <logging.h>
 #include <rangeparser.h>
 #include <boost/spirit/include/qi.hpp>
 
@@ -79,7 +80,14 @@ int DiffCommand::perform()
     {
         working_copy_ = piel::lib::WorkingCopy::attach(boost::filesystem::current_path());
 
-        piel::cmd::Diff diff(working_copy_, piel::lib::RangeParser::parse(range_spec_));
+        boost::optional<piel::lib::refs::Range> orange;
+        if (vm.count("range"))
+        {
+            LOGT << "Parse range spec: '" << range_spec_ << "'." << LOGE;
+            orange = piel::lib::RangeParser::parse(range_spec_);
+        }
+
+        piel::cmd::Diff diff(working_copy_, orange);
 
         diff();
     }
@@ -91,6 +99,11 @@ int DiffCommand::perform()
     catch (const piel::lib::errors::unable_to_find_reference_file& e)
     {
         std::cerr << "Unable to find reference file at working copy!" << std::endl;
+        return -1;
+    }
+    catch (const piel::cmd::errors::can_not_resolve_non_empty_reference& e)
+    {
+        std::cerr << "Can't resolve non empty ref: " << e.ref << "!" << std::endl;
         return -1;
     }
     catch (const boost::spirit::qi::expectation_failure<std::string::const_iterator>& e)

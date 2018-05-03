@@ -31,7 +31,7 @@
 
 namespace piel { namespace cmd {
 
-Diff::Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range)
+Diff::Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const boost::optional<piel::lib::refs::Range>& range)
     : WorkingCopyCommand(working_copy)
     , piel::lib::IOstreamsHolder()
     , range_(range)
@@ -52,25 +52,57 @@ piel::lib::TreeIndex::Ptr Diff::resolve_ref(const std::string& ref, const piel::
         result = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), ref);
     }
 
-    if (!result)
+    if (!result && ref.empty())
     {
         LOGT << "Unable to resolve ref: " << ref << " use default ref: " << def_ref->self().id().string() << ELOG;
         result = def_ref;
     }
 
-    LOGT << "Result: " << result->self().id().string() << ELOG;
+    if (result)
+    {
+        LOGT << "Result: " << result->self().id().string() << ELOG;
+    }
+    else
+    {
+        LOGE << "Unable to resolve ref: " << ref << ELOG;
+    }
 
     return result;
 }
 
 void Diff::operator()()
 {
-    cout() << "# " << range_.first << "..." << range_.second << std::endl;
+    piel::lib::TreeIndex::Ptr from, to;
 
-    piel::lib::TreeIndex::Ptr from = resolve_ref(range_.first, working_copy()->current_tree_state());
-    piel::lib::TreeIndex::Ptr to = resolve_ref(range_.second, working_copy()->working_dir_state());
+    if (range_)
+    {
+        cout() << "# " << range_->first << "..." << range_->second << std::endl;
 
-    LOGT << "Diff range { from: " << range_.first << " to:" << range_.second  << " }" << ELOG;
+        from    = resolve_ref(range_->first,    working_copy()->current_tree_state());
+        if (!from)
+        {
+            LOGE  << "Can't resolve non empty ref: " << range_->first << "!" <<  ELOG;
+            throw errors::can_not_resolve_non_empty_reference(range_->first);
+        }
+
+        to      = resolve_ref(range_->second,   working_copy()->working_dir_state());
+        if (!to)
+        {
+            LOGE  << "Can't resolve non empty ref: " << range_->second << "!" <<  ELOG;
+            throw errors::can_not_resolve_non_empty_reference(range_->second);
+        }
+
+        LOGT << "Diff range { from: " << range_->first << " to:" << range_->second  << " }" << ELOG;
+    }
+    else
+    {
+        cout() << "# HEAD...DIR" << std::endl;
+
+        from    = working_copy()->current_tree_state();
+        to      = working_copy()->working_dir_state();
+
+        LOGT << "Diff range { from: HEAD  to: DIR }" << ELOG;
+    }
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(from, to);
 }

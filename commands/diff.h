@@ -34,10 +34,17 @@
 
 namespace piel { namespace cmd {
 
+namespace errors {
+    struct can_not_resolve_non_empty_reference {
+        std::string ref;
+        can_not_resolve_non_empty_reference(const std::string& ref_) : ref(ref_) {}
+    };
+}
+
 class Diff: public WorkingCopyCommand, public piel::lib::IOstreamsHolder
 {
 public:
-    Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range);
+    Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const boost::optional<piel::lib::refs::Range>& range);
     virtual ~Diff();
 
     void operator()();
@@ -46,7 +53,7 @@ protected:
     piel::lib::TreeIndex::Ptr resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_index);
 
 private:
-    piel::lib::refs::Range range_;
+    boost::optional<piel::lib::refs::Range> range_;
 
 };
 
