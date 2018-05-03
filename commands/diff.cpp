@@ -54,13 +54,13 @@ piel::lib::TreeIndex::Ptr Diff::resolve_ref(const std::string& ref, const piel::
 
     if (!result && ref.empty())
     {
-        LOGT << "Unable to resolve ref: " << ref << " use default ref: " << def_ref->self().id().string() << ELOG;
+        LOGT << "Unable to resolve ref: " << ref << " use default ref: " << def_ref->str_id() << ELOG;
         result = def_ref;
     }
 
     if (result)
     {
-        LOGT << "Result: " << result->self().id().string() << ELOG;
+        LOGT << "Result: " << result->str_id() << ELOG;
     }
     else
     {
@@ -76,8 +76,6 @@ void Diff::operator()()
 
     if (range_)
     {
-        cout() << "# " << range_->first << "..." << range_->second << std::endl;
-
         from    = resolve_ref(range_->first,    working_copy()->current_tree_state());
         if (!from)
         {
@@ -96,13 +94,23 @@ void Diff::operator()()
     }
     else
     {
-        cout() << "# HEAD...DIR" << std::endl;
-
         from    = working_copy()->current_tree_state();
         to      = working_copy()->working_dir_state();
 
         LOGT << "Diff range { from: HEAD  to: DIR }" << ELOG;
     }
+
+    std::string from_str = "HEAD", to_str = "DIR";
+    if (from != working_copy()->current_tree_state())
+    {
+        from_str = from->str_id();
+    }
+    if (to != working_copy()->working_dir_state())
+    {
+        to_str = to->str_id();
+    }
+
+    cout() << "# " << from_str << "..." << to_str << std::endl;
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(from, to);
 }

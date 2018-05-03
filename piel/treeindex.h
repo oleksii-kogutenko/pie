@@ -113,6 +113,12 @@ public:
     static TreeIndex::Ptr load(const Asset& asset, IObjectsStorage::Ptr storage = IObjectsStorage::Ptr());
     static TreeIndex::Ptr from_ref(const IObjectsStorage::Ptr& storage, const std::string& ref);
 
+    // Helper for access to asset id representation
+    inline std::string str_id()
+    {
+        return self().id().string();
+    }
+
 private:
     friend class        IndexesDiff;
     friend class        TreeIndexEnumerator;
