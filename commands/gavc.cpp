@@ -63,7 +63,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , query_(query)
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
-    , list_of_downloaded_files_()
+    , list_of_actual_files_()
 {
 }
 
@@ -182,7 +182,6 @@ void GAVC::on_object(pt::ptree::value_type obj)
     std::string download_uri = *op_download_uri;
     LOGT << "download_uri: " << download_uri << ELOG;
 
-
     fs::path path(*op_path);
     LOGT << "path: " << path.generic_string() << ELOG;
     LOGT << "filename: " << path.filename()   << ELOG;
@@ -195,8 +194,6 @@ void GAVC::on_object(pt::ptree::value_type obj)
 
     std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
     //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
-
-    list_of_downloaded_files_.push_back(object_path);
 
     bool do_download = true;
     bool local_file_is_actual = false;
@@ -226,11 +223,17 @@ void GAVC::on_object(pt::ptree::value_type obj)
         do_download = !local_file_is_actual;
     }
 
-    if (!have_to_download_results_) {
+    if (!have_to_download_results_)
+    {
         if (local_file_is_actual)
+        {
             cout() << "+ " << object_id << std::endl;
+            list_of_actual_files_.push_back(object_path);
+        }
         else
+        {
             cout() << "- " << object_id << std::endl;
+        }
         return;
     }
 
@@ -249,15 +252,12 @@ void GAVC::on_object(pt::ptree::value_type obj)
 
         pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
 
-        //cout() << "Downloading file from: " << download_uri << std::endl;
-
         OnBufferCallback on_buffer(this);
         download_handlers.connect(on_buffer);
 
         if (!download_client.perform())
         {
-            LOGE << "Error on downloading file attempt!"        << ELOG;
-            LOGE << download_client.curl_error().presentation() << ELOG;
+            throw errors::gavc_download_file_error();
         }
     }
     else
@@ -265,6 +265,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
         LOGT << "Object already exists." << ELOG;
     }
 
+    list_of_actual_files_.push_back(object_path);
     cout() << "+ " << object_id << std::endl;
 }
 
@@ -354,9 +355,9 @@ boost::filesystem::path GAVC::get_path_to_download() const
     return path_to_download_;
 }
 
-GAVC::paths_list GAVC::get_list_of_downloaded_files() const
+GAVC::paths_list GAVC::get_list_of_actual_files() const
 {
-    return list_of_downloaded_files_;
+    return list_of_actual_files_;
 }
 
 

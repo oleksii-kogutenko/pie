@@ -186,6 +186,10 @@ bool PullCommand::parse_arguments()
         std::cerr << e.error << std::endl;
         return -1;
     }
+    catch (piel::cmd::errors::gavc_download_file_error& ) {
+        std::cerr << "Can't find any version for query!" << std::endl;
+        return -1;
+    }
     catch (piel::cmd::errors::cant_get_maven_metadata& ) {
         std::cerr << "Can't retrieve maven metadata!" << std::endl;
         return -1;

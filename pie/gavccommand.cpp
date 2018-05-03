@@ -164,6 +164,10 @@ bool GavcCommand::parse_arguments()
         std::cerr << "Can't find any version for query!" << std::endl;
         return -1;
     }
+    catch (piel::cmd::errors::gavc_download_file_error& ) {
+        std::cerr << "Can't find any version for query!" << std::endl;
+        return -1;
+    }
 
     result = 0;
 

@@ -126,7 +126,7 @@ void Pull::operator()()
     gavc.set_path_to_download(archives_path);
     gavc();
 
-    GAVC::paths_list list = gavc.get_list_of_downloaded_files();
+    GAVC::paths_list list = gavc.get_list_of_actual_files();
 
     LOGD << "List of download file..." << ELOG;
 

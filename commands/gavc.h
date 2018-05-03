@@ -58,6 +58,7 @@ namespace errors {
     };
     struct cant_get_maven_metadata {};
     struct cant_find_version_for_query {};
+    struct gavc_download_file_error {};
 };
 
 class GAVC: public piel::lib::IOstreamsHolder
@@ -77,7 +78,7 @@ public:
 
     void set_path_to_download(const boost::filesystem::path& path);
     boost::filesystem::path get_path_to_download() const;
-    paths_list get_list_of_downloaded_files() const;
+    paths_list get_list_of_actual_files() const;
 
 protected:
     std::string create_url(const std::string& version_to_query) const;
@@ -91,7 +92,7 @@ private:
     art::lib::GavcQuery query_;
     boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
-    paths_list list_of_downloaded_files_;
+    paths_list list_of_actual_files_;
 };
 
 } } // namespace piel::cmd
