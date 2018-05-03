@@ -35,11 +35,22 @@ Diff::Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const boost::optiona
     : WorkingCopyCommand(working_copy)
     , piel::lib::IOstreamsHolder()
     , range_(range)
+    , working_dir_state_()
 {
 }
 
 Diff::~Diff()
 {
+}
+
+piel::lib::TreeIndex::Ptr Diff::working_dir_state()
+{
+    if (!working_dir_state_)
+    {
+        LOGT << "Create working directory index." << ELOG;
+        working_dir_state_ = working_copy()->working_dir_state();
+    }
+    return working_dir_state_;
 }
 
 piel::lib::TreeIndex::Ptr Diff::resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_ref)
@@ -83,7 +94,7 @@ void Diff::operator()()
             throw errors::can_not_resolve_non_empty_reference(range_->first);
         }
 
-        to      = resolve_ref(range_->second,   working_copy()->working_dir_state());
+        to      = resolve_ref(range_->second,   working_dir_state());
         if (!to)
         {
             LOGE  << "Can't resolve non empty ref: " << range_->second << "!" <<  ELOG;
@@ -95,9 +106,9 @@ void Diff::operator()()
     else
     {
         from    = working_copy()->current_tree_state();
-        to      = working_copy()->working_dir_state();
+        to      = working_dir_state();
 
-        LOGT << "Diff range { from: HEAD  to: DIR }" << ELOG;
+        LOGT << "Diff range { from: HEAD to: DIR }" << ELOG;
     }
 
     std::string from_str = "HEAD", to_str = "DIR";
@@ -105,7 +116,7 @@ void Diff::operator()()
     {
         from_str = from->str_id();
     }
-    if (to != working_copy()->working_dir_state())
+    if (to != working_dir_state())
     {
         to_str = to->str_id();
     }

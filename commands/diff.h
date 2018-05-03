@@ -51,9 +51,11 @@ public:
 
 protected:
     piel::lib::TreeIndex::Ptr resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_index);
+    piel::lib::TreeIndex::Ptr working_dir_state();
 
 private:
     boost::optional<piel::lib::refs::Range> range_;
+    piel::lib::TreeIndex::Ptr working_dir_state_;
 
 };
 
