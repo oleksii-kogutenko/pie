@@ -206,6 +206,9 @@ void GAVC::on_object(pt::ptree::value_type obj)
     bool do_download = true;
     if (fs::exists(object_path))
     {
+        std::cout << "? " << " " << object_id << "\r";
+        std::cout.flush();
+
         std::ifstream is(object_path.generic_string().c_str());
 
         pl::ChecksumsDigestBuilder digest_builder;
@@ -219,14 +222,17 @@ void GAVC::on_object(pt::ptree::value_type obj)
         LOGT   << "Md5 server: "       << server_checksums[art::lib::ArtBaseConstants::checksums_md5]
                 << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
 
-        do_download = !(  server_checksums[art::lib::ArtBaseConstants::checksums_sha256] == str_digests[piel::lib::Sha256::t::name()]
-                       && server_checksums[art::lib::ArtBaseConstants::checksums_sha1]   == str_digests[piel::lib::Sha::t::name()]
-                       && server_checksums[art::lib::ArtBaseConstants::checksums_md5]    == str_digests[piel::lib::Md5::t::name()]
+        do_download = !(  /*server_checksums[art::lib::ArtBaseConstants::checksums_sha256] == str_digests[piel::lib::Sha256::t::name()] &&*/
+                          server_checksums[art::lib::ArtBaseConstants::checksums_sha1]   == str_digests[piel::lib::Sha::t::name()] &&
+                          server_checksums[art::lib::ArtBaseConstants::checksums_md5]    == str_digests[piel::lib::Md5::t::name()]
                        );
     }
 
     if (do_download)
     {
+        std::cout << "- " << " " << object_id << "\r";
+        std::cout.flush();
+
         LOGT << "Download/Update object." << ELOG;
 
         al::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
