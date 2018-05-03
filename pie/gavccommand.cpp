@@ -160,6 +160,10 @@ bool GavcCommand::parse_arguments()
         std::cerr << "Can't retrieve maven metadata!" << std::endl;
         return -1;
     }
+    catch (piel::cmd::errors::cant_find_version_for_query& ) {
+        std::cerr << "Can't find any version for query!" << std::endl;
+        return -1;
+    }
 
     result = 0;
 

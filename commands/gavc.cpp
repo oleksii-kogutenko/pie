@@ -308,6 +308,10 @@ void GAVC::operator()()
     al::MavenMetadata metadata = *metadata_op;
 
     std::vector<std::string> versions_to_process = metadata.versions_for(query_);
+    if (versions_to_process.empty())
+    {
+        throw errors::cant_find_version_for_query();
+    }
 
     for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
     {

@@ -57,6 +57,7 @@ namespace errors {
         std::string ver;
     };
     struct cant_get_maven_metadata {};
+    struct cant_find_version_for_query {};
 };
 
 class GAVC: public piel::lib::IOstreamsHolder

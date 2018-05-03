@@ -190,6 +190,10 @@ bool PullCommand::parse_arguments()
         std::cerr << "Can't retrieve maven metadata!" << std::endl;
         return -1;
     }
+    catch (piel::cmd::errors::cant_find_version_for_query& ) {
+        std::cerr << "Can't find any version for query!" << std::endl;
+        return -1;
+    }
     catch (piel::cmd::errors::invalid_working_copy& ) {
         std::cerr << "Unknown error. Working copy state is invalid." << std::endl;
         return -1;
