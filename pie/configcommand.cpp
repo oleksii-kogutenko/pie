@@ -57,7 +57,7 @@ int ConfigCommand::perform()
 {
     std::string value_to_set_;
 
-    po::options_description desc("Set configuration parameter value");
+    po::options_description desc("Configuration parameter values");
 
     typedef std::map<std::string,std::string>::const_iterator ConstIter;
     for (ConstIter iter = piel::cmd::SetConfig::supported().begin(), end = piel::cmd::SetConfig::supported().end(); iter != end; ++iter)
