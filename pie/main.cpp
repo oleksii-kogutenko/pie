@@ -36,6 +36,7 @@
 #include <resetcommand.h>
 #include <commitcommand.h>
 #include <logcommand.h>
+#include <diffcommand.h>
 #include <treecommand.h>
 #include <pushcommand.h>
 #include <uploadcommand.h>
@@ -64,6 +65,7 @@ int main(int argc, char **argv)
     C_ ( pa::CommitCommand,             "commit",   "Commit current working copy state as new head tree state." );
     C_ ( pa::TreeCommand,               "tree",     "Show trees names." );
     C_ ( pa::LogCommand,                "log",      "Show tree log." );
+    C_ ( pa::DiffCommand,               "diff",     "Show difference between references." );
     C_ ( pa::ConfigCommand,             "config",   "Setup configuration parameter." );
 
 #undef C_

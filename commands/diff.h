@@ -30,16 +30,20 @@
 #define COMMANDS_DIFF_H_
 
 #include <workingcopycommand.h>
+#include <iostreamsholder.h>
 
 namespace piel { namespace cmd {
 
-class Diff: public WorkingCopyCommand
+class Diff: public WorkingCopyCommand, public piel::lib::IOstreamsHolder
 {
 public:
     Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range);
     virtual ~Diff();
 
     void operator()();
+
+protected:
+    piel::lib::TreeIndex::Ptr resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_index);
 
 private:
     piel::lib::refs::Range range_;

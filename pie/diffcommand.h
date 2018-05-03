@@ -26,53 +26,34 @@
  *
  */
 
-#include <diff.h>
-#include <logging.h>
+#ifndef PIE_DIFFCOMMAND_H_
+#define PIE_DIFFCOMMAND_H_
 
-namespace piel { namespace cmd {
+#include <application.h>
+#include <workingcopy.h>
 
-Diff::Diff(const piel::lib::WorkingCopy::Ptr& working_copy, const piel::lib::refs::Range& range)
-    : WorkingCopyCommand(working_copy)
-    , piel::lib::IOstreamsHolder()
-    , range_(range)
+namespace pie { namespace app {
+
+class DiffCommand: public ICommand
 {
-}
+public:
+    DiffCommand(Application *app, int argc, char **argv);
+    virtual ~DiffCommand();
 
-Diff::~Diff()
-{
-}
+    int perform();
 
-piel::lib::TreeIndex::Ptr Diff::resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_index)
-{
-    piel::lib::TreeIndex::Ptr result;
+protected:
+    void show_command_help_message(const boost::program_options::options_description& desc);
 
-    if (!ref.empty())
-    {
-        result = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), ref);
-        LOGT << "Ref: " << ref << " resolved to: " << result->self().id().string() << ELOG;
-    }
+private:
+    int argc_;
+    char **argv_;
 
-    if (!result)
-    {
-        result = def_index;
-        LOGT << "Unable to resolve ref: " << ref << " use default ref: " << result->self().id().string() << ELOG;
-    }
+    piel::lib::WorkingCopy::Ptr working_copy_;
+    std::string                 range_spec_;
 
-    return result;
-}
+};
 
-void Diff::operator()()
-{
-    cout() << "# " << range_.first << "..." << range_.second << std::endl;
+} } // namespace pie::app
 
-    piel::lib::TreeIndex::Ptr from = resolve_ref(range_.first, working_copy()->current_tree_state());
-    piel::lib::TreeIndex::Ptr to = resolve_ref(range_.second, working_copy()->working_dir_state());
-
-    LOGT << "Diff range { from: " << range_.first << " to:" << range_.second  << " }" << ELOG;
-
-    piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(from, to);
-
-
-}
-
-} } // namespace piel::cmd
+#endif /* PIE_DIFFCOMMAND_H_ */
