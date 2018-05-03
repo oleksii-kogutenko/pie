@@ -124,6 +124,16 @@ void Diff::operator()()
     cout() << "# " << from_str << "..." << to_str << std::endl;
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(from, to);
+    if (!diff.empty())
+    {
+        LOGT << "Non empty diff:" << ELOG;
+        cout() << diff.format() << std::endl;
+    }
+    else
+    {
+        LOGT << "Diff is empty!" << ELOG;
+        cout() << "No changes." << std::endl;
+    }
 }
 
 } } // namespace piel::cmd
