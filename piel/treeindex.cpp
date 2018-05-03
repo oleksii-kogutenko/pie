@@ -341,6 +341,7 @@ void TreeIndex::store(std::ostream& os) const
     }
     else
     {
+        LOGT << "Not resolved ref: " << ref << "!"<< ELOG;
         return TreeIndex::Ptr();
     }
 }

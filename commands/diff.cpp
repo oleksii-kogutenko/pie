@@ -42,21 +42,23 @@ Diff::~Diff()
 {
 }
 
-piel::lib::TreeIndex::Ptr Diff::resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_index)
+piel::lib::TreeIndex::Ptr Diff::resolve_ref(const std::string& ref, const piel::lib::TreeIndex::Ptr& def_ref)
 {
     piel::lib::TreeIndex::Ptr result;
 
     if (!ref.empty())
     {
+        LOGT << "Attempt to resolve ref: " << ref << ELOG;
         result = piel::lib::TreeIndex::from_ref(working_copy()->local_storage(), ref);
-        LOGT << "Ref: " << ref << " resolved to: " << result->self().id().string() << ELOG;
     }
 
     if (!result)
     {
-        result = def_index;
-        LOGT << "Unable to resolve ref: " << ref << " use default ref: " << result->self().id().string() << ELOG;
+        LOGT << "Unable to resolve ref: " << ref << " use default ref: " << def_ref->self().id().string() << ELOG;
+        result = def_ref;
     }
+
+    LOGT << "Result: " << result->self().id().string() << ELOG;
 
     return result;
 }
@@ -71,8 +73,6 @@ void Diff::operator()()
     LOGT << "Diff range { from: " << range_.first << " to:" << range_.second  << " }" << ELOG;
 
     piel::lib::IndexesDiff diff = piel::lib::IndexesDiff::diff(from, to);
-
-
 }
 
 } } // namespace piel::cmd
