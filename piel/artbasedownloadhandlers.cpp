@@ -72,6 +72,7 @@ void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
     {
         dest_->write(ptr, size);
     }
+
     checksums_builder_.update(ptr, size);
 
     on_buffer_({

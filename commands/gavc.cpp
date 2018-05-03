@@ -91,6 +91,51 @@ private:
     fs::path object_path_;
 };
 
+struct OnBufferCallback {
+
+    OnBufferCallback(const GAVC *parent)
+        : parent_(parent)
+        , index_(0)
+        , total_(0)
+        , step_(0)
+    {
+    }
+
+    ~OnBufferCallback()
+    {
+        if (step_ > 0)
+        {
+            std::cout << "+ " << id_ << " " << total_ << std::endl;
+            //std::cout << "+ " << id_ << std::endl;
+        }
+    }
+
+    void operator()(const al::ArtBaseDownloadHandlers::BufferInfo& bi)
+    {
+        static const char progress_ch[4] = { '-', '\\', '|', '/' };
+        static const int step = 10;
+
+        id_     = bi.id;
+        total_ += bi.size;
+
+        if (step_ > step) {
+            std::cout << progress_ch[index_] << " " << id_ << " " << total_ << "\r";
+            std::cout.flush();
+            index_ = (index_ + 1) % sizeof(progress_ch);
+            step_ = 0;
+        } else {
+            step_ += 1;
+        }
+    }
+
+private:
+    const GAVC *parent_;
+    unsigned char index_;
+    size_t total_;
+    unsigned char step_;
+    std::string id_;
+};
+
 std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& obj_tree, const std::string& section) const
 {
     std::map<std::string,std::string> result;
@@ -146,72 +191,73 @@ void GAVC::on_object(pt::ptree::value_type obj)
     std::string download_uri = *op_download_uri;
     LOGT << "download_uri: " << download_uri << ELOG;
 
-    if (have_to_download_results_) {
+    if (!have_to_download_results_) {
+        cout() << "+ " << download_uri << std::endl;
+        return;
+    }
 
-        fs::path path(*op_path);
-        LOGT << "path: " << path.generic_string() << ELOG;
-        LOGT << "filename: " << path.filename()   << ELOG;
+    fs::path path(*op_path);
+    LOGT << "path: " << path.generic_string() << ELOG;
+    LOGT << "filename: " << path.filename()   << ELOG;
 
-        fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
+    fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
 
-        LOGT << "object path: " << object_path.generic_string() << ELOG;
+    LOGT << "object path: " << object_path.generic_string() << ELOG;
 
-        std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
-        //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
+    std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
+    //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
 
-        list_of_downloaded_files_.push_back(object_path);
+    list_of_downloaded_files_.push_back(object_path);
 
-        bool do_download = true;
-        if (fs::exists(object_path))
+    bool do_download = true;
+    if (fs::exists(object_path))
+    {
+        std::ifstream is(object_path.generic_string().c_str());
+
+        pl::ChecksumsDigestBuilder digest_builder;
+        pl::ChecksumsDigestBuilder::StrDigests str_digests =
+                digest_builder.str_digests_for(is);
+
+        LOGT   << "Sha256 server: "    << server_checksums[art::lib::ArtBaseConstants::checksums_sha256]
+                << " local: "     << str_digests[piel::lib::Sha256::t::name()] << ELOG;
+        LOGT   << "Sha1 server: "      << server_checksums[art::lib::ArtBaseConstants::checksums_sha1]
+                << " local: "     << str_digests[piel::lib::Sha::t::name()] << ELOG;
+        LOGT   << "Md5 server: "       << server_checksums[art::lib::ArtBaseConstants::checksums_md5]
+                << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
+
+        do_download = !(  server_checksums[art::lib::ArtBaseConstants::checksums_sha256] == str_digests[piel::lib::Sha256::t::name()]
+                       && server_checksums[art::lib::ArtBaseConstants::checksums_sha1]   == str_digests[piel::lib::Sha::t::name()]
+                       && server_checksums[art::lib::ArtBaseConstants::checksums_md5]    == str_digests[piel::lib::Md5::t::name()]
+                       );
+    }
+
+    if (do_download)
+    {
+        LOGT << "Download/Update object." << ELOG;
+
+        al::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
+
+        BeforeOutputCallback before_output(object_path);
+        //download_handlers.set_id(object_path.filename().c_str());
+        download_handlers.set_id(download_uri);
+        download_handlers.set_before_output_callback(&before_output);
+
+        pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
+
+        //cout() << "Downloading file from: " << download_uri << std::endl;
+
+        OnBufferCallback on_buffer(this);
+        download_handlers.connect(on_buffer);
+
+        if (!download_client.perform())
         {
-            std::ifstream is(object_path.generic_string().c_str());
-
-            pl::ChecksumsDigestBuilder digest_builder;
-            pl::ChecksumsDigestBuilder::StrDigests str_digests =
-                    digest_builder.str_digests_for(is);
-
-            LOGT   << "Sha256 server: "    << server_checksums[art::lib::ArtBaseConstants::checksums_sha256]
-                    << " local: "     << str_digests[piel::lib::Sha256::t::name()] << ELOG;
-            LOGT   << "Sha1 server: "      << server_checksums[art::lib::ArtBaseConstants::checksums_sha1]
-                    << " local: "     << str_digests[piel::lib::Sha::t::name()] << ELOG;
-            LOGT   << "Md5 server: "       << server_checksums[art::lib::ArtBaseConstants::checksums_md5]
-                    << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
-
-            do_download = !(  server_checksums[art::lib::ArtBaseConstants::checksums_sha256] == str_digests[piel::lib::Sha256::t::name()]
-                           && server_checksums[art::lib::ArtBaseConstants::checksums_sha1]   == str_digests[piel::lib::Sha::t::name()]
-                           && server_checksums[art::lib::ArtBaseConstants::checksums_md5]    == str_digests[piel::lib::Md5::t::name()]
-                           );
+            LOGE << "Error on downloading file attempt!"        << ELOG;
+            LOGE << download_client.curl_error().presentation() << ELOG;
         }
-
-        if (do_download)
-        {
-            LOGT << "Download/Update object." << ELOG;
-
-            al::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
-
-            BeforeOutputCallback before_output(object_path);
-            download_handlers.set_id(object_path.filename().c_str());
-            download_handlers.set_before_output_callback(&before_output);
-
-            pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
-
-            cout() << "Downloading file from: " << download_uri << std::endl;
-
-            if (!download_client.perform())
-            {
-                LOGE << "Error on downloading file attempt!"        << ELOG;
-                LOGE << download_client.curl_error().presentation() << ELOG;
-            }
-        }
-        else
-        {
-            LOGT << "Object already exists." << ELOG;
-        }
-
-    } else {
-
-        cout() << "Download url: " << download_uri << std::endl;
-
+    }
+    else
+    {
+        LOGT << "Object already exists." << ELOG;
     }
 }
 
@@ -265,7 +311,9 @@ void GAVC::operator()()
 
     for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
     {
-        LOGT << "Process version: " << *i << ELOG;
+        LOGT << "Version: " << *i << ELOG;
+
+        cout() << "Version: " << *i << std::endl;
 
         al::ArtGavcHandlers api_handlers(server_api_access_token_);
         pl::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);

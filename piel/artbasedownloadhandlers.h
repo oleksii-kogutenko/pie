@@ -39,17 +39,17 @@
 
 namespace art { namespace lib {
 
-struct BufferInfo
-{
-    std::string id;
-    size_t size;
-};
-
-typedef piel::lib::QueuedThread<BufferInfo> BufferInfoListener;
-
 class ArtBaseDownloadHandlers: public ArtBaseApiHandlers
 {
 public:
+    struct BufferInfo
+    {
+        std::string id;
+        size_t size;
+    };
+
+    //typedef piel::lib::QueuedThread<BufferInfo> BufferInfoListener;
+
     ArtBaseDownloadHandlers(const std::string& api_token);
     ArtBaseDownloadHandlers(const std::string& api_token, std::ostream* dest);
     virtual ~ArtBaseDownloadHandlers();
