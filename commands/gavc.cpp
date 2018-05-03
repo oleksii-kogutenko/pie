@@ -101,15 +101,6 @@ struct OnBufferCallback {
     {
     }
 
-    ~OnBufferCallback()
-    {
-        if (step_ > 0)
-        {
-            std::cout << "+ " << id_ << " " << total_ << std::endl;
-            //std::cout << "+ " << id_ << std::endl;
-        }
-    }
-
     void operator()(const al::ArtBaseDownloadHandlers::BufferInfo& bi)
     {
         static const char progress_ch[4] = { '-', '\\', '|', '/' };
@@ -119,7 +110,7 @@ struct OnBufferCallback {
         total_ += bi.size;
 
         if (step_ > step) {
-            std::cout << progress_ch[index_] << " " << id_ << " " << total_ << "\r";
+            std::cout << progress_ch[index_] << " " << id_ << "\r";
             std::cout.flush();
             index_ = (index_ + 1) % sizeof(progress_ch);
             step_ = 0;
@@ -191,18 +182,21 @@ void GAVC::on_object(pt::ptree::value_type obj)
     std::string download_uri = *op_download_uri;
     LOGT << "download_uri: " << download_uri << ELOG;
 
-    if (!have_to_download_results_) {
-        cout() << "+ " << download_uri << std::endl;
-        return;
-    }
 
     fs::path path(*op_path);
     LOGT << "path: " << path.generic_string() << ELOG;
     LOGT << "filename: " << path.filename()   << ELOG;
 
     fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
+    std::string object_id = object_path.filename().c_str();
 
     LOGT << "object path: " << object_path.generic_string() << ELOG;
+    LOGT << "object id: " << object_id << ELOG;
+
+    if (!have_to_download_results_) {
+        cout() << "- " << object_id << std::endl;
+        return;
+    }
 
     std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
     //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
@@ -238,8 +232,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
         al::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
 
         BeforeOutputCallback before_output(object_path);
-        //download_handlers.set_id(object_path.filename().c_str());
-        download_handlers.set_id(download_uri);
+        download_handlers.set_id(object_id);
         download_handlers.set_before_output_callback(&before_output);
 
         pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
@@ -259,6 +252,8 @@ void GAVC::on_object(pt::ptree::value_type obj)
     {
         LOGT << "Object already exists." << ELOG;
     }
+
+    cout() << "+ " << object_id << std::endl;
 }
 
 std::string GAVC::create_url(const std::string& version_to_query) const
