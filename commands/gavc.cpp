@@ -91,8 +91,8 @@ private:
     fs::path object_path_;
 };
 
-struct OnBufferCallback {
-
+struct OnBufferCallback
+{
     OnBufferCallback(const GAVC *parent)
         : parent_(parent)
         , index_(0)
