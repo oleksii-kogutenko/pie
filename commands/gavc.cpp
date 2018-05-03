@@ -206,7 +206,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
     bool do_download = true;
     if (fs::exists(object_path))
     {
-        std::cout << "? " << " " << object_id << "\r";
+        std::cout << "? " << object_id << "\r";
         std::cout.flush();
 
         std::ifstream is(object_path.generic_string().c_str());
@@ -230,7 +230,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
 
     if (do_download)
     {
-        std::cout << "- " << " " << object_id << "\r";
+        std::cout << "- " << object_id << "\r";
         std::cout.flush();
 
         LOGT << "Download/Update object." << ELOG;
