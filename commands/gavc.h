@@ -85,6 +85,7 @@ protected:
     void on_object(boost::property_tree::ptree::value_type obj);
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
     bool validate_local_file(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums) const;
+    void download_file(const boost::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
 
 private:
     std::string server_url_;

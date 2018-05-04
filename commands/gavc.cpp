@@ -167,7 +167,7 @@ bool GAVC::validate_local_file(const fs::path& object_path, std::map<std::string
 {
     bool local_file_is_actual = fs::exists(object_path);
 
-    std::ifstream is(object_path.generic_string().c_str());
+    std::ifstream is(object_path.generic_string());
     pl::ChecksumsDigestBuilder::StrDigests str_digests = pl::ChecksumsDigestBuilder().str_digests_for(is);
 
     if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_sha256))
@@ -192,6 +192,28 @@ bool GAVC::validate_local_file(const fs::path& object_path, std::map<std::string
     }
 
     return local_file_is_actual;
+}
+
+void GAVC::download_file(const fs::path& object_path, const std::string& object_id, const std::string& download_uri) const
+{
+    LOGT << "Download file: " << object_path << " id: " << object_id << " uri: " << download_uri << ELOG;
+
+    al::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
+
+    BeforeOutputCallback before_output(object_path);
+    download_handlers.set_id(object_id);
+    download_handlers.set_before_output_callback(&before_output);
+
+    pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
+
+    OnBufferCallback on_buffer(this);
+    download_handlers.connect(on_buffer);
+
+    if (!download_client.perform())
+    {
+        LOGE << "Error on download file: " << object_path << " id: " << object_id << " uri: " << download_uri << ELOG;
+        throw errors::gavc_download_file_error();
+    }
 }
 
 void GAVC::on_object(pt::ptree::value_type obj)
@@ -230,27 +252,10 @@ void GAVC::on_object(pt::ptree::value_type obj)
 
     if (have_to_download_results_ && do_download)
     {
-        std::cout << "- " << object_id << "\r";
-        std::cout.flush();
+        cout() << "- " << object_id << "\r";
+        cout().flush();
 
-        LOGT << "Download/Update object." << ELOG;
-
-        al::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
-
-        BeforeOutputCallback before_output(object_path);
-        download_handlers.set_id(object_id);
-        download_handlers.set_before_output_callback(&before_output);
-
-        pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(*op_download_uri, &download_handlers);
-
-        OnBufferCallback on_buffer(this);
-        download_handlers.connect(on_buffer);
-
-        if (!download_client.perform())
-        {
-            cout() << "- " << object_id << std::endl;
-            throw errors::gavc_download_file_error();
-        }
+        download_file(object_path, object_id, *op_download_uri);
 
         list_of_actual_files_.push_back(object_path);
 
