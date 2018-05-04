@@ -32,6 +32,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <vector>
 #include <gavc.h>
 #include <artbaseconstants.h>
 #include <artbasedownloadhandlers.h>
@@ -42,6 +43,7 @@
 
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace al = art::lib;
 namespace pl = piel::lib;
@@ -273,7 +275,7 @@ void GAVC::on_object(pt::ptree::value_type obj)
     }
 }
 
-std::string GAVC::create_url(const std::string& version_to_query) const
+std::string GAVC::create_url(const std::string& version_to_query, const std::string& classifier) const
 {
     std::string url = server_url_;
     url.append("/api/search/gavc");
@@ -283,8 +285,8 @@ std::string GAVC::create_url(const std::string& version_to_query) const
     if (!version_to_query.empty()) {
         url.append("&v=").append(version_to_query);
     }
-    if (!query_.classifier().empty()) {
-        url.append("&c=").append(query_.classifier());
+    if (!classifier.empty()) {
+        url.append("&c=").append(classifier);
     }
     return url;
 }
@@ -331,20 +333,30 @@ void GAVC::operator()()
 
         cout() << "Version: " << *i << std::endl;
 
-        al::ArtGavcHandlers api_handlers(server_api_access_token_);
-        pl::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);
+        std::string classifier_spec = query_.classifier();
+        std::vector<std::string> classifiers;
 
-        if (!client.perform())
+        boost::split(classifiers, classifier_spec, boost::is_any_of(","));
+
+        for (std::vector<std::string>::const_iterator c = classifiers.begin(), cend = classifiers.end(); c != cend; ++c)
         {
-            throw errors::error_processing_version(client.curl_error().presentation(), *i);
+            LOGT << "Classifier: " << *c << ELOG;
+
+            al::ArtGavcHandlers api_handlers(server_api_access_token_);
+            pl::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i, *c), &api_handlers);
+
+            if (!client.perform())
+            {
+                throw errors::error_processing_version(client.curl_error().presentation(), *i);
+            }
+
+            // Create a root
+            pt::ptree root;
+
+            // Load the json file into this ptree
+            pt::read_json(api_handlers.responce_stream(), root);
+            pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1));
         }
-
-        // Create a root
-        pt::ptree root;
-
-        // Load the json file into this ptree
-        pt::read_json(api_handlers.responce_stream(), root);
-        pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1));
     }
 
 }
