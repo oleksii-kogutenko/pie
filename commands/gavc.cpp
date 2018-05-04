@@ -32,6 +32,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <ctime>
 #include <vector>
 #include <gavc.h>
 #include <artbaseconstants.h>
@@ -99,25 +100,26 @@ struct OnBufferCallback
         : parent_(parent)
         , index_(0)
         , total_(0)
-        , step_(0)
+        , last_event_time_(0)
     {
     }
 
     void operator()(const al::ArtBaseDownloadHandlers::BufferInfo& bi)
     {
         static const char progress_ch[4] = { '-', '\\', '|', '/' };
-        static const int step = 10;
+
+        time_t curr_event_time_ = time(0);
 
         id_     = bi.id;
         total_ += bi.size;
 
-        if (step_ > step) {
+        if (curr_event_time_ - last_event_time_ > 1)
+        {
             parent_->cout() << progress_ch[index_] << " " << id_ << "\r";
             parent_->cout().flush();
             index_ = (index_ + 1) % sizeof(progress_ch);
-            step_ = 0;
-        } else {
-            step_ += 1;
+
+            last_event_time_ = curr_event_time_;
         }
     }
 
@@ -125,8 +127,8 @@ private:
     const GAVC *parent_;
     unsigned char index_;
     size_t total_;
-    unsigned char step_;
     std::string id_;
+    time_t last_event_time_;
 };
 
 std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& obj_tree, const std::string& section) const
