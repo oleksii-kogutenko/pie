@@ -56,7 +56,7 @@ GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_repository
            , const art::lib::GavcQuery& query
            , const bool have_to_download_results)
-    : piel::lib::IOstreamsHolder()
+    : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
     , server_repository_(server_repository)
@@ -110,8 +110,8 @@ struct OnBufferCallback
         total_ += bi.size;
 
         if (step_ > step) {
-            std::cout << progress_ch[index_] << " " << id_ << "\r";
-            std::cout.flush();
+            parent_->cout() << progress_ch[index_] << " " << id_ << "\r";
+            parent_->cout().flush();
             index_ = (index_ + 1) % sizeof(progress_ch);
             step_ = 0;
         } else {
@@ -134,33 +134,64 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
     pt::ptree checksums = obj_tree.get_child(section);
 
     boost::optional<std::string> op_sha1 = pt::find_value(checksums,
-            pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_sha1));
+            pt::FindPropertyHelper(al::ArtBaseConstants::checksums_sha1));
 
     if (op_sha1)
     {
-        result[art::lib::ArtBaseConstants::checksums_sha1] = *op_sha1;
+        result[al::ArtBaseConstants::checksums_sha1] = *op_sha1;
         LOGT << section << " sha1: " << *op_sha1 << ELOG;
     }
 
     boost::optional<std::string> op_sha256 = pt::find_value(checksums,
-            pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_sha256));
+            pt::FindPropertyHelper(al::ArtBaseConstants::checksums_sha256));
 
     if (op_sha256)
     {
-        result[art::lib::ArtBaseConstants::checksums_sha256] = *op_sha256;
+        result[al::ArtBaseConstants::checksums_sha256] = *op_sha256;
         LOGT << section << " sha256: " << *op_sha256 << ELOG;
     }
 
     boost::optional<std::string> op_md5 = pt::find_value(checksums,
-            pt::FindPropertyHelper(art::lib::ArtBaseConstants::checksums_md5));
+            pt::FindPropertyHelper(al::ArtBaseConstants::checksums_md5));
 
     if (op_md5)
     {
-        result[art::lib::ArtBaseConstants::checksums_md5] = *op_md5;
+        result[al::ArtBaseConstants::checksums_md5] = *op_md5;
         LOGT << section << " md5: " << *op_md5 << ELOG;
     }
 
     return result;
+}
+
+bool GAVC::validate_local_file(const fs::path& object_path, std::map<std::string,std::string>& server_checksums) const
+{
+    bool local_file_is_actual = fs::exists(object_path);
+
+    std::ifstream is(object_path.generic_string().c_str());
+    pl::ChecksumsDigestBuilder::StrDigests str_digests = pl::ChecksumsDigestBuilder().str_digests_for(is);
+
+    if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_sha256))
+    {
+        LOGT   << "Sha256 from server: "    << server_checksums[al::ArtBaseConstants::checksums_sha256]
+               << " local: "                << str_digests[pl::Sha256::t::name()] << ELOG;
+        local_file_is_actual &= server_checksums[al::ArtBaseConstants::checksums_sha256] == str_digests[pl::Sha256::t::name()];
+    }
+
+    if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_sha1))
+    {
+        LOGT   << "Sha1 from server: "      << server_checksums[al::ArtBaseConstants::checksums_sha1]
+               << " local: "                << str_digests[pl::Sha::t::name()] << ELOG;
+        local_file_is_actual &= server_checksums[al::ArtBaseConstants::checksums_sha1] == str_digests[pl::Sha::t::name()];
+    }
+
+    if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_md5))
+    {
+        LOGT   << "Md5 from server: "       << server_checksums[al::ArtBaseConstants::checksums_md5]
+               << " local: "                << str_digests[pl::Md5::t::name()] << ELOG;
+        local_file_is_actual &= server_checksums[al::ArtBaseConstants::checksums_md5] == str_digests[pl::Md5::t::name()];
+    }
+
+    return local_file_is_actual;
 }
 
 void GAVC::on_object(pt::ptree::value_type obj)
@@ -179,65 +210,25 @@ void GAVC::on_object(pt::ptree::value_type obj)
         return;
     }
 
-    std::string download_uri = *op_download_uri;
-    LOGT << "download_uri: " << download_uri << ELOG;
+    fs::path    path        = *op_path;
+    fs::path    object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
 
-    fs::path path(*op_path);
-    LOGT << "path: " << path.generic_string() << ELOG;
-    LOGT << "filename: " << path.filename()   << ELOG;
+    LOGT << "object path: "     << object_path                  << ELOG;
 
-    fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
-    std::string object_id = object_path.filename().c_str();
+    std::string object_id       = object_path.filename().string();
 
-    LOGT << "object path: " << object_path.generic_string() << ELOG;
-    LOGT << "object id: " << object_id << ELOG;
+    LOGT << "object id: "       << object_id                    << ELOG;
 
     std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
     //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
 
-    bool do_download = true;
-    bool local_file_is_actual = false;
-    if (fs::exists(object_path))
-    {
-        std::cout << "? " << object_id << "\r";
-        std::cout.flush();
+    cout() << "? " << object_id << "\r";
+    cout().flush();
 
-        std::ifstream is(object_path.generic_string().c_str());
+    bool local_file_is_actual   = validate_local_file(object_path, server_checksums);
+    bool do_download            = !local_file_is_actual;
 
-        pl::ChecksumsDigestBuilder digest_builder;
-        pl::ChecksumsDigestBuilder::StrDigests str_digests =
-                digest_builder.str_digests_for(is);
-
-        LOGT   << "Sha256 server: "    << server_checksums[art::lib::ArtBaseConstants::checksums_sha256]
-                << " local: "     << str_digests[piel::lib::Sha256::t::name()] << ELOG;
-        LOGT   << "Sha1 server: "      << server_checksums[art::lib::ArtBaseConstants::checksums_sha1]
-                << " local: "     << str_digests[piel::lib::Sha::t::name()] << ELOG;
-        LOGT   << "Md5 server: "       << server_checksums[art::lib::ArtBaseConstants::checksums_md5]
-                << " local: "     << str_digests[piel::lib::Md5::t::name()] << ELOG;
-
-        local_file_is_actual = (  /*server_checksums[art::lib::ArtBaseConstants::checksums_sha256] == str_digests[piel::lib::Sha256::t::name()] &&*/
-                          server_checksums[art::lib::ArtBaseConstants::checksums_sha1]   == str_digests[piel::lib::Sha::t::name()] &&
-                          server_checksums[art::lib::ArtBaseConstants::checksums_md5]    == str_digests[piel::lib::Md5::t::name()]
-                       );
-
-        do_download = !local_file_is_actual;
-    }
-
-    if (!have_to_download_results_)
-    {
-        if (local_file_is_actual)
-        {
-            cout() << "+ " << object_id << std::endl;
-            list_of_actual_files_.push_back(object_path);
-        }
-        else
-        {
-            cout() << "- " << object_id << std::endl;
-        }
-        return;
-    }
-
-    if (do_download)
+    if (have_to_download_results_ && do_download)
     {
         std::cout << "- " << object_id << "\r";
         std::cout.flush();
@@ -250,23 +241,31 @@ void GAVC::on_object(pt::ptree::value_type obj)
         download_handlers.set_id(object_id);
         download_handlers.set_before_output_callback(&before_output);
 
-        pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
+        pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(*op_download_uri, &download_handlers);
 
         OnBufferCallback on_buffer(this);
         download_handlers.connect(on_buffer);
 
         if (!download_client.perform())
         {
+            cout() << "- " << object_id << std::endl;
             throw errors::gavc_download_file_error();
         }
+
+        list_of_actual_files_.push_back(object_path);
+
+        cout() << "+ " << object_id << std::endl;
+    }
+    else if (local_file_is_actual)
+    {
+        list_of_actual_files_.push_back(object_path);
+
+        cout() << "+ " << object_id << std::endl;
     }
     else
     {
-        LOGT << "Object already exists." << ELOG;
+        cout() << "- " << object_id << std::endl;
     }
-
-    list_of_actual_files_.push_back(object_path);
-    cout() << "+ " << object_id << std::endl;
 }
 
 std::string GAVC::create_url(const std::string& version_to_query) const
