@@ -65,6 +65,9 @@ class GAVC: public piel::lib::IOstreamsHolder
 {
 public:
     typedef std::list<boost::filesystem::path> paths_list;
+    typedef std::map<boost::filesystem::path,std::pair<std::string,std::string> > query_results;
+
+    static const std::string empty_classifier;
 
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
@@ -79,10 +82,11 @@ public:
     void set_path_to_download(const boost::filesystem::path& path);
     boost::filesystem::path get_path_to_download() const;
     paths_list get_list_of_actual_files() const;
+    query_results get_query_results() const;
 
 protected:
     std::string create_url(const std::string& version_to_query, const std::string& classifier) const;
-    void on_object(boost::property_tree::ptree::value_type obj);
+    void on_object(const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& query_classifier);
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
     bool validate_local_file(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums) const;
     void download_file(const boost::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
@@ -95,6 +99,7 @@ private:
     boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
     paths_list list_of_actual_files_;
+    query_results query_results_;
 };
 
 } } // namespace piel::cmd

@@ -64,10 +64,6 @@ public:
     void set_classifier_to_checkout(const std::string& c) { classifier_to_checkout_ = c; }
     std::string get_classifier_to_checkout() const { return classifier_to_checkout_; }
 
-protected:
-    std::string get_classifier_from_filename(const boost::filesystem::path& fn);
-    std::vector<std::string> split(const std::string &s, char delim);
-
 private:
     piel::lib::WorkingCopy::Ptr working_copy_;
     std::string server_url_;

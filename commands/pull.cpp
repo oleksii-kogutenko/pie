@@ -73,35 +73,6 @@ Pull::~Pull()
 {
 }
 
-std::vector<std::string> Pull::split(const std::string &s, char delim)
-{
-    std::vector<std::string> result;
-    std::stringstream ss(s);
-    std::string item;
-    while (getline(ss, item, delim)) {
-        LOGT << "split item: " << item << ELOG;
-        result.push_back(item);
-    }
-    return result;
-}
-
-std::string Pull::get_classifier_from_filename(const fs::path& fn)
-{
-    std::string classifier;
-    std::vector<std::string> res = split(fn.stem().generic_string(), constants::classifier_delimiter);
-
-    if (res.size() != 3) {
-        throw errors::invalid_downloaded_artifact_name(fn.stem().generic_string());
-    }
-
-    classifier = res[2];
-    if (fn.has_extension()) {
-        classifier = classifier.substr(0, classifier.find(fn.extension().generic_string(), 0));
-    }
-
-    return classifier;
-}
-
 void Pull::operator()()
 {
     fs::path wc_path = (path_to_download_.empty()) ? fs::current_path() : path_to_download_;
@@ -126,7 +97,8 @@ void Pull::operator()()
     gavc.set_path_to_download(archives_path);
     gavc();
 
-    GAVC::paths_list list = gavc.get_list_of_actual_files();
+    GAVC::paths_list list   = gavc.get_list_of_actual_files();
+    GAVC::query_results qr  = gavc.get_query_results();
 
     LOGD << "List of download file..." << ELOG;
 
@@ -137,8 +109,16 @@ void Pull::operator()()
             continue;
         }
 
-        std::string classifier = get_classifier_from_filename(*it);
+        std::string classifier  = qr[*it].first;
+        std::string version     = qr[*it].second;
+
         LOGD << "classifier:" << classifier << ELOG;
+        LOGD << "version:" << version << ELOG;
+
+        if (classifier == GAVC::empty_classifier) {
+            LOGD << "Skip empty classifier." << ELOG;
+            continue;
+        }
 
         cout() << "Import tree: " << classifier;
 

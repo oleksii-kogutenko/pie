@@ -54,6 +54,8 @@ namespace po = boost::program_options;
 
 namespace piel { namespace cmd {
 
+/*static*/ const std::string GAVC::empty_classifier = "<none>";
+
 GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_url
            , const std::string& server_repository
@@ -67,6 +69,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
     , list_of_actual_files_()
+    , query_results_()
 {
 }
 
@@ -220,8 +223,10 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
     }
 }
 
-void GAVC::on_object(pt::ptree::value_type obj)
+void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
 {
+    LOGT << "on_object version: " << version << " query classifier: " << query_classifier << ELOG;
+
     boost::optional<std::string> op_download_uri = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
     if (!op_download_uri)
     {
@@ -236,14 +241,37 @@ void GAVC::on_object(pt::ptree::value_type obj)
         return;
     }
 
-    fs::path    path        = *op_path;
-    fs::path    object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
+    fs::path path        = *op_path;
+    fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
 
     LOGT << "object path: "     << object_path                  << ELOG;
 
     std::string object_id       = object_path.filename().string();
 
     LOGT << "object id: "       << object_id                    << ELOG;
+
+    std::string object_classifier = query_classifier;
+    if (object_classifier.empty())
+    {
+        LOGD << "No classifier specified. Extract classifier from the object id." << ELOG;
+
+        std::vector<std::string> object_id_parts;
+        boost::split(object_id_parts, object_id, boost::is_any_of("-"));
+
+        if (object_id_parts.size() > 2)
+        {
+            object_classifier = object_id_parts[2];
+            if (object_classifier.find('.') != std::string::npos)
+            {
+                object_classifier = object_classifier.substr(0, object_classifier.find('.'));
+            }
+        }
+        else
+        {
+            object_classifier = empty_classifier;
+        }
+    }
+    LOGT << "object classifier: " << object_classifier << ELOG;
 
     std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
     //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
@@ -275,6 +303,12 @@ void GAVC::on_object(pt::ptree::value_type obj)
     {
         cout() << "- " << object_id << std::endl;
     }
+
+    LOGT << "Add query result. { object path: " << object_path
+            << " classifier: " << object_classifier
+            << " version: " << version << " }" << ELOG;
+
+    query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
 }
 
 std::string GAVC::create_url(const std::string& version_to_query, const std::string& classifier) const
@@ -357,7 +391,7 @@ void GAVC::operator()()
 
             // Load the json file into this ptree
             pt::read_json(api_handlers.responce_stream(), root);
-            pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1));
+            pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1, *i, *c));
         }
     }
 
@@ -378,5 +412,9 @@ GAVC::paths_list GAVC::get_list_of_actual_files() const
     return list_of_actual_files_;
 }
 
+GAVC::query_results GAVC::get_query_results() const
+{
+    return query_results_;
+}
 
 } } // namespace piel::cmd
