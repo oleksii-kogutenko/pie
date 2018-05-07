@@ -51,7 +51,6 @@ namespace piel { namespace cmd {
 namespace constants {
 
     static const std::string pom_extention = ".pom";
-    static const char classifier_delimiter = '-';
 
 };
 

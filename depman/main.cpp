@@ -29,7 +29,7 @@
 #include <string>
 #include <map>
 
-namespace depman { namespace app { 
+namespace depman { namespace app {
 
     struct Transport {
         std::string remote_;
@@ -56,32 +56,38 @@ namespace da = depman::app;
 //
 // >> depman add test   git+ssh://git.test.org:repository.git;refspec=;mergebase=;logbase=;branch=master;revison=123456
 // depman.conf:
-// git test {
+//
+// git: {
+//   id: test;
 //   remote: ssh://git.test.org:repository.git;
 //   local: test;
 //   branch: master;
 //   revision: 123456;
-// }
+// };
 //
 // >> depman add test2  art+https:://artifactory.server/artifactory;repo=bin-release;qavc=test:test2:+;version=123
-// depman.conf: 
-// git test {
+// depman.conf:
+//
+// git: {
+//   id: test;
 //   remote: ssh://git.test.org:repository.git;
 //   local: test;
 //   branch: master;
 //   revision: 123456;
-// }
-// art test2 {
+// };
+// art: {
+//   id: test2;
 //   remote: https:://artifactory.server/artifactory;
 //   local: test2;
 //   repo: bin-release-local;
 //   gavc: test:test2:+;
 //   version: 123;
-//   classifiers {
+//   classifiers: {
 //      debug: dbg;
 //      release: prd;
-//   }
-// }
+//   };
+// };
+//
 //
 // >> depman show
 // >> depman export
