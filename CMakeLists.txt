@@ -44,6 +44,7 @@ set(Boost_libraries_list program_options system filesystem regex thread)
 add_subdirectory(piel)
 add_subdirectory(commands)
 add_subdirectory(pie)
+add_subdirectory(depman)
 
 enable_testing()
 add_subdirectory(tests)
