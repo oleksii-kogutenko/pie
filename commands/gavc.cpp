@@ -60,7 +60,8 @@ GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_url
            , const std::string& server_repository
            , const art::lib::GavcQuery& query
-           , const bool have_to_download_results)
+           , const bool have_to_download_results
+           , const std::string& output_file)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -70,6 +71,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , have_to_download_results_(have_to_download_results)
     , list_of_actual_files_()
     , query_results_()
+    , output_file_(output_file)
 {
 }
 
@@ -241,8 +243,8 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         return;
     }
 
-    fs::path path        = *op_path;
-    fs::path object_path = (path_to_download_.empty()) ? path.filename() : path_to_download_ / path.filename();
+    fs::path path        = output_file_.empty()         ?   *op_path          : output_file_                          ;
+    fs::path object_path = path_to_download_.empty()    ?   path.filename()   : path_to_download_ / path.filename()   ;
 
     LOGT << "object path: "     << object_path                  << ELOG;
 

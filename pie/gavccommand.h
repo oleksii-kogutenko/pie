@@ -62,6 +62,7 @@ private:
 
     bool have_to_download_results_;
 
+    std::string output_file_;
 };
 
 } } // namespace pie::app

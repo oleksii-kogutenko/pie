@@ -73,7 +73,8 @@ public:
          , const std::string& server_url
          , const std::string& server_repository
          , const art::lib::GavcQuery& query
-         , const bool have_to_download_results);
+         , const bool have_to_download_results
+         , const std::string& output_file = std::string());
 
     virtual ~GAVC();
 
@@ -100,6 +101,7 @@ private:
     bool have_to_download_results_;
     paths_list list_of_actual_files_;
     query_results query_results_;
+    std::string output_file_;
 };
 
 } } // namespace piel::cmd

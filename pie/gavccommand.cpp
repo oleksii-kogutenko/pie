@@ -51,6 +51,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , server_repository_()
     , query_()
     , have_to_download_results_(false)
+    , output_file_()
 {
 }
 
@@ -72,6 +73,7 @@ bool GavcCommand::parse_arguments()
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
+        ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -137,7 +139,8 @@ bool GavcCommand::parse_arguments()
                              server_url_,
                              server_repository_,
                              query_,
-                             have_to_download_results_);
+                             have_to_download_results_,
+                             output_file_);
 
         gavc();
 
