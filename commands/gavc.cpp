@@ -244,7 +244,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
     }
 
     fs::path path        = output_file_.empty()         ?   *op_path          : output_file_                          ;
-    fs::path object_path = path_to_download_.empty()    ?   path.filename()   : path_to_download_ / path.filename()   ;
+    fs::path object_path = path_to_download_.empty()    ?   path              : path_to_download_ / path.filename()   ;
 
     LOGT << "object path: "     << object_path                  << ELOG;
 
