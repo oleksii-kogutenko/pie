@@ -31,4 +31,7 @@ target_link_libraries(${Module_name} crypto)
 # libzip (libcurl4-openssl-dev)
 target_link_libraries(${Module_name} curl)
 
+# Static c++
+set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+
 #install(TARGETS pie RUNTIME DESTINATION bin)
