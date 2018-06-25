@@ -11,7 +11,15 @@ target_link_libraries(${Module_name} commands piel pthread zip)
 # Boost (libboost-all-dev)
 find_package( Boost COMPONENTS ${Boost_libraries_list} REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
-target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES})
+
+#target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(${Module_name} LINK_PUBLIC
+    libboost_program_options.a
+    libboost_system.a
+    libboost_filesystem.a
+    libboost_regex.a
+    libboost_thread.a
+)
 
 # OpenSSL (libssl-dev)
 target_link_libraries(${Module_name} crypto)

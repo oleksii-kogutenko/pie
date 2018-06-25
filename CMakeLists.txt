@@ -4,7 +4,7 @@
 
 #set(CMAKE_C_COMPILER /usr/bin/clang)
 #set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
 
 #set(CMAKE_C_COMPILER /usr/bin/gcc-5)
 #set(CMAKE_CXX_COMPILER /usr/bin/g++-5)
