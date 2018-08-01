@@ -28,8 +28,11 @@ target_link_libraries(${Module_name} crypto)
 #target_link_libraries(${Module_name} ${ZIP})
 #include_directories("third-party/libzip/include")
 
-# libzip (libcurl4-openssl-dev)
-target_link_libraries(${Module_name} curl)
+# libcurl (libcurl4-openssl-dev)
+# target_link_libraries(${Module_name} curl)
+
+# libcurl (libcurl4-gnutls-dev)
+target_link_libraries(${Module_name} curl-gnutls)
 
 # Static c++
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
