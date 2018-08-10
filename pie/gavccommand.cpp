@@ -29,7 +29,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <gavccommand.h>
-#include <gavc.h>
+#include <gavccache.h>
 #include <logging.h>
 #include <mavenmetadata.h>
 
@@ -52,6 +52,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , query_()
     , have_to_download_results_(false)
     , output_file_()
+    , cache_path_()
 {
 }
 
@@ -74,6 +75,7 @@ bool GavcCommand::parse_arguments()
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
+        ("cache,c",         po::value<std::string>(&cache_path_),               "Cache path.  Can be set using GAVC_CACHE environment variable.")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -115,6 +117,7 @@ bool GavcCommand::parse_arguments()
     get_env_flag &= get_from_env(vm, "token",       "GAVC_SERVER_API_ACCESS_TOKEN", server_api_access_token_);
     get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              server_url_);
     get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       server_repository_);
+                    get_from_env(vm, "cache",       "GAVC_CACHE",                   cache_path_);
 
     if (!get_env_flag) {
         show_command_help_message(desc);
@@ -135,14 +138,14 @@ bool GavcCommand::parse_arguments()
     }
 
     try {
-        piel::cmd::GAVC gavc(server_api_access_token_,
+        piel::cmd::GAVCCache gavccache(server_api_access_token_,
                              server_url_,
                              server_repository_,
                              query_,
                              have_to_download_results_,
+                             cache_path_,
                              output_file_);
-
-        gavc();
+        gavccache();
 
     }
     catch (piel::cmd::errors::unable_to_parse_maven_metadata&) {

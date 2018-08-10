@@ -314,4 +314,17 @@ std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, 
     return result;
 }
 
+std::string GavcQuery::format_maven_metadata_path(const std::string& repository) const
+{
+    LOGT << "Build path for maven metadata. repository: " << repository << ELOG;
+
+    std::string group_path = group();
+    std::replace(group_path.begin(), group_path.end(), GavcConstants::group_delimiter, GavcConstants::path_delimiter);
+    std::string result = boost::str(boost::format( "%1$c%2$s%1$c%3$s%1$c%4$s" )
+        % GavcConstants::path_delimiter % repository % group_path % name());
+
+    LOGT << "Cache path to metadata url: " << result << ELOG;
+    return result;
+}
+
 } } // namespace art::lib

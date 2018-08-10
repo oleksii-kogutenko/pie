@@ -85,3 +85,7 @@ add_executable(push_test push_tests.cpp)
 target_link_libraries(push_test ${Piel_LIBRARIES})
 #add_test (NAME PushTest COMMAND push_test)
 
+#############################################################
+add_executable(gavc_cache gavc_cache.cpp)
+target_link_libraries(gavc_cache ${Piel_LIBRARIES})
+add_test (NAME GAVCCache COMMAND gavc_cache)

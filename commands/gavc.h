@@ -68,6 +68,7 @@ public:
     typedef std::map<boost::filesystem::path,std::pair<std::string,std::string> > query_results;
 
     static const std::string empty_classifier;
+    static const std::string checksum_ext;
 
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
@@ -85,11 +86,18 @@ public:
     paths_list get_list_of_actual_files() const;
     query_results get_query_results() const;
 
+    std::vector<std::string> get_versions_to_process() const;
+    void process_versions(const std::vector<std::string>& );
+    void process_version(const std::string&);
+    std::string get_maven_metadata_path() const;
+
+    static bool validate_local_file(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums);
+    static std::map<std::string, std::string> load_checksum(const boost::filesystem::path& object_path );
+    static void save_checksum(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums);
 protected:
     std::string create_url(const std::string& version_to_query, const std::string& classifier) const;
     void on_object(const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& query_classifier);
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
-    bool validate_local_file(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums) const;
     void download_file(const boost::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
 
 private:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,47 +26,60 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#ifndef GAVCCACHE_H_
+#define GAVCCACHE_H_
 
-#include <application.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+#include <gavc.h>
 
-namespace pie { namespace app {
+namespace piel { namespace cmd {
 
-class GavcCommand: public ICommand
+namespace errors {
+    struct cache_folder_does_not_exist {
+        cache_folder_does_not_exist(const std::string& folder)
+            : folder(folder)
+        {}
+        std::string folder;
+    };
+}
+
+class GAVCCache: public piel::lib::IOstreamsHolder
 {
 public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
 
-    virtual int perform();
+    static const std::string empty_classifier;
 
-    bool have_to_download_results() const { return have_to_download_results_; }
+    GAVCCache(  const std::string& server_api_access_token
+         , const std::string& server_url
+         , const std::string& server_repository
+         , const art::lib::GavcQuery& query
+         , const bool have_to_download_results
+         , const std::string& cache_path = std::string()
+         , const std::string& output_file = std::string());
 
-protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
+    virtual ~GAVCCache();
+
+    void operator()();
+
+//protected:
+    std::vector<std::string> get_cache_versions(const std::string &path) const;
+    GAVC::paths_list get_cached_file_list(const std::vector<std::string> &versions_to_process, const std::string &path, bool do_print = true);
+    void copy_file_list(GAVC::paths_list &file_list);
+
+    std::string get_clessifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
 
 private:
-    int argc_;
-    char **argv_;
-
     std::string server_url_;
     std::string server_api_access_token_;
     std::string server_repository_;
-
     art::lib::GavcQuery query_;
-
+    boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
-
+    GAVC::paths_list list_of_actual_files_;
+    GAVC::query_results query_results_;
     std::string output_file_;
     std::string cache_path_;
 };
 
-} } // namespace pie::app
+} } // namespace piel::cmd
 
-#endif // GAVCCOMMAND_H
+#endif /* GAVC_H_ */

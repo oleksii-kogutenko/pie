@@ -55,6 +55,7 @@ namespace po = boost::program_options;
 namespace piel { namespace cmd {
 
 /*static*/ const std::string GAVC::empty_classifier = "<none>";
+/*static*/ const std::string GAVC::checksum_ext = ".checksum";
 
 GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_url
@@ -172,7 +173,7 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
     return result;
 }
 
-bool GAVC::validate_local_file(const fs::path& object_path, std::map<std::string,std::string>& server_checksums) const
+/*static*/ bool GAVC::validate_local_file(const fs::path& object_path, std::map<std::string,std::string>& server_checksums)
 {
     bool local_file_is_actual = fs::exists(object_path);
 
@@ -223,6 +224,35 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
         LOGE << "Error on download file: " << object_path << " id: " << object_id << " uri: " << download_uri << ELOG;
         throw errors::gavc_download_file_error();
     }
+}
+
+/*static*/ void GAVC::save_checksum(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums)
+{
+    std::ofstream os(object_path.generic_string() + checksum_ext);
+    for(std::map<std::string,std::string>::const_iterator it = server_checksums.begin();
+        it != server_checksums.end(); ++it)
+    {
+        os << it->first << " " << it->second << std::endl;
+    }
+}
+
+/*static*/ std::map<std::string,std::string> GAVC::load_checksum(const boost::filesystem::path& object_path )
+{
+    std::ifstream is(object_path.generic_string() + checksum_ext);
+    std::map<std::string,std::string> checksums;
+    while (!is.eof()) {
+        std::string first, second;
+        is >> first;
+        is >> second;
+        checksums[first] = second;
+
+    }
+    for(std::map<std::string,std::string>::const_iterator it = checksums.begin();
+        it != checksums.end(); ++it)
+    {
+        LOGT << "LOADED CHANCKSUM: " << it->first << " " << it->second << ELOG;
+    }
+    return checksums;
 }
 
 void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
@@ -306,6 +336,10 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         cout() << "- " << object_id << std::endl;
     }
 
+    if (have_to_download_results_) {
+        save_checksum(object_path, server_checksums);
+    }
+
     LOGT << "Add query result. { object path: " << object_path
             << " classifier: " << object_classifier
             << " version: " << version << " }" << ELOG;
@@ -329,7 +363,12 @@ std::string GAVC::create_url(const std::string& version_to_query, const std::str
     return url;
 }
 
-void GAVC::operator()()
+std::string GAVC::get_maven_metadata_path() const
+{
+    return query_.format_maven_metadata_path(server_repository_);
+}
+
+std::vector<std::string> GAVC::get_versions_to_process() const
 {
     // Get maven metadata
     al::ArtGavcHandlers download_metadata_handlers(server_api_access_token_);
@@ -365,38 +404,54 @@ void GAVC::operator()()
         throw errors::cant_find_version_for_query();
     }
 
+    return versions_to_process;
+}
+
+void GAVC::process_version(const std::string& i)
+{
+    LOGT << "Version: " << i << ELOG;
+
+    cout() << "Version: " << i << std::endl;
+
+    std::string classifier_spec = query_.classifier();
+    std::vector<std::string> classifiers;
+
+    boost::split(classifiers, classifier_spec, boost::is_any_of(","));
+
+    for (std::vector<std::string>::const_iterator c = classifiers.begin(), cend = classifiers.end(); c != cend; ++c)
+    {
+        LOGT << "Classifier: " << *c << ELOG;
+
+        al::ArtGavcHandlers api_handlers(server_api_access_token_);
+        pl::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(i, *c), &api_handlers);
+
+        if (!client.perform())
+        {
+            throw errors::error_processing_version(client.curl_error().presentation(), i);
+        }
+
+        // Create a root
+        pt::ptree root;
+
+        // Load the json file into this ptree
+        pt::read_json(api_handlers.responce_stream(), root);
+        pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1, i, *c));
+    }
+}
+
+void GAVC::process_versions(const std::vector<std::string>& versions_to_process)
+{
     for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
     {
         LOGT << "Version: " << *i << ELOG;
-
-        cout() << "Version: " << *i << std::endl;
-
-        std::string classifier_spec = query_.classifier();
-        std::vector<std::string> classifiers;
-
-        boost::split(classifiers, classifier_spec, boost::is_any_of(","));
-
-        for (std::vector<std::string>::const_iterator c = classifiers.begin(), cend = classifiers.end(); c != cend; ++c)
-        {
-            LOGT << "Classifier: " << *c << ELOG;
-
-            al::ArtGavcHandlers api_handlers(server_api_access_token_);
-            pl::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i, *c), &api_handlers);
-
-            if (!client.perform())
-            {
-                throw errors::error_processing_version(client.curl_error().presentation(), *i);
-            }
-
-            // Create a root
-            pt::ptree root;
-
-            // Load the json file into this ptree
-            pt::read_json(api_handlers.responce_stream(), root);
-            pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1, *i, *c));
-        }
+        process_version(*i);
     }
+}
 
+void GAVC::operator()()
+{
+    std::vector<std::string> versions_to_process = get_versions_to_process();
+    process_versions(versions_to_process);
 }
 
 void GAVC::set_path_to_download(const boost::filesystem::path& path)
