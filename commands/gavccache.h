@@ -65,7 +65,7 @@ public:
     GAVC::paths_list get_cached_file_list(const std::vector<std::string> &versions_to_process, const std::string &path, bool do_print = true);
     void copy_file_list(GAVC::paths_list &file_list);
 
-    std::string get_clessifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
+    std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
 
 private:
     std::string server_url_;

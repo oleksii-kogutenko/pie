@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Check_classifier_with_cache_download)
             cache_dir->first /
             q.format_maven_metadata_path(server_repository) /
             q.version() /
-            (gavccache.get_clessifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
+            (gavccache.get_classifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
     LOGT << "PATH: " << q.format_maven_metadata_path(server_repository) << ELOG;
     LOGT << "path: " << file_path << ELOG;
     LOGT << "is: " << fs::is_regular_file(file_path) << ELOG;
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(Check_classifier_with_cache_download_and_copy)
             cache_dir->first /
             q.format_maven_metadata_path(server_repository) /
             q.version() /
-            (gavccache.get_clessifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
+            (gavccache.get_classifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
     LOGT << "PATH: " << q.format_maven_metadata_path(server_repository) << ELOG;
     LOGT << "path: " << file_path << ELOG;
     LOGT << "is: " << fs::is_regular_file(file_path) << ELOG;
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(Check_check_cache)
             cache_dir->first /
             q.format_maven_metadata_path(server_repository) /
             q.version() /
-            (gavccache1.get_clessifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
+            (gavccache1.get_classifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
     LOGT << "PATH: " << q.format_maven_metadata_path(server_repository) << ELOG;
     LOGT << "path: " << file_path << ELOG;
     LOGT << "is: " << fs::is_regular_file(file_path) << ELOG;
