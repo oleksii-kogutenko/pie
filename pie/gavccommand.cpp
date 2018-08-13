@@ -42,6 +42,16 @@ namespace pie { namespace app {
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
+namespace utils {
+
+static std::string get_default_cache_path() {
+    static const std::string default_cache_path = "/.pie/gavc/cache";
+    static const char *home_c_str = ::getenv("HOME");
+    return std::string(home_c_str) + default_cache_path;
+}
+
+}//namespace utils
+
 GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     : ICommand(app)
     , argc_(argc)
@@ -52,7 +62,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , query_()
     , have_to_download_results_(false)
     , output_file_()
-    , cache_path_()
+    , cache_path_(utils::get_default_cache_path())
 {
 }
 
@@ -75,7 +85,7 @@ bool GavcCommand::parse_arguments()
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
-        ("cache,c",         po::value<std::string>(&cache_path_),               "Cache path.  Can be set using GAVC_CACHE environment variable.")
+        ("cache,c",         po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
         ;
 
     if (show_help(desc, argc_, argv_)) {
