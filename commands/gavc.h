@@ -94,6 +94,10 @@ public:
     static bool validate_local_file(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums);
     static std::map<std::string, std::string> load_checksum(const boost::filesystem::path& object_path );
     static void save_checksum(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums);
+
+    void set_cache_mode(bool value);
+    static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
+
 protected:
     std::string create_url(const std::string& version_to_query, const std::string& classifier) const;
     void on_object(const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& query_classifier);
@@ -107,6 +111,7 @@ private:
     art::lib::GavcQuery query_;
     boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
+    bool cache_mode_;
     paths_list list_of_actual_files_;
     query_results query_results_;
     std::string output_file_;

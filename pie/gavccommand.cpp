@@ -63,6 +63,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , have_to_download_results_(false)
     , output_file_()
     , cache_path_(utils::get_default_cache_path())
+    , disable_cache_(false)
 {
 }
 
@@ -85,7 +86,8 @@ bool GavcCommand::parse_arguments()
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
-        ("cache,c",         po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("disable-cache",                                                       "Do not use local cache (enabled by default).")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -134,7 +136,8 @@ bool GavcCommand::parse_arguments()
         return false;
     }
 
-    have_to_download_results_ = vm.count("download");
+    have_to_download_results_   = vm.count("download");
+    disable_cache_              = vm.count("disable-cache");
 
     return true;
 }
@@ -148,14 +151,35 @@ bool GavcCommand::parse_arguments()
     }
 
     try {
-        piel::cmd::GAVCCache gavccache(server_api_access_token_,
+        if (disable_cache_) {
+            piel::cmd::GAVC gavc(server_api_access_token_,
+                             server_url_,
+                             server_repository_,
+                             query_,
+                             have_to_download_results_,
+                             output_file_);
+
+            if (output_file_.empty()) {
+                gavc.set_path_to_download(boost::filesystem::current_path());
+            }
+
+            gavc();
+        }
+        else {
+            piel::cmd::GAVCCache gavccache(server_api_access_token_,
                              server_url_,
                              server_repository_,
                              query_,
                              have_to_download_results_,
                              cache_path_,
                              output_file_);
-        gavccache();
+
+            if (output_file_.empty()) {
+                gavccache.set_path_to_download(boost::filesystem::current_path());
+            }
+
+            gavccache();
+        }
 
     }
     catch (piel::cmd::errors::unable_to_parse_maven_metadata&) {
@@ -181,7 +205,11 @@ bool GavcCommand::parse_arguments()
         return -1;
     }
     catch (piel::cmd::errors::gavc_download_file_error& ) {
-        std::cerr << "Can't find any version for query!" << std::endl;
+        std::cerr << "Can't download file!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cache_no_queued_version& ) {
+        std::cerr << "Can't find any version for query in cache!" << std::endl;
         return -1;
     }
 

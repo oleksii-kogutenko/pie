@@ -44,7 +44,7 @@ std::string server_url        = "http://server/art";
 std::string server_repository = "test-repo-local";
 std::string server_token      = "";
 std::string gavc_cache        = "";
-std::string query_str         = " valhalla.dev.charter.humaxwb20.third_parties.linux.arm:expat-2.1.1:44:package";
+std::string query_str         = "valhalla.dev.charter.humaxwb20.third_parties.linux.arm:expat-2.1.1:44:package";
 
 std::string getEnv(const std::string& env)
 {
@@ -161,12 +161,12 @@ BOOST_AUTO_TEST_CASE(Check_classifier_with_cache_download)
             cache_dir->first /
             q.format_maven_metadata_path(server_repository) /
             q.version() /
-            (gavccache.get_classifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
+            (cmd::GAVC::get_classifier_file_name(q.name(), q.version(), q.classifier()));
     LOGT << "PATH: " << q.format_maven_metadata_path(server_repository) << ELOG;
     LOGT << "path: " << file_path << ELOG;
     LOGT << "is: " << fs::is_regular_file(file_path) << ELOG;
 
-    BOOST_CHECK(fs::is_regular_file(file_path));
+    BOOST_CHECK(fs::exists(file_path));
 }
 
 BOOST_AUTO_TEST_CASE(Check_classifier_with_cache_download_and_copy)
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(Check_classifier_with_cache_download_and_copy)
             cache_dir->first /
             q.format_maven_metadata_path(server_repository) /
             q.version() /
-            (gavccache.get_classifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
+            (cmd::GAVC::get_classifier_file_name(q.name(), q.version(), q.classifier()));
     LOGT << "PATH: " << q.format_maven_metadata_path(server_repository) << ELOG;
     LOGT << "path: " << file_path << ELOG;
     LOGT << "is: " << fs::is_regular_file(file_path) << ELOG;
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(Check_check_cache)
 
     LOGT << "---" << q.to_string() << ELOG;
 
-    fs::path art_file = to_dir->first / "art.tbz2";
+    fs::path art_file = to_dir->first / "art";
 
     piel::cmd::GAVCCache gavccache(server_token, server_url, server_repository, q, true, cache_dir->first.string());
 
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(Check_check_cache)
             cache_dir->first /
             q.format_maven_metadata_path(server_repository) /
             q.version() /
-            (gavccache1.get_classifier_file_name(q.name(), q.version(), q.classifier()) + ".tbz2");
+            (cmd::GAVC::get_classifier_file_name(q.name(), q.version(), q.classifier()));
     LOGT << "PATH: " << q.format_maven_metadata_path(server_repository) << ELOG;
     LOGT << "path: " << file_path << ELOG;
     LOGT << "is: " << fs::is_regular_file(file_path) << ELOG;

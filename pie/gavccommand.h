@@ -65,6 +65,7 @@ private:
 
     std::string output_file_;
     std::string cache_path_;
+    bool disable_cache_;
 };
 
 } } // namespace pie::app

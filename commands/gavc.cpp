@@ -70,6 +70,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , query_(query)
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
+    , cache_mode_(false)
     , list_of_actual_files_()
     , query_results_()
     , output_file_(output_file)
@@ -236,7 +237,7 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
     }
 }
 
-/*static*/ std::map<std::string,std::string> GAVC::load_checksum(const boost::filesystem::path& object_path )
+/*static*/ std::map<std::string,std::string> GAVC::load_checksum(const boost::filesystem::path& object_path)
 {
     std::ifstream is(object_path.generic_string() + checksum_ext);
     std::map<std::string,std::string> checksums;
@@ -247,12 +248,18 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
         checksums[first] = second;
 
     }
+
     for(std::map<std::string,std::string>::const_iterator it = checksums.begin();
         it != checksums.end(); ++it)
     {
-        LOGT << "LOADED CHANCKSUM: " << it->first << " " << it->second << ELOG;
+        LOGT << "LOADED CHECKSUM: " << it->first << " " << it->second << ELOG;
     }
     return checksums;
+}
+
+/*static*/ std::string GAVC::get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier)
+{
+    return query_name + "-" + ver + "-" + classifier;
 }
 
 void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
@@ -273,8 +280,15 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         return;
     }
 
-    fs::path path        = output_file_.empty()         ?   *op_path          : output_file_                          ;
-    fs::path object_path = path_to_download_.empty()    ?   path              : path_to_download_ / path.filename()   ;
+    fs::path path;
+
+    if (cache_mode_) {
+        path        = get_classifier_file_name(query_.name(), version, query_classifier);
+    } else {
+        path        = output_file_.empty()         ?   *op_path          : output_file_;
+    }
+
+    fs::path object_path = path_to_download_.empty()    ?   path         : path_to_download_ / path.filename()   ;
 
     LOGT << "object path: "     << object_path                  << ELOG;
 
@@ -323,21 +337,26 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
 
         list_of_actual_files_.push_back(object_path);
 
-        cout() << "+ " << object_id << std::endl;
+        if (cache_mode_) {
+            save_checksum(object_path, server_checksums);
+            cout() << "c " << object_id << std::endl;
+        } else {
+            cout() << "+ " << object_id << std::endl;
+        }
     }
     else if (local_file_is_actual)
     {
         list_of_actual_files_.push_back(object_path);
 
-        cout() << "+ " << object_id << std::endl;
+        if (cache_mode_) {
+            cout() << "c " << object_id << std::endl;
+        } else {
+            cout() << "+ " << object_id << std::endl;
+        }
     }
     else
     {
         cout() << "- " << object_id << std::endl;
-    }
-
-    if (have_to_download_results_) {
-        save_checksum(object_path, server_checksums);
     }
 
     LOGT << "Add query result. { object path: " << object_path
@@ -472,6 +491,11 @@ GAVC::paths_list GAVC::get_list_of_actual_files() const
 GAVC::query_results GAVC::get_query_results() const
 {
     return query_results_;
+}
+
+void GAVC::set_cache_mode(bool value)
+{
+    cache_mode_ = value;
 }
 
 } } // namespace piel::cmd

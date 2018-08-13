@@ -40,6 +40,12 @@ namespace errors {
         {}
         std::string folder;
     };
+    struct cache_no_queued_version {
+        cache_no_queued_version(const std::string& version)
+            : version(version)
+        {}
+        std::string version;
+    };
 }
 
 class GAVCCache: public piel::lib::IOstreamsHolder
@@ -60,12 +66,12 @@ public:
 
     void operator()();
 
-//protected:
-    std::vector<std::string> get_cache_versions(const std::string &path) const;
-    GAVC::paths_list get_cached_file_list(const std::vector<std::string> &versions_to_process, const std::string &path, bool do_print = true);
-    void copy_file_list(GAVC::paths_list &file_list);
+    void set_path_to_download(const boost::filesystem::path& path);
+    boost::filesystem::path get_path_to_download() const;
 
-    std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
+    std::vector<std::string> get_cached_versions(const std::string &path) const;
+    GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path, bool do_print = true);
+    void copy_file_list(GAVC::paths_list &file_list);
 
 private:
     std::string server_url_;
