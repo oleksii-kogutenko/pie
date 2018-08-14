@@ -136,13 +136,14 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
 
         if(props.get(GAVC::object_classifier_property, "") == classifier) {
             result = artifacts_cache + fs::path::preferred_separator + props.get(GAVC::object_id_property, "");
+            break;
         }
     }
 
     return result;
 }
 
-GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path, bool do_print)
+GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path, bool use_cache)
 {
     std::string classifier_spec = query_.classifier();
     std::string query_name      = query_.name();
@@ -170,19 +171,24 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
 
             if (!fs::is_regular_file(file_path)) {
                 LOGT << "no file " << file_path << ELOG;
+
+                if (use_cache) throw errors::cache_no_file_for_classifier(*c);
+
                 continue;
             }
 
-            pl::Properties props = GAVC::load_object_properties(file_path);
-
-            bool is_actual = GAVC::validate_local_file(file_path, props);
+            pl::Properties props    = GAVC::load_object_properties(file_path);
+            bool is_actual          = GAVC::validate_local_file(file_path, props);
 
             if (!is_actual) {
                 LOGT << "file " << file_path << " is not actual!!!" << ELOG;
+
+                if (use_cache) throw errors::cache_not_valid_file(*c);
+
                 continue;
             }
 
-            if (do_print) {
+            if (use_cache) {
                 cout() << "c " << classifier_file_name << std::endl;
             }
 
@@ -236,7 +242,7 @@ void GAVCCache::operator()()
     }
 
     if (use_cache && empty_cache) {
-        throw errors::cache_no_queued_version(query_.to_string());
+        throw errors::cache_no_cache_for_query(query_.to_string());
     }
 
     GAVC::paths_list list_files;

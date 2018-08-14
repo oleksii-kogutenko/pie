@@ -40,11 +40,23 @@ namespace errors {
         {}
         std::string folder;
     };
-    struct cache_no_queued_version {
-        cache_no_queued_version(const std::string& version)
-            : version(version)
+    struct cache_no_cache_for_query {
+        cache_no_cache_for_query(const std::string& query)
+            : query(query)
         {}
-        std::string version;
+        std::string query;
+    };
+    struct cache_no_file_for_classifier {
+        cache_no_file_for_classifier(const std::string& classifier)
+            : classifier(classifier)
+        {}
+        std::string classifier;
+    };
+    struct cache_not_valid_file {
+        cache_not_valid_file(const std::string& classifier)
+            : classifier(classifier)
+        {}
+        std::string classifier;
     };
 }
 

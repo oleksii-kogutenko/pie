@@ -208,8 +208,16 @@ bool GavcCommand::parse_arguments()
         std::cerr << "Can't download file!" << std::endl;
         return -1;
     }
-    catch (piel::cmd::errors::cache_no_queued_version& ) {
-        std::cerr << "Can't find any version for query in cache!" << std::endl;
+    catch (piel::cmd::errors::cache_no_cache_for_query& e) {
+        std::cerr << "Can't find anything for query: " << e.query << " in cache!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cache_no_file_for_classifier& e) {
+        std::cerr << "Can't find any file in cache for classifier: " << e.classifier << "!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cache_not_valid_file& e) {
+        std::cerr << "Can't not valid or broken file in cache for classifier: " << e.classifier << "!" << std::endl;
         return -1;
     }
 
