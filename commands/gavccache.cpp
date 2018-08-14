@@ -61,8 +61,12 @@ namespace po = boost::program_options;
 
 namespace piel { namespace cmd {
 
-/*static*/ const std::string GAVCCache::last_access_time_property   = "last_access_time";
-/*static*/ const std::string GAVCCache::last_access_time_format     = "%D %T";
+/*static*/ const std::string GAVCCache::cache_version                   = "1.0";
+/*static*/ const std::string GAVCCache::cache_version_property          = "cache_version";
+/*static*/ const std::string GAVCCache::cache_properties_filename       = ".properties";
+
+/*static*/ const std::string GAVCCache::last_access_time_property       = "last_access_time";
+/*static*/ const std::string GAVCCache::last_access_time_format         = "%D %T";
 
 GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const std::string& server_url
@@ -231,8 +235,40 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
     return list_of_actual_files_;
 }
 
+void GAVCCache::init()
+{
+    fs::create_directories(cache_path_);
+
+    std::string cache_properties_file = cache_path_ + fs::path::preferred_separator + cache_properties_filename;
+
+    pl::Properties props = pl::Properties();
+    props.set(cache_version_property, cache_version);
+
+    std::ofstream os(cache_properties_file);
+    props.store(os);
+}
+
+bool GAVCCache::validate()
+{
+    std::string cache_properties_file = cache_path_ + fs::path::preferred_separator + cache_properties_filename;
+    if (!fs::is_regular_file(cache_properties_file)) {
+        return false;
+    }
+
+    std::ifstream is(cache_properties_file);
+    pl::Properties props = pl::Properties::load(is);
+    return cache_version == props.get(cache_version_property, "");
+}
+
 void GAVCCache::operator()()
 {
+    if (!validate()) {
+        try {
+            fs::remove_all(cache_path_);
+        } catch (...) {}
+        init();
+    }
+
     piel::cmd::GAVC gavc(
          server_api_access_token_,
          server_url_,
@@ -286,7 +322,8 @@ void GAVCCache::operator()()
     if (use_cache) {
 
         for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
-            cout() << "Version: " << *ver << std::endl;
+            cout() << "Version: "       << *ver     << std::endl;
+            cout() << "Mode: cached"                << std::endl;
         }
 
         if (have_to_download_results_) {
@@ -315,7 +352,7 @@ void GAVCCache::operator()()
             std::string path = mm_path + "/" + *i;
 
             LOGT << "path:"     << path << ELOG;
-            boost::filesystem::create_directories(path);
+            fs::create_directories(path);
 
             gavc.set_path_to_download(path);
             gavc.process_version(*i);

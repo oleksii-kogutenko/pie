@@ -408,7 +408,8 @@ void GAVC::process_version(const std::string& i)
 {
     LOGT << "Version: " << i << ELOG;
 
-    cout() << "Version: " << i << std::endl;
+    cout() << "Version: "       << i << std::endl;
+    cout() << "Mode: online"         << std::endl;
 
     std::string classifier_spec = query_.classifier();
     std::vector<std::string> classifiers;
