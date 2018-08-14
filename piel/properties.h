@@ -125,6 +125,7 @@ public:
     };
 
     Properties();
+    Properties(const Properties& src);
     ~Properties();
 
     static Properties load(std::istream &is);
@@ -132,6 +133,7 @@ public:
 
     void set(const Property::name_type& name, const Property::value_type& value);
     Property::value_type get(const Property::name_type& name, const Property::value_type& default_value) const;
+    bool contains(const Property::name_type& name) const;
 
     template<class Property>
     void set(const Property& prop)
@@ -149,6 +151,12 @@ public:
     MapType& data();
     MapType::mapped_type& operator[](const MapType::key_type& key);
     void clear();
+
+    static Properties from_map(const MapType &map) {
+        Properties result;
+        result.data_.insert(map.begin(), map.end());
+        return result;
+    }
 
     enum JoinDirection {
         JoinDirection_left,

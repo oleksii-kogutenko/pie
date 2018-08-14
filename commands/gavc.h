@@ -31,6 +31,7 @@
 
 #include <gavcquery.h>
 #include <iostreamsholder.h>
+#include <properties.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
@@ -68,7 +69,9 @@ public:
     typedef std::map<boost::filesystem::path,std::pair<std::string,std::string> > query_results;
 
     static const std::string empty_classifier;
-    static const std::string checksum_ext;
+    static const std::string properties_ext;
+    static const std::string object_id_property;
+    static const std::string object_classifier_property;
 
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
@@ -91,9 +94,10 @@ public:
     void process_version(const std::string&);
     std::string get_maven_metadata_path() const;
 
-    static bool validate_local_file(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums);
-    static std::map<std::string, std::string> load_checksum(const boost::filesystem::path& object_path );
-    static void save_checksum(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums);
+    static bool validate_local_file(const boost::filesystem::path& object_path, const piel::lib::Properties& server_checksums);
+
+    static piel::lib::Properties load_object_properties(const boost::filesystem::path& object_path);
+    static void store_object_properties(const boost::filesystem::path& object_path, const piel::lib::Properties& properties);
 
     void set_cache_mode(bool value);
     static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);

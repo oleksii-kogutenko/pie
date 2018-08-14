@@ -100,6 +100,12 @@ Properties::Properties()
 {
 }
 
+Properties::Properties(const Properties& src)
+    : data_(src.data_)
+{
+
+}
+
 Properties::~Properties()
 {
 }
@@ -155,6 +161,11 @@ Properties::Property::value_type Properties::get(const Property::name_type& name
     {
         return data_.at(name);
     }
+}
+
+bool Properties::contains(const Property::name_type& name) const
+{
+    return data_.find(name) != data_.end();
 }
 
 const Properties::MapType& Properties::data() const

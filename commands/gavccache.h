@@ -73,6 +73,8 @@ public:
     GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path, bool do_print = true);
     void copy_file_list(GAVC::paths_list &file_list);
 
+    std::string find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier);
+
 private:
     std::string server_url_;
     std::string server_api_access_token_;

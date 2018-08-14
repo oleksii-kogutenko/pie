@@ -55,7 +55,9 @@ namespace po = boost::program_options;
 namespace piel { namespace cmd {
 
 /*static*/ const std::string GAVC::empty_classifier = "<none>";
-/*static*/ const std::string GAVC::checksum_ext = ".checksum";
+/*static*/ const std::string GAVC::properties_ext = ".properties";
+/*static*/ const std::string GAVC::object_id_property = "object_id";
+/*static*/ const std::string GAVC::object_classifier_property = "object_classifier";
 
 GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_url
@@ -174,32 +176,32 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
     return result;
 }
 
-/*static*/ bool GAVC::validate_local_file(const fs::path& object_path, std::map<std::string,std::string>& server_checksums)
+/*static*/ bool GAVC::validate_local_file(const fs::path& object_path, const pl::Properties& server_checksums)
 {
     bool local_file_is_actual = fs::exists(object_path);
 
     std::ifstream is(object_path.generic_string());
     pl::ChecksumsDigestBuilder::StrDigests str_digests = pl::ChecksumsDigestBuilder().str_digests_for(is);
 
-    if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_sha256))
+    if (server_checksums.contains(al::ArtBaseConstants::checksums_sha256))
     {
-        LOGT   << "Sha256 from server: "    << server_checksums[al::ArtBaseConstants::checksums_sha256]
+        LOGT   << "Sha256 from server: "    << server_checksums.get(al::ArtBaseConstants::checksums_sha256, "")
                << " local: "                << str_digests[pl::Sha256::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums[al::ArtBaseConstants::checksums_sha256] == str_digests[pl::Sha256::t::name()];
+        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_sha256, "") == str_digests[pl::Sha256::t::name()];
     }
 
-    if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_sha1))
+    if (server_checksums.contains(al::ArtBaseConstants::checksums_sha1))
     {
-        LOGT   << "Sha1 from server: "      << server_checksums[al::ArtBaseConstants::checksums_sha1]
+        LOGT   << "Sha1 from server: "      << server_checksums.get(al::ArtBaseConstants::checksums_sha1, "")
                << " local: "                << str_digests[pl::Sha::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums[al::ArtBaseConstants::checksums_sha1] == str_digests[pl::Sha::t::name()];
+        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_sha1, "") == str_digests[pl::Sha::t::name()];
     }
 
-    if (server_checksums.end() != server_checksums.find(al::ArtBaseConstants::checksums_md5))
+    if (server_checksums.contains(al::ArtBaseConstants::checksums_md5))
     {
-        LOGT   << "Md5 from server: "       << server_checksums[al::ArtBaseConstants::checksums_md5]
+        LOGT   << "Md5 from server: "       << server_checksums.get(al::ArtBaseConstants::checksums_md5, "")
                << " local: "                << str_digests[pl::Md5::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums[al::ArtBaseConstants::checksums_md5] == str_digests[pl::Md5::t::name()];
+        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_md5, std::string("")) == str_digests[pl::Md5::t::name()];
     }
 
     return local_file_is_actual;
@@ -227,39 +229,16 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
     }
 }
 
-/*static*/ void GAVC::save_checksum(const boost::filesystem::path& object_path, std::map<std::string,std::string>& server_checksums)
+/*static*/ piel::lib::Properties GAVC::load_object_properties(const boost::filesystem::path& object_path)
 {
-    std::ofstream os(object_path.generic_string() + checksum_ext);
-    for(std::map<std::string,std::string>::const_iterator it = server_checksums.begin();
-        it != server_checksums.end(); ++it)
-    {
-        os << it->first << " " << it->second << std::endl;
-    }
+    std::ifstream is(object_path.generic_string() + properties_ext);
+    return pl::Properties::load(is);
 }
 
-/*static*/ std::map<std::string,std::string> GAVC::load_checksum(const boost::filesystem::path& object_path)
+/*static*/ void GAVC::store_object_properties(const boost::filesystem::path& object_path, const piel::lib::Properties& properties)
 {
-    std::ifstream is(object_path.generic_string() + checksum_ext);
-    std::map<std::string,std::string> checksums;
-    while (!is.eof()) {
-        std::string first, second;
-        is >> first;
-        is >> second;
-        checksums[first] = second;
-
-    }
-
-    for(std::map<std::string,std::string>::const_iterator it = checksums.begin();
-        it != checksums.end(); ++it)
-    {
-        LOGT << "LOADED CHECKSUM: " << it->first << " " << it->second << ELOG;
-    }
-    return checksums;
-}
-
-/*static*/ std::string GAVC::get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier)
-{
-    return query_name + "-" + ver + "-" + classifier;
+    std::ofstream os(object_path.generic_string() + properties_ext);
+    properties.store(os);
 }
 
 void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
@@ -280,14 +259,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         return;
     }
 
-    fs::path path;
-
-    if (cache_mode_) {
-        path        = get_classifier_file_name(query_.name(), version, query_classifier);
-    } else {
-        path        = output_file_.empty()         ?   *op_path          : output_file_;
-    }
-
+    fs::path path        = output_file_.empty()         ?   *op_path     : output_file_;
     fs::path object_path = path_to_download_.empty()    ?   path         : path_to_download_ / path.filename()   ;
 
     LOGT << "object path: "     << object_path                  << ELOG;
@@ -325,7 +297,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
     cout() << "? " << object_id << "\r";
     cout().flush();
 
-    bool local_file_is_actual   = validate_local_file(object_path, server_checksums);
+    bool local_file_is_actual   = validate_local_file(object_path, pl::Properties::from_map(server_checksums));
     bool do_download            = !local_file_is_actual;
 
     if (have_to_download_results_ && do_download)
@@ -338,7 +310,13 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         list_of_actual_files_.push_back(object_path);
 
         if (cache_mode_) {
-            save_checksum(object_path, server_checksums);
+            pl::Properties props = pl::Properties::from_map(server_checksums);
+
+            props.set(object_id_property, object_id);
+            props.set(object_classifier_property, query_classifier);
+
+            store_object_properties(object_path, props);
+
             cout() << "c " << object_id << std::endl;
         } else {
             cout() << "+ " << object_id << std::endl;

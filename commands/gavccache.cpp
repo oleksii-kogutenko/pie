@@ -45,10 +45,12 @@
 #include <logging.h>
 #include <mavenmetadata.h>
 #include <artbaseapihandlers.h>
+#include <properties.h>
 
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace al = art::lib;
 namespace pl = piel::lib;
@@ -115,6 +117,31 @@ std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path)
     return filter.filtered(result);
 }
 
+std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier)
+{
+    std::string result;
+
+    for(auto entry : boost::make_iterator_range(fs::directory_iterator(artifacts_cache), {})){
+        LOGT << entry.path().filename().c_str() << ELOG;
+        if(!fs::is_regular_file(entry.path())) {
+            continue;
+        }
+
+        if (!boost::algorithm::ends_with(entry.path().filename().string(), GAVC::properties_ext)) {
+            continue;
+        }
+
+        std::ifstream is(entry.path().string());
+        pl::Properties props = pl::Properties::load(is);
+
+        if(props.get(GAVC::object_classifier_property, "") == classifier) {
+            result = artifacts_cache + fs::path::preferred_separator + props.get(GAVC::object_id_property, "");
+        }
+    }
+
+    return result;
+}
+
 GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path, bool do_print)
 {
     std::string classifier_spec = query_.classifier();
@@ -135,22 +162,20 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
                 continue;
             }
 
-            std::string classifier_file_name = GAVC::get_classifier_file_name(query_name, *ver, *c);
-
-            std::string file_path = path + fs::path::preferred_separator
-                    + *ver + fs::path::preferred_separator +
-                    classifier_file_name;
+            std::string artifact_cache_path     = path + fs::path::preferred_separator + *ver;
+            std::string file_path               = find_file_for_classifier(artifact_cache_path, *c);
+            std::string classifier_file_name    = fs::path(file_path).filename().string();
 
             LOGT << "Classifier: " << *c << " path: " << file_path << ELOG;
-
 
             if (!fs::is_regular_file(file_path)) {
                 LOGT << "no file " << file_path << ELOG;
                 continue;
             }
 
-            std::map<std::string, std::string> checksum = GAVC::load_checksum(file_path);
-            bool is_actual = GAVC::validate_local_file(file_path, checksum);
+            pl::Properties props = GAVC::load_object_properties(file_path);
+
+            bool is_actual = GAVC::validate_local_file(file_path, props);
 
             if (!is_actual) {
                 LOGT << "file " << file_path << " is not actual!!!" << ELOG;
