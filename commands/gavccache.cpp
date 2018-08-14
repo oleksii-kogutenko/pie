@@ -30,9 +30,10 @@
  *
  */
 
-#include <iostream>
-#include <cstdlib>
 #include <ctime>
+#include <iostream>
+#include <iomanip>
+#include <cstdlib>
 #include <vector>
 #include <gavc.h>
 #include <gavccache.h>
@@ -59,6 +60,9 @@ namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
 namespace piel { namespace cmd {
+
+/*static*/ const std::string GAVCCache::last_access_time_property   = "last_access_time";
+/*static*/ const std::string GAVCCache::last_access_time_format     = "%D %T";
 
 GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const std::string& server_url
@@ -141,6 +145,32 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
     }
 
     return result;
+}
+
+/*static*/ std::string GAVCCache::now_string()
+{
+    std::ostringstream buffer;
+    std::time_t tm = std::time(nullptr);
+    buffer << std::put_time(std::localtime(&tm), last_access_time_format.c_str());
+    return buffer.str();
+}
+
+/*static*/ void GAVCCache::update_last_access_time(const fs::path& cache_object_path)
+{
+    pl::Properties props = GAVC::load_object_properties(cache_object_path);
+    std::ostringstream buffer;
+    buffer << now_string();
+    props.set(last_access_time_property, buffer.str());
+    GAVC::store_object_properties(cache_object_path, props);
+}
+
+/*static*/ std::tm GAVCCache::get_last_access_time(const fs::path& cache_object_path)
+{
+    pl::Properties props = GAVC::load_object_properties(cache_object_path);
+    std::tm t = {};
+    std::istringstream ss(props.get(last_access_time_property, now_string()));
+    ss >> std::get_time(&t, last_access_time_format.c_str());
+    return t;
 }
 
 GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path, bool use_cache)
@@ -272,6 +302,7 @@ void GAVCCache::operator()()
                 cout() << "+ " << object_path.filename().string() << std::endl;
 
                 fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
+                update_last_access_time(*f);
             }
         }
 
@@ -303,6 +334,7 @@ void GAVCCache::operator()()
                 cout() << "+ " << object_path.filename().string() << std::endl;
 
                 fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
+                update_last_access_time(*f);
             }
         }
     }

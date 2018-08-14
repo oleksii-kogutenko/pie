@@ -64,7 +64,8 @@ class GAVCCache: public piel::lib::IOstreamsHolder
 {
 public:
 
-    static const std::string empty_classifier;
+    static const std::string last_access_time_property;
+    static const std::string last_access_time_format;
 
     GAVCCache(  const std::string& server_api_access_token
          , const std::string& server_url
@@ -86,6 +87,12 @@ public:
     void copy_file_list(GAVC::paths_list &file_list);
 
     std::string find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier);
+
+    static void update_last_access_time(const boost::filesystem::path& cache_object_path);
+    static std::tm get_last_access_time(const boost::filesystem::path& cache_object_path);
+
+private:
+    static std::string now_string();
 
 private:
     std::string server_url_;
