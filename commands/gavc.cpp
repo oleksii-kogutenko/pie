@@ -317,7 +317,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
 
             store_object_properties(object_path, props);
 
-            cout() << "c " << object_id << std::endl;
+            //cout() << "c " << object_id << std::endl;
         } else {
             cout() << "+ " << object_id << std::endl;
         }
@@ -327,7 +327,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         list_of_actual_files_.push_back(object_path);
 
         if (cache_mode_) {
-            cout() << "c " << object_id << std::endl;
+            //cout() << "c " << object_id << std::endl;
         } else {
             cout() << "+ " << object_id << std::endl;
         }

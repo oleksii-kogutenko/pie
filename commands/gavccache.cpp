@@ -82,8 +82,6 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , query_(query)
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
-    , list_of_actual_files_()
-    , query_results_()
     , output_file_(output_file)
     , cache_path_(cache_path)
 {
@@ -185,6 +183,9 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
     std::vector<std::string> classifiers;
 
     boost::split(classifiers, classifier_spec, boost::is_any_of(","));
+    bool have_errors = false;
+
+    GAVC::paths_list results;
 
     for (auto ver = versions_to_process.begin(), end = versions_to_process.end(); ver != end; ++ver)
     {
@@ -204,35 +205,40 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
             LOGT << "Classifier: " << *c << " path: " << file_path << ELOG;
 
             if (!fs::is_regular_file(file_path)) {
-                LOGT << "no file " << file_path << ELOG;
+                LOGT << "No file: " << file_path << " for classifier: " << *c << ELOG;
 
                 if (use_cache) throw errors::cache_no_file_for_classifier(*c);
 
-                continue;
+                have_errors = true;
+                break;
             }
 
             pl::Properties props    = GAVC::load_object_properties(file_path);
-            bool is_actual          = GAVC::validate_local_file(file_path, props);
+            bool is_valid           = GAVC::validate_local_file(file_path, props);
 
-            if (!is_actual) {
-                LOGT << "file " << file_path << " is not actual!!!" << ELOG;
+            if (!is_valid) {
+                LOGT << "File: " << file_path  << " for classifier: " << *c << " is not valid!" << ELOG;
 
                 if (use_cache) throw errors::cache_not_valid_file(*c);
 
-                continue;
+                have_errors = true;
+                break;
             }
 
             if (use_cache) {
                 cout() << "c " << classifier_file_name << std::endl;
             }
 
-            if (std::find(list_of_actual_files_.begin(), list_of_actual_files_.end(), file_path) == list_of_actual_files_.end()) {
-                list_of_actual_files_.push_back(file_path);
+            if (std::find(results.begin(), results.end(), file_path) == results.end()) {
+                results.push_back(file_path);
             }
         }
     }
 
-    return list_of_actual_files_;
+    if (have_errors)
+        return GAVC::paths_list();
+
+    return results;
 }
 
 void GAVCCache::init()
@@ -287,16 +293,19 @@ void GAVCCache::operator()()
 
     std::vector<std::string> versions_to_process_remote;
     std::vector<std::string> versions_to_process_cache;
+    std::vector<std::string> versions_to_process;
 
     bool use_cache      = false;
     bool empty_cache    = false;
+    bool offline        = false;
 
     try {
         versions_to_process_remote  = gavc.get_versions_to_process();
     }
     catch (piel::cmd::errors::no_server_maven_metadata& e) {
         // No server metadata. Force use cache.
-        use_cache = true;
+        use_cache   = true;
+        offline     = true;
     }
 
     try {
@@ -307,45 +316,24 @@ void GAVCCache::operator()()
         empty_cache = true;
     }
 
-    if (use_cache && empty_cache) {
+    GAVC::paths_list cached_files = get_cached_files_list(versions_to_process_cache, mm_path, false);
+
+    use_cache |= (versions_to_process_remote == versions_to_process_cache) && (!empty_cache && !cached_files.empty());
+
+    if (offline && use_cache && empty_cache) {
         throw errors::cache_no_cache_for_query(query_.to_string());
     }
 
-    GAVC::paths_list list_files;
+    LOGT << "offline: " << offline << " use_cache: " << use_cache << " empty_cache: " << empty_cache << ELOG;
 
-    list_files = get_cached_files_list(versions_to_process_cache, mm_path, false);
-
-    use_cache |= (versions_to_process_remote == versions_to_process_cache) && (!empty_cache && !list_files.empty());
-
-    LOGT << " use_cache: " << use_cache << ELOG;
-
-    if (use_cache) {
-
+    if (offline) {
         for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
             cout() << "Version: "       << *ver     << std::endl;
-            cout() << "Mode: cached"                << std::endl;
+            cout() << "Mode: offline"               << std::endl;
         }
 
-        if (have_to_download_results_) {
-            list_files = get_cached_files_list(versions_to_process_cache, mm_path, use_cache);
-
-            for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
-
-                fs::path path        = output_file_.empty()         ?   fs::path(*f).filename() : output_file_                          ;
-                fs::path object_path = path_to_download_.empty()    ?   path                    : path_to_download_ / path.filename()   ;
-
-                LOGT << *f << "->" << object_path << ELOG;
-
-                cout() << "+ " << object_path.filename().string() << std::endl;
-
-                fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
-                update_last_access_time(*f);
-            }
-        }
-
+        versions_to_process = versions_to_process_cache;
     } else {
-
-        // Download files to cache
         for (auto i = versions_to_process_remote.begin(), end = versions_to_process_remote.end(); i != end; ++i) {
             LOGT << "Version: " << *i << ELOG;
 
@@ -358,21 +346,23 @@ void GAVCCache::operator()()
             gavc.process_version(*i);
         }
 
-        if (have_to_download_results_) {
-            list_files = gavc.get_list_of_actual_files();
+        versions_to_process = versions_to_process_remote;
+    }
 
-            for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
+    if (have_to_download_results_) {
+        GAVC::paths_list list_files = get_cached_files_list(versions_to_process, mm_path, true);
 
-                fs::path path        = output_file_.empty()         ?   fs::path(*f).filename() : output_file_                          ;
-                fs::path object_path = path_to_download_.empty()    ?   path                    : path_to_download_ / path.filename()   ;
+        for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
 
-                LOGT << *f << "->" << object_path << ELOG;
+            fs::path path        = output_file_.empty()         ?   fs::path(*f).filename() : output_file_                          ;
+            fs::path object_path = path_to_download_.empty()    ?   path                    : path_to_download_ / path.filename()   ;
 
-                cout() << "+ " << object_path.filename().string() << std::endl;
+            LOGT << *f << "->" << object_path << ELOG;
 
-                fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
-                update_last_access_time(*f);
-            }
+            cout() << "+ " << object_path.filename().string() << std::endl;
+
+            fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
+            update_last_access_time(*f);
         }
     }
 }

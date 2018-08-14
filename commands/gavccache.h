@@ -107,8 +107,6 @@ private:
     art::lib::GavcQuery query_;
     boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
-    GAVC::paths_list list_of_actual_files_;
-    GAVC::query_results query_results_;
     std::string output_file_;
     std::string cache_path_;
 };
