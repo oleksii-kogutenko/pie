@@ -170,6 +170,10 @@ std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::str
     Match predicate(&matcher_);
     result.erase(std::remove_if(result.begin(), result.end(), Match::not_(predicate)), result.end());
 
+    if (result.empty()) {
+        return result;
+    }
+
     // 2. Process significant parts. Build table <version, [significant parts]>
     SpartsTable sparts_table;
     for (std::vector<std::string>::const_iterator i = result.begin(), end = result.end(); i != end; ++i)

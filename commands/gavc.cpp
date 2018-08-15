@@ -305,6 +305,8 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         cout() << "- " << object_id << "\r";
         cout().flush();
 
+        fs::create_directories(object_path.parent_path());
+
         download_file(object_path, object_id, *op_download_uri);
 
         list_of_actual_files_.push_back(object_path);

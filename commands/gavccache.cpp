@@ -94,14 +94,21 @@ GAVCCache::~GAVCCache()
 std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path) const
 {
     std::vector<std::string> result;
+
     if(!fs::is_directory(path)) {
         throw piel::cmd::errors::cache_folder_does_not_exist(path);
     }
+
     for(auto entry : boost::make_iterator_range(fs::directory_iterator(path), {})){
         LOGT << entry.path().filename().c_str() << ELOG;
         if(fs::is_directory(entry)) {
             result.push_back(entry.path().filename().c_str());
         }
+    }
+
+    if (result.empty()) {
+        LOGT << "Nothing in cache for query." << ELOG;
+        return result;
     }
 
     boost::optional<std::vector<al::gavc::OpType> > ops_val = query_.query_version_ops();
@@ -114,13 +121,13 @@ std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path)
     std::vector<al::gavc::OpType> ops = *ops_val;
 
     al::GavcVersionsComparator comparator(ops);
+    al::GavcVersionsFilter     filter(ops);
+
+    result = filter.filtered(result);
 
     std::sort(result.begin(), result.end(), comparator);
 
-    // Filter out versions what are not corresponding to query
-    al::GavcVersionsFilter filter(ops);
-
-    return filter.filtered(result);
+    return result;
 }
 
 std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier)
@@ -326,16 +333,11 @@ void GAVCCache::operator()()
         have_cached_files           = !get_cached_files_list(versions_to_process_cache, mm_path, false).empty();
     } catch (errors::cache_folder_does_not_exist& e) {
         // Don't see anything in cache.
-        have_cached_files           = false;
-    }
-
-    if (offline && !have_cached_files) {
-        throw errors::cache_no_cache_for_query(query_.to_string());
     }
 
     LOGT << "force_offline: " << force_offline << " offline: " << offline << " have_cached_files: " << have_cached_files << ELOG;
 
-    if (offline && have_cached_files) {
+    if (offline) {
         for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
             cout() << "Version: "       << *ver     << std::endl;
             if (force_offline) {
@@ -352,9 +354,6 @@ void GAVCCache::operator()()
 
             std::string path = mm_path + "/" + *i;
 
-            LOGT << "path:"     << path << ELOG;
-            fs::create_directories(path);
-
             gavc.set_path_to_download(path);
             gavc.process_version(*i);
         }
@@ -363,6 +362,11 @@ void GAVCCache::operator()()
     }
 
     if (have_to_download_results_) {
+
+        if (offline && !have_cached_files) {
+            throw errors::cache_no_cache_for_query(query_.to_string());
+        }
+
         GAVC::paths_list list_files = get_cached_files_list(versions_to_process, mm_path, true);
 
         for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
