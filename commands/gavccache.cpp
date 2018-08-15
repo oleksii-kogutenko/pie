@@ -266,6 +266,17 @@ bool GAVCCache::validate()
     return cache_version == props.get(cache_version_property, "");
 }
 
+bool GAVCCache::is_force_offline() const
+{
+    bool offline            = false;
+    const char *offline_str = ::getenv("PIE_GAVC_FORCE_OFFLINE");
+    if (offline_str) {
+        offline = std::string(offline_str) == "1" || std::string(offline_str) == "true";
+    }
+    LOGT << "Force offline mode: " << offline << ELOG;
+    return offline;
+}
+
 void GAVCCache::operator()()
 {
     if (!validate()) {
@@ -285,9 +296,10 @@ void GAVCCache::operator()()
 
     gavc.set_cache_mode(true);
 
+    LOGT << " gavc.get_maven_metadata_path:"    << gavc.get_maven_metadata_path()   << ELOG;
+
     std::string mm_path = cache_path_ + gavc.get_maven_metadata_path();
 
-    LOGT << " gavc.get_maven_metadata_path:"    << gavc.get_maven_metadata_path()   << ELOG;
     LOGT << " cache_path_:"                     << cache_path_                      << ELOG;
     LOGT << " mm_path:"                         << mm_path                          << ELOG;
 
@@ -295,41 +307,42 @@ void GAVCCache::operator()()
     std::vector<std::string> versions_to_process_cache;
     std::vector<std::string> versions_to_process;
 
-    bool use_cache      = false;
-    bool empty_cache    = false;
-    bool offline        = false;
+    bool force_offline      = is_force_offline();
+    bool offline            = force_offline;
+    bool have_cached_files  = false;
 
-    try {
-        versions_to_process_remote  = gavc.get_versions_to_process();
-    }
-    catch (piel::cmd::errors::no_server_maven_metadata& e) {
-        // No server metadata. Force use cache.
-        use_cache   = true;
-        offline     = true;
+    if (!offline) {
+        try {
+            versions_to_process_remote  = gavc.get_versions_to_process();
+        }
+        catch (piel::cmd::errors::no_server_maven_metadata& e) {
+            // No server metadata. Force use cache.
+            offline                     = true;
+        }
     }
 
     try {
         versions_to_process_cache   = get_cached_versions(mm_path);
-        empty_cache                 = versions_to_process_cache.empty();
+        have_cached_files           = !get_cached_files_list(versions_to_process_cache, mm_path, false).empty();
     } catch (errors::cache_folder_does_not_exist& e) {
         // Don't see anything in cache.
-        empty_cache = true;
+        have_cached_files           = false;
     }
 
-    GAVC::paths_list cached_files = get_cached_files_list(versions_to_process_cache, mm_path, false);
-
-    use_cache |= (versions_to_process_remote == versions_to_process_cache) && (!empty_cache && !cached_files.empty());
-
-    if (offline && use_cache && empty_cache) {
+    if (offline && !have_cached_files) {
         throw errors::cache_no_cache_for_query(query_.to_string());
     }
 
-    LOGT << "offline: " << offline << " use_cache: " << use_cache << " empty_cache: " << empty_cache << ELOG;
+    LOGT << "force_offline: " << force_offline << " offline: " << offline << " have_cached_files: " << have_cached_files << ELOG;
 
-    if (offline) {
+    if (offline && have_cached_files) {
         for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
             cout() << "Version: "       << *ver     << std::endl;
-            cout() << "Mode: offline"               << std::endl;
+            if (force_offline) {
+                cout() << "Mode: force offline"     << std::endl;
+            } else {
+                cout() << "Mode: offline"           << std::endl;
+            }
         }
 
         versions_to_process = versions_to_process_cache;

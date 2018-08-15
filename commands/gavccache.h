@@ -99,6 +99,7 @@ public:
 
 private:
     static std::string now_string();
+    bool is_force_offline() const;
 
 private:
     std::string server_url_;
