@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#ifndef GAVCCACHECLEANCOMMAND_H
+#define GAVCCACHECLEANCOMMAND_H
 
 #include <application.h>
 #include <gavcquery.h>
@@ -37,19 +37,13 @@
 
 namespace pie { namespace app {
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
-
-class GavcCommand: public ICommand
+class GavcCacheCleanCommand: public ICommand
 {
 public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+    GavcCacheCleanCommand(Application *app, int argc, char **argv);
+    virtual ~GavcCacheCleanCommand();
 
     virtual int perform();
-
-    bool have_to_download_results() const { return have_to_download_results_; }
 
 protected:
     bool parse_arguments();
@@ -59,19 +53,10 @@ private:
     int argc_;
     char **argv_;
 
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-
-    art::lib::GavcQuery query_;
-
-    bool have_to_download_results_;
-
-    std::string output_file_;
     std::string cache_path_;
-    bool disable_cache_;
+    int         max_age_;
 };
 
 } } // namespace pie::app
 
-#endif // GAVCCOMMAND_H
+#endif // GAVCCACHECLEANCOMMAND_H

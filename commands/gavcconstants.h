@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2018, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,52 +26,34 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#pragma once
 
-#include <application.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+//#ifndef GAVCCONSTANTS_H_
+//#define GAVCCONSTANTS_H_
 
-namespace pie { namespace app {
+#include <string>
+#include <ctime>
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
+namespace piel { namespace cmd {
 
-class GavcCommand: public ICommand
-{
-public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+struct GAVCConstants {
 
-    virtual int perform();
+    static const std::string empty_classifier;
+    static const std::string properties_ext;
+    static const std::string object_id_property;
+    static const std::string object_classifier_property;
 
-    bool have_to_download_results() const { return have_to_download_results_; }
 
-protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
+    static const std::string cache_version;
+    static const std::string cache_version_property;
+    static const std::string cache_properties_filename;
 
-private:
-    int argc_;
-    char **argv_;
+    static const std::string last_access_time_property;
+    static const std::string last_access_time_format;
 
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-
-    art::lib::GavcQuery query_;
-
-    bool have_to_download_results_;
-
-    std::string output_file_;
-    std::string cache_path_;
-    bool disable_cache_;
+    static const int seconds_in_day;
 };
 
-} } // namespace pie::app
+} } // namespace piel::cmd
 
-#endif // GAVCCOMMAND_H
+//#endif /* GAVCCONSTANTS_H_ */

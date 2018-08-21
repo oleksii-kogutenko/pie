@@ -44,7 +44,7 @@ namespace po = boost::program_options;
 
 namespace utils {
 
-static std::string get_default_cache_path() {
+std::string get_default_cache_path() {
     static const std::string default_cache_path = "/.pie/gavc/cache";
     static const char *home_c_str = ::getenv("HOME");
     return std::string(home_c_str) + default_cache_path;

@@ -68,11 +68,6 @@ public:
     typedef std::list<boost::filesystem::path> paths_list;
     typedef std::map<boost::filesystem::path,std::pair<std::string,std::string> > query_results;
 
-    static const std::string empty_classifier;
-    static const std::string properties_ext;
-    static const std::string object_id_property;
-    static const std::string object_classifier_property;
-
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
          , const std::string& server_repository

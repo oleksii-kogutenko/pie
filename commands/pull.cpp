@@ -32,6 +32,7 @@
 
 #include <pull.h>
 #include <gavc.h>
+#include "gavcconstants.h"
 
 #include <zipindexer.h>
 
@@ -114,7 +115,7 @@ void Pull::operator()()
         LOGD << "classifier:" << classifier << ELOG;
         LOGD << "version:" << version << ELOG;
 
-        if (classifier == GAVC::empty_classifier) {
+        if (classifier == GAVCConstants::empty_classifier) {
             LOGD << "Skip empty classifier." << ELOG;
             continue;
         }

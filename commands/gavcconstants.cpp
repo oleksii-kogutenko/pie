@@ -1,5 +1,9 @@
 /*
- * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
+ * Copyright (c) 2017-2018
+ *
+ *  Dmytro Iakovliev daemondzk@gmail.com
+ *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +30,24 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#include "gavcconstants.h"
+#include <iostream>
+#include <sstream>
 
-#include <application.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+namespace piel { namespace cmd {
 
-namespace pie { namespace app {
+/*static*/ const std::string GAVCConstants::empty_classifier           = "<none>";
+/*static*/ const std::string GAVCConstants::properties_ext             = ".properties";
+/*static*/ const std::string GAVCConstants::object_id_property         = "object_id";
+/*static*/ const std::string GAVCConstants::object_classifier_property = "object_classifier";
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
+/*static*/ const std::string GAVCConstants::cache_version              = "1.1";
+/*static*/ const std::string GAVCConstants::cache_version_property     = "cache_version";
+/*static*/ const std::string GAVCConstants::cache_properties_filename  = ".properties";
 
-class GavcCommand: public ICommand
-{
-public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+/*static*/ const std::string GAVCConstants::last_access_time_property  = "last_access_time";
+/*static*/ const std::string GAVCConstants::last_access_time_format    = "%d.%m.%Y %T";
 
-    virtual int perform();
+/*static*/ const int GAVCConstants::seconds_in_day                     = 60*60*24;
 
-    bool have_to_download_results() const { return have_to_download_results_; }
-
-protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
-
-private:
-    int argc_;
-    char **argv_;
-
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-
-    art::lib::GavcQuery query_;
-
-    bool have_to_download_results_;
-
-    std::string output_file_;
-    std::string cache_path_;
-    bool disable_cache_;
-};
-
-} } // namespace pie::app
-
-#endif // GAVCCOMMAND_H
+} } // namespace piel::cmd

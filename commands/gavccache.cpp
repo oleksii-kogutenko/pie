@@ -37,7 +37,7 @@
 #include <vector>
 #include <gavc.h>
 #include <gavccache.h>
-#include <gavcconstants.h>
+#include "gavcconstants.h"
 #include <gavcversionsfilter.h>
 #include <gavcversionscomparator.h>
 #include <artbaseconstants.h>
@@ -60,13 +60,6 @@ namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
 namespace piel { namespace cmd {
-
-/*static*/ const std::string GAVCCache::cache_version                   = "1.0";
-/*static*/ const std::string GAVCCache::cache_version_property          = "cache_version";
-/*static*/ const std::string GAVCCache::cache_properties_filename       = ".properties";
-
-/*static*/ const std::string GAVCCache::last_access_time_property       = "last_access_time";
-/*static*/ const std::string GAVCCache::last_access_time_format         = "%D %T";
 
 GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const std::string& server_url
@@ -140,15 +133,15 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
             continue;
         }
 
-        if (!boost::algorithm::ends_with(entry.path().filename().string(), GAVC::properties_ext)) {
+        if (!boost::algorithm::ends_with(entry.path().filename().string(), GAVCConstants::properties_ext)) {
             continue;
         }
 
         std::ifstream is(entry.path().string());
         pl::Properties props = pl::Properties::load(is);
 
-        if(props.get(GAVC::object_classifier_property, "") == classifier) {
-            result = artifacts_cache + fs::path::preferred_separator + props.get(GAVC::object_id_property, "");
+        if(props.get(GAVCConstants::object_classifier_property, "") == classifier) {
+            result = artifacts_cache + fs::path::preferred_separator + props.get(GAVCConstants::object_id_property, "");
             break;
         }
     }
@@ -160,7 +153,7 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
 {
     std::ostringstream buffer;
     std::time_t tm = std::time(nullptr);
-    buffer << std::put_time(std::localtime(&tm), last_access_time_format.c_str());
+    buffer << std::put_time(std::localtime(&tm), GAVCConstants::last_access_time_format.c_str());
     return buffer.str();
 }
 
@@ -169,7 +162,7 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
     pl::Properties props = GAVC::load_object_properties(cache_object_path);
     std::ostringstream buffer;
     buffer << now_string();
-    props.set(last_access_time_property, buffer.str());
+    props.set(GAVCConstants::last_access_time_property, buffer.str());
     GAVC::store_object_properties(cache_object_path, props);
 }
 
@@ -177,8 +170,11 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
 {
     pl::Properties props = GAVC::load_object_properties(cache_object_path);
     std::tm t = {};
-    std::istringstream ss(props.get(last_access_time_property, now_string()));
-    ss >> std::get_time(&t, last_access_time_format.c_str());
+    std::istringstream ss(props.get(GAVCConstants::last_access_time_property, now_string()));
+    ss >> std::get_time(&t, GAVCConstants::last_access_time_format.c_str());
+
+    t.tm_isdst = 1;
+
     return t;
 }
 
@@ -250,12 +246,17 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
 
 void GAVCCache::init()
 {
-    fs::create_directories(cache_path_);
+    if (!fs::is_directory(cache_path_)) {
+        if (fs::exists(cache_path_)) {
+            fs::remove(cache_path_);
+        }
+        fs::create_directories(cache_path_);
+    }
 
-    std::string cache_properties_file = cache_path_ + fs::path::preferred_separator + cache_properties_filename;
+    std::string cache_properties_file = cache_path_ + fs::path::preferred_separator + GAVCConstants::cache_properties_filename;
 
     pl::Properties props = pl::Properties();
-    props.set(cache_version_property, cache_version);
+    props.set(GAVCConstants::cache_version_property, GAVCConstants::cache_version);
 
     std::ofstream os(cache_properties_file);
     props.store(os);
@@ -263,14 +264,14 @@ void GAVCCache::init()
 
 bool GAVCCache::validate()
 {
-    std::string cache_properties_file = cache_path_ + fs::path::preferred_separator + cache_properties_filename;
+    std::string cache_properties_file = cache_path_ + fs::path::preferred_separator + GAVCConstants::cache_properties_filename;
     if (!fs::is_regular_file(cache_properties_file)) {
         return false;
     }
 
     std::ifstream is(cache_properties_file);
     pl::Properties props = pl::Properties::load(is);
-    return cache_version == props.get(cache_version_property, "");
+    return GAVCConstants::cache_version == props.get(GAVCConstants::cache_version_property, "");
 }
 
 bool GAVCCache::is_force_offline() const

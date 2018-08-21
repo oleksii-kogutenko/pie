@@ -35,6 +35,7 @@
 #include <ctime>
 #include <vector>
 #include <gavc.h>
+#include "gavcconstants.h"
 #include <artbaseconstants.h>
 #include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
@@ -53,11 +54,6 @@ namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
 namespace piel { namespace cmd {
-
-/*static*/ const std::string GAVC::empty_classifier = "<none>";
-/*static*/ const std::string GAVC::properties_ext = ".properties";
-/*static*/ const std::string GAVC::object_id_property = "object_id";
-/*static*/ const std::string GAVC::object_classifier_property = "object_classifier";
 
 GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_url
@@ -231,13 +227,13 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
 
 /*static*/ piel::lib::Properties GAVC::load_object_properties(const boost::filesystem::path& object_path)
 {
-    std::ifstream is(object_path.generic_string() + properties_ext);
+    std::ifstream is(object_path.generic_string() + GAVCConstants::properties_ext);
     return pl::Properties::load(is);
 }
 
 /*static*/ void GAVC::store_object_properties(const boost::filesystem::path& object_path, const piel::lib::Properties& properties)
 {
-    std::ofstream os(object_path.generic_string() + properties_ext);
+    std::ofstream os(object_path.generic_string() + GAVCConstants::properties_ext);
     properties.store(os);
 }
 
@@ -286,7 +282,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         }
         else
         {
-            object_classifier = empty_classifier;
+            object_classifier = GAVCConstants::empty_classifier;
         }
     }
     LOGT << "object classifier: " << object_classifier << ELOG;
@@ -314,8 +310,8 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         if (cache_mode_) {
             pl::Properties props = pl::Properties::from_map(server_checksums);
 
-            props.set(object_id_property, object_id);
-            props.set(object_classifier_property, query_classifier);
+            props.set(GAVCConstants::object_id_property, object_id);
+            props.set(GAVCConstants::object_classifier_property, query_classifier);
 
             store_object_properties(object_path, props);
 

@@ -63,13 +63,6 @@ namespace errors {
 class GAVCCache: public piel::lib::IOstreamsHolder
 {
 public:
-    static const std::string cache_version;
-    static const std::string cache_version_property;
-    static const std::string cache_properties_filename;
-
-    static const std::string last_access_time_property;
-    static const std::string last_access_time_format;
-
     GAVCCache(  const std::string& server_api_access_token
          , const std::string& server_url
          , const std::string& server_repository

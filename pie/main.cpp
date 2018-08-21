@@ -28,6 +28,7 @@
 
 #include <application.h>
 #include <gavccommand.h>
+#include <gavccachecleancommand.h>
 #include <initworkingcopycommand.h>
 #include <createcommand.h>
 #include <destroycommand.h>
@@ -52,6 +53,7 @@ int main(int argc, char **argv)
 #define C_(x,y,z) app.register_command( new pa::CommmandConstructor< x >( y, z ) )
 
     C_ ( pa::GavcCommand,               "gavc",     "GAVC query implementation." );
+    C_ ( pa::GavcCacheCleanCommand,     "gavccacheclean", "GAVC cache clean implementation." );
     C_ ( pa::UploadCommand,             "upload",   "Upload to Artifactory server." );
     C_ ( pa::PullCommand,               "pull",     "Pull from Artifactory server." );
     C_ ( pa::PushCommand,               "push",     "Push to Artifactory server." );
