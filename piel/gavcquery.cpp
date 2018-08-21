@@ -37,6 +37,9 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 //! Versions based queries
 //
@@ -179,11 +182,11 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
         return boost::none;
     }
 
-    LOG_T << "group: "      << result.group();
-    LOG_T << "name: "       << result.name();
-    LOG_T << "version: "    << result.version();
-    LOG_T << "classifier: " << result.classifier();
-    LOG_T << "extension: "  << result.extension();
+    LOGT << "group: "      << result.group()        << ELOG;
+    LOGT << "name: "       << result.name()         << ELOG;
+    LOGT << "version: "    << result.version()      << ELOG;
+    LOGT << "classifier: " << result.classifier()   << ELOG;
+    LOGT << "extension: "  << result.extension()    << ELOG;
 
     // Attempt to parse versions query
     boost::optional<std::vector<gavc::OpType> > ops = result.query_version_ops();
@@ -215,62 +218,112 @@ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
 
     for (std::vector<gavc::OpType>::iterator i = result.begin(), end = result.end(); i != end; ++i )
     {
-        LOG_T << "version query op: " << i->second;
+        LOGT << "version query op: " << i->second << ELOG;
     }
 
     if (!data_.version.empty() & result.empty())
     {
-        LOG_E << "version query: " << data_.version << " has wrong syntax!";
+        LOGE << "version query: " << data_.version << " has wrong syntax!" << ELOG;
         return boost::none;
     }
 
     return result;
 }
 
+struct QueryOpsFinder_exact_version_query {
+    bool operator()(const gavc::OpType& op) {
+        return op.first > gavc::Op_const;
+    }
+};
+
+bool GavcQuery::is_exact_version_query() const
+{
+    boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
+    if (!pops) return false;
+
+    return std::find_if(pops->begin(), pops->end(), QueryOpsFinder_exact_version_query()) == pops->end();
+}
+
+bool GavcQuery::is_single_version_query() const
+{
+    boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
+    if (!pops) return false;
+
+    bool is_last_op_all = false;
+    for(std::vector<gavc::OpType>::const_iterator i = pops->begin(), end = pops->end(); i != end; ++i)
+    {
+        if (i->first != gavc::Op_const)
+            is_last_op_all = i->first == gavc::Op_all;
+    }
+
+    return !is_last_op_all;
+}
+
 std::string GavcQuery::to_string() const
 {
-	std::ostringstream result;
+    std::ostringstream result;
 
-	if (!group().empty())
-	{
+    if (!group().empty())
+    {
         result << group();
-	}
-	if (!name().empty())
-	{
+    }
+    if (!name().empty())
+    {
         result << GavcConstants::delimiter;
         result << name();
-	}
-	if (!version().empty())
-	{
+    }
+    if (!version().empty())
+    {
         result << GavcConstants::delimiter;
         result << version();
-	}
-	if (!classifier().empty())
-	{
+    }
+    if (!classifier().empty())
+    {
         result << GavcConstants::delimiter;
         result << classifier();
-	}
-	if (!extension().empty())
-	{
+    }
+    if (!extension().empty())
+    {
         result << GavcConstants::extension_prefix;
         result << extension();
-	}
+    }
 
-	LOG_T << result.str();
+    LOGT << result.str() << ELOG;
 
     return result.str();
 }
 
+std::string GavcQuery::group_path() const
+{
+    std::string g = group();
+    std::vector<std::string> parts;
+    boost::split(parts, g, boost::is_any_of("."));
+    return boost::join(parts, "/");
+}
+
 std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, const std::string& repository) const
 {
-    LOG_T << "Build url for maven metadata. server_url: " << server_url << " repository: " << repository;
+    LOGT << "Build url for maven metadata. server_url: " << server_url << " repository: " << repository << ELOG;
 
     std::string group_path = group();
     std::replace(group_path.begin(), group_path.end(), GavcConstants::group_delimiter, GavcConstants::path_delimiter);
     std::string result = boost::str(boost::format( "%2$s%1$c%3$s%1$c%4$s%1$c%5$s%1$c%6$s" )
         % GavcConstants::path_delimiter % server_url % repository % group_path % name() % GavcConstants::maven_metadata_filename);
 
-    LOG_T << "Maven metadata url: " << result;
+    LOGT << "Maven metadata url: " << result << ELOG;
+    return result;
+}
+
+std::string GavcQuery::format_maven_metadata_path(const std::string& repository) const
+{
+    LOGT << "Build path for maven metadata. repository: " << repository << ELOG;
+
+    std::string group_path = group();
+    std::replace(group_path.begin(), group_path.end(), GavcConstants::group_delimiter, GavcConstants::path_delimiter);
+    std::string result = boost::str(boost::format( "%1$c%2$s%1$c%3$s%1$c%4$s" )
+        % GavcConstants::path_delimiter % repository % group_path % name());
+
+    LOGT << "Cache path to metadata url: " << result << ELOG;
     return result;
 }
 

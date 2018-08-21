@@ -94,10 +94,12 @@ struct CurlEasyHandlers {
     size_t handle_input(char *ptr, size_t size)     { return CURLE_READ_ERROR; }
 
     //! Handler what will be called before after custom_header and before handle_input.
-    void before_input()                             { }
+    //! \return if false will input operation will be aborted
+    bool before_input()                             { return true; }
 
     //! Handler what will be called before after handle_header and handle_output.
-    void before_output()                            { }
+    //! //! \return if false will output operation will be aborted
+    bool before_output()                            { return true; }
 
 };
 
@@ -105,18 +107,21 @@ struct CurlError {
     CurlError()
         : code_(CURLE_OK)
         , message_()
+        , http_code_(200)
     {
     }
 
-    CurlError(CURLcode code, const std::string& message)
+    CurlError(CURLcode code, long http_code, const std::string& message)
         : code_(code)
         , message_(message)
+        , http_code_(http_code)
     {
     }
 
     CurlError(const CurlError& src)
         : code_(src.code_)
         , message_(src.message_)
+        , http_code_(src.http_code_)
     {
     }
 
@@ -130,11 +135,18 @@ struct CurlError {
         return message_;
     }
 
+    long http_code() const
+    {
+        return http_code_;
+    }
+
     std::string presentation() const
     {
         std::ostringstream oss;
         oss << "libcurl error code: ";
         oss << code_;
+        oss << " http code: ";
+        oss << http_code_;
         oss << " message: ";
         oss << message_;
         return oss.str();
@@ -143,7 +155,7 @@ struct CurlError {
 private:
     CURLcode code_;
     std::string message_;
-
+    long http_code_;
 };
 
 //! libcurl curl_easy_* api wrapper.
@@ -209,21 +221,33 @@ size_t CurlEasyClient<Handlers>::handle_header(char *ptr, size_t size, size_t co
 template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_write(char *ptr, size_t size, size_t count, void* ctx)
 {
+    bool write_abort = false;
+
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
     if (CurlEasyHandlersTraits<Handlers>::have_before_output) {
-        thiz->handlers_->before_output();
+        write_abort = !thiz->handlers_->before_output();
     }
-    return thiz->handlers_->handle_output(ptr, size*count);
+
+    if (write_abort)
+        return 0;
+    else
+        return thiz->handlers_->handle_output(ptr, size*count);
 }
 
 template<class Handlers>
 size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t count, void* ctx)
 {
+    bool read_abort = false;
+
     CurlEasyClientPtr thiz = static_cast<CurlEasyClientPtr>(ctx);
     if (CurlEasyHandlersTraits<Handlers>::have_before_input) {
-        thiz->handlers_->before_input();
+        read_abort = !thiz->handlers_->before_input();
     }
-    return thiz->handlers_->handle_input(ptr, size*count);
+
+    if (read_abort)
+        return CURL_READFUNC_ABORT;
+    else
+        return thiz->handlers_->handle_input(ptr, size*count);
 }
 
 template<class Handlers>
@@ -238,7 +262,6 @@ bool CurlEasyClient<Handlers>::perform()
         {
             chunk = ::curl_slist_append(chunk, (*i).c_str());
         }
-        // TODO: process errors
         ::curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, chunk);
     }
     if (CurlEasyHandlersTraits<Handlers>::have_handle_header) {
@@ -254,19 +277,22 @@ bool CurlEasyClient<Handlers>::perform()
         ::curl_easy_setopt(curl_, CURLOPT_READFUNCTION, handle_read);
         ::curl_easy_setopt(curl_, CURLOPT_UPLOAD, 1L);
     }
+    ::curl_easy_setopt(curl_, CURLOPT_FAILONERROR, 1L);
 #ifdef DEBUG_VERBOSE_CURL
     curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
 #endif
     curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_);
     CURLcode code = ::curl_easy_perform(curl_);
-    bool result = CURLE_OK == code;
+    long http_code = 0;
+    curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, &http_code);
+    bool result = CURLE_OK == code && http_code < 400;
     if (!result)
     {
-        curl_error_ = CurlError(code, std::string(errbuf_));
+        curl_error_ = CurlError(code, http_code, std::string(errbuf_));
     }
     else
     {
-        curl_error_ = CurlError();
+        curl_error_ = CurlError(code, http_code, "OK");
     }
     return result;
 }

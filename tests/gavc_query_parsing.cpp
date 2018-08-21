@@ -126,6 +126,7 @@ BOOST_AUTO_TEST_CASE(Query_GA)
     GavcQuery q = *op;
 
     BOOST_CHECK_EQUAL("adk.trunk",  q.group());
+    BOOST_CHECK_EQUAL("adk/trunk",  q.group_path());
     BOOST_CHECK_EQUAL("adk",        q.name());
     BOOST_CHECK_EQUAL("",           q.version());
     BOOST_CHECK_EQUAL("",           q.classifier());
@@ -218,3 +219,61 @@ BOOST_AUTO_TEST_CASE(VersionParts_not_allow_ops_sequences)
     op = GavcQuery::parse(q_body);
     BOOST_CHECK(op);
 }
+
+BOOST_AUTO_TEST_CASE(CheckForExactVersion)
+{
+    boost::optional<GavcQuery> op = GavcQuery::parse("test.test:test:1");
+    BOOST_CHECK(op);
+    BOOST_CHECK(op->is_exact_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.1.1");
+    BOOST_CHECK(op);
+    BOOST_CHECK(op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:*");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(!op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.*");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(!op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.*.1");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(!op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:+");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.+");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.+.1");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:-");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.-");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+
+    op = GavcQuery::parse("test.test:test:1.-.1");
+    BOOST_CHECK(op);
+    BOOST_CHECK(!op->is_exact_version_query());
+    BOOST_CHECK(op->is_single_version_query());
+}
+

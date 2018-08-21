@@ -29,13 +29,13 @@
 #ifndef FSINDEXER_H
 #define FSINDEXER_H
 
-#include <index.h>
 #include <boost/filesystem.hpp>
+#include <treeindex.h>
 
 namespace piel { namespace lib {
 
 //! Utility to build indexes for directories content.
-class FsIndexer : public IIndexer
+class FsIndexer
 {
 public:
     //! Constructor.
@@ -46,8 +46,9 @@ public:
 
     //! Build filesystem index.
     //! \param dir indexed directory.
+    //! \param exclude sub directory what will be skipped on indexing.
     //! \return an index.
-    Index build(const boost::filesystem::path& dir) const;
+    static TreeIndex::Ptr build(const boost::filesystem::path& dir, const boost::filesystem::path& exclude = boost::filesystem::path());
 
 };
 

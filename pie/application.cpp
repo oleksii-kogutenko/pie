@@ -29,6 +29,8 @@
 #include <application.h>
 #include <iostream>
 
+namespace pie { namespace app {
+
 bool ICommand::show_help(boost::program_options::options_description &desc, int argc, char **argv)
 {
     boost::program_options::options_description help_desc("Help options");
@@ -45,11 +47,34 @@ bool ICommand::show_help(boost::program_options::options_description &desc, int 
 
     if (vm.count("help")) {
         std::cout << help_desc;
-        show_command_help_message(desc);
+        if (!desc.options().empty())
+        {
+            show_command_help_message(desc);
+        }
         return true;
     }
 
     return false;
+}
+
+/*static*/ bool ICommand::get_from_env(boost::program_options::variables_map& vm,
+                               const std::string& opt_name,
+                               const std::string& env_var,
+                               std::string& var)
+{
+    if (!vm.count(opt_name)) {
+        const char *value = ::getenv(env_var.c_str());
+        if (value)
+        {
+            var = std::string(value);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 /*virtual*/ void ICommand::show_command_help_message(const boost::program_options::options_description& desc)
@@ -69,7 +94,7 @@ int UnknownCommand::perform()
     std::cerr << "Incorrect command line or unknown command."               << std::endl;
 
     std::cout << "Usage:"                                                   << std::endl;
-    std::cout << "\t" << argv_[0] << " <command name> [command args]"       << std::endl;
+    std::cout << "\t" << argv_[0] << " <command name> [command arguments]"  << std::endl;
     std::cout << "Help:"                                                    << std::endl;
     std::cout << "\t" << argv_[0] << " <command name> --help|-h"            << std::endl;
     std::cout << "\t\t- Will out detailed list of the command arguments."   << std::endl;
@@ -106,7 +131,7 @@ boost::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
 void CommandsFactory::show_registered_commands() const
 {
     std::cout << "Commands:" << std::endl;
-    Constructors::const_iterator cmd_iter = constructors_.begin(), 
+    Constructors::const_iterator cmd_iter = constructors_.begin(),
                                  end      = constructors_.end();
     for (;cmd_iter != end; ++cmd_iter) {
         std::cout << "\t" << cmd_iter->second->name()
@@ -141,3 +166,5 @@ void Application::show_registered_commands() const
 {
     commands_factory_.show_registered_commands();
 }
+
+} } // namespace pie::app

@@ -48,7 +48,7 @@ struct Not {
     {
         bool result = !pred_(arg);
 
-        LOG_T << "negated value: " << result;
+        LOGT << "negated value: " << result << ELOG;
 
         return result;
     }
@@ -71,7 +71,7 @@ struct Match {
     {
         bool result = matcher_->match(val);
 
-        LOG_T << "match value: " << val << " result: " << result;
+        LOGT << "match value: " << val << " result: " << result << ELOG;
 
         return result;
     }
@@ -103,6 +103,7 @@ struct SpartsTableComparator
         case gavc::Op_oldest:
             return !comparator_->compare_part(lhs.second[field_index_], rhs.second[field_index_]);
         }
+        return false;
     }
 
 private:
@@ -122,7 +123,7 @@ struct SpartsTableValuesFilter
 
     bool operator()(const SpartsTableElement& val) const
     {
-        val.second[field_index_] != value_;
+        return val.second[field_index_] != value_;
     }
 
 private:
@@ -169,11 +170,15 @@ std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::str
     Match predicate(&matcher_);
     result.erase(std::remove_if(result.begin(), result.end(), Match::not_(predicate)), result.end());
 
+    if (result.empty()) {
+        return result;
+    }
+
     // 2. Process significant parts. Build table <version, [significant parts]>
     SpartsTable sparts_table;
     for (std::vector<std::string>::const_iterator i = result.begin(), end = result.end(); i != end; ++i)
     {
-        LOG_T << "Table item for: " << *i;
+        LOGT << "Table item for: " << *i << ELOG;
         sparts_table.push_back(std::make_pair(*i, matcher_.significant_parts(*i)));
     }
 
@@ -183,7 +188,7 @@ std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::str
     {
         if (i->first != gavc::Op_const && i->first != gavc::Op_all)
         {
-            LOG_T << "Filtering for field: " << field_index;
+            LOGT << "Filtering for field: " << field_index << ELOG;
 
             SpartsTableComparator table_comparator(&comparator_, *i, field_index);
             SpartsTable::iterator element_to_keep = std::max_element(sparts_table.begin(), sparts_table.end(), table_comparator);
@@ -194,12 +199,12 @@ std::vector<std::string> GavcVersionsFilter::filtered(const std::vector<std::str
             }
             else
             {
-                LOG_F << "Can't find max element for field: " << field_index;
+                LOGF << "Can't find max element for field: " << field_index << ELOG;
             }
         }
         else
         {
-            LOG_T << "Skip filtering for field: " << field_index;
+            LOGT << "Skip filtering for field: " << field_index << ELOG;
         }
 
         if (i->first != gavc::Op_const) {

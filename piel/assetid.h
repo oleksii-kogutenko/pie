@@ -36,14 +36,15 @@ namespace piel { namespace lib {
 
 class AssetId
 {
-protected:
-    AssetId(const std::string& id);
-
 public:
-    static const AssetId base;
+    static const AssetId not_calculated;
+    static const AssetId empty;
+    static const std::string digest_algo;
+    static const unsigned int str_digest_len;
 
     AssetId();
     AssetId(std::istream& is);
+    AssetId(const std::string& id);
     AssetId(const AssetId& src);
 
     ~AssetId();
@@ -53,7 +54,7 @@ public:
 
     bool operator<(const AssetId& src) const;
 
-    std::string presentation() const;
+    std::string string() const;
 
     static AssetId create_for(std::istream& is);
     static AssetId create(const std::string& id);

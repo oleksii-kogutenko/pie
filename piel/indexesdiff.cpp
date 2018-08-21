@@ -27,6 +27,7 @@
  */
 
 #include <indexesdiff.h>
+
 #include <logging.h>
 
 namespace piel { namespace lib {
@@ -34,6 +35,7 @@ namespace piel { namespace lib {
 template<class DiffMap, class CompareMap>
 struct MapDiffBuilder {
 
+    typedef typename DiffMap::iterator                      DiffMapIterator;
     typedef typename CompareMap::const_iterator             ConstIter;
     typedef typename CompareMap::value_type::second_type    EmptyValueType;
 
@@ -44,11 +46,11 @@ struct MapDiffBuilder {
         ConstIter first_end    = first_map.end(),
                   second_end   = second_map.end();
 
-
-
         for (ConstIter i = first_map.begin(); i != first_end; ++i)
         {
             ConstIter second_iter_ = second_map.find(i->first);
+
+            std::pair<DiffMapIterator, bool> insert_result;
 
             if (second_iter_ != second_end)
             {
@@ -56,17 +58,23 @@ struct MapDiffBuilder {
                         ?  IndexesDiff::ElementState_unmodified
                         :  IndexesDiff::ElementState_modified;
 
-                result.insert(
+
+                insert_result = result.insert(
                         std::make_pair(i->first,
                                 std::make_pair(element_state,
                                         std::make_pair(i->second, second_iter_->second))));
             }
             else
             {
-                result.insert(
+                insert_result = result.insert(
                         std::make_pair(i->first,
                                 std::make_pair(IndexesDiff::ElementState_removed,
                                         std::make_pair(i->second, EmptyValueType()))));
+            }
+
+            if (!insert_result.second)
+            {
+                LOGF << "Unable on insert maps diff element into diff. Key: " << i->first << ELOG;
             }
         }
 
@@ -76,10 +84,17 @@ struct MapDiffBuilder {
 
             if (first_iter == first_end)
             {
-                result.insert(
+                std::pair<DiffMapIterator, bool> insert_result;
+
+                insert_result = result.insert(
                         std::make_pair(i->first,
                                 std::make_pair(IndexesDiff::ElementState_added,
                                         std::make_pair(EmptyValueType(), i->second))));
+
+                if (!insert_result.second)
+                {
+                    LOGF << "Unable on insert maps diff element into diff. Key: " << i->first << ELOG;
+                }
             }
         }
 
@@ -104,9 +119,9 @@ struct FindChangedElement {
 
 };
 
-typedef MapDiffBuilder<IndexesDiff::ContentDiff,Index::Content>                     ContentDiffBuilder;
-typedef MapDiffBuilder<IndexesDiff::AttributesDiff,Index::Attributes>               AttributesDiffBuilder;
-typedef MapDiffBuilder<IndexesDiff::ContentAttributesDiff,Index::ContentAttributes> ContentAttributesDiffBuilder;
+typedef MapDiffBuilder<IndexesDiff::ContentDiff,TreeIndex::Content>                     ContentDiffBuilder;
+typedef MapDiffBuilder<IndexesDiff::AttributesDiff,TreeIndex::Attributes>               AttributesDiffBuilder;
+typedef MapDiffBuilder<IndexesDiff::ContentAttributesDiff,TreeIndex::ContentAttributes> ContentAttributesDiffBuilder;
 
 IndexesDiff::IndexesDiff()
     : content_diff_()
@@ -122,7 +137,6 @@ IndexesDiff::~IndexesDiff()
 bool IndexesDiff::empty() const
 {
     return !different_content() &&
-           !different_attributes() &&
            !different_content_attributes();
 }
 
@@ -181,10 +195,15 @@ namespace fmt {
 
     std::string asset_id(const Asset& a)
     {
-        return a.id().presentation();
+        return a.id().string();
     }
 
 } // namespace fmt
+
+IndexesDiff::AttributesDiff IndexesDiff::content_item_attributes_diff(const ContentAttributesDiff::const_iterator& element_iter) const
+{
+    return AttributesDiffBuilder::diff(element_iter->second.second.first, element_iter->second.second.second);
+}
 
 std::string IndexesDiff::format() const
 {
@@ -211,7 +230,7 @@ std::string IndexesDiff::format() const
 
         if (element_iter != content_attributes_diff_.end())
         {
-            AttributesDiff content_attributes_diff = AttributesDiffBuilder::diff(element_iter->second.second.first, element_iter->second.second.second);
+            AttributesDiff content_attributes_diff = content_item_attributes_diff(element_iter);
 
             for (AttributesDiff::const_iterator j = content_attributes_diff.begin(), end1 = content_attributes_diff.end(); j != end1; ++j)
             {
@@ -227,13 +246,13 @@ std::string IndexesDiff::format() const
     return oss.str();
 }
 
-/*static*/ IndexesDiff IndexesDiff::diff(const Index& first_index, const Index& second_index)
+/*static*/ IndexesDiff IndexesDiff::diff(const TreeIndex::Ptr& first_index, const TreeIndex::Ptr& second_index)
 {
     IndexesDiff result;
 
-    result.content_diff_            = ContentDiffBuilder::diff(first_index.content_, second_index.content_);
-    result.attributes_diff_         = AttributesDiffBuilder::diff(first_index.attributes_, second_index.attributes_);
-    result.content_attributes_diff_ = ContentAttributesDiffBuilder::diff(first_index.content_attributes_, second_index.content_attributes_);
+    result.content_diff_            = ContentDiffBuilder::diff(first_index->content_, second_index->content_);
+    result.attributes_diff_         = AttributesDiffBuilder::diff(first_index->attributes_, second_index->attributes_);
+    result.content_attributes_diff_ = ContentAttributesDiffBuilder::diff(first_index->content_attributes_, second_index->content_attributes_);
 
     return result;
 }

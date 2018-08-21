@@ -26,10 +26,20 @@
  *
  */
 
-#include <boost/interprocess/streams/vectorstream.hpp>
 #include <memoryobjectsstorage.h>
 
+#include <boost/interprocess/streams/vectorstream.hpp>
+#include <boost/algorithm/string.hpp>
+
 namespace piel { namespace lib {
+
+namespace constants {
+    struct C {
+        static const std::string ref_ids_delimiter;
+    };
+
+    /*static*/ const std::string C::ref_ids_delimiter = ",";
+};
 
 typedef boost::interprocess::basic_ivectorstream<MemoryObjectsStorage::Object> ivectorstream;
 typedef boost::interprocess::basic_ovectorstream<MemoryObjectsStorage::Object> ovectorstream;
@@ -38,19 +48,17 @@ MemoryObjectsStorage::MemoryObjectsStorage()
     : assets_()
     , refs_()
 {
-
 }
 
 MemoryObjectsStorage::~MemoryObjectsStorage()
 {
-
 }
 
 // Put readable asset into storage.
 void MemoryObjectsStorage::put(const Asset& asset)
 {
-    // Do not put AssetId::base Asset
-    if (asset.id() == AssetId::base || contains(asset.id()))
+    // Do not put AssetId::empty Asset
+    if (asset.id() == AssetId::empty || contains(asset.id()))
     {
         return;
     }
@@ -61,20 +69,39 @@ void MemoryObjectsStorage::put(const Asset& asset)
     if (asset_istream)
     {
         os << asset_istream->rdbuf();
+        assets_.insert(std::make_pair(asset.id(), os.vector()));
     }
-
-    assets_.insert(std::make_pair(asset.id(), os.vector()));
+    else
+    {
+        throw errors::attempt_to_put_non_readable_asset();
+    }
 }
 
 void MemoryObjectsStorage::put(std::set<Asset> assets)
 {
     for(std::set<Asset>::const_iterator i = assets.begin(), end = assets.end(); i != end; ++i)
+    {
         put(*i);
+    }
 }
 
-void MemoryObjectsStorage::put(const IObjectsStorage::Ref& ref)
+void MemoryObjectsStorage::create_reference(const refs::Ref& ref)
 {
-    refs_.insert(ref);
+    if (!refs_.insert(std::make_pair(ref.first, ref.second.string())).second)
+    {
+        throw errors::unable_to_insert_new_reference();
+    }
+}
+
+void MemoryObjectsStorage::destroy_reference(const refs::Ref::first_type& ref_name)
+{
+    refs_.erase(ref_name);
+}
+
+void MemoryObjectsStorage::update_reference(const refs::Ref& ref)
+{
+    std::string prev_value = refs_.at(ref.first);
+    refs_[ref.first] = ref.second.string() + constants::C::ref_ids_delimiter + prev_value;
 }
 
 // Check if readable asset available in storage.
@@ -84,15 +111,15 @@ bool MemoryObjectsStorage::contains(const AssetId& id) const
 }
 
 //// Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-Asset MemoryObjectsStorage::asset(const AssetId& id) const
+Asset MemoryObjectsStorage::asset(const IObjectsStorage::Ptr& storage, const AssetId& id) const
 {
     if (contains(id))
     {
-        return Asset::create_for(this, id);
+        return Asset::create_for(storage, id);
     }
     else
     {
-        return Asset::create_id(AssetId::base);
+        return Asset();
     }
 }
 
@@ -114,22 +141,35 @@ AssetId MemoryObjectsStorage::resolve(const std::string& ref) const
 {
     if (refs_.find(ref) != refs_.end())
     {
-        return refs_.at(ref);
+        std::string ref_indexes_list = refs_.at(ref);
+
+        std::vector<std::string> ids;
+        boost::split(ids, ref_indexes_list, boost::is_any_of(constants::C::ref_ids_delimiter));
+
+        return AssetId::create(ids[0]);
+    }
+    else if (ref.length() == AssetId::str_digest_len)
+    {
+        // Attempt to resolve AssetId by string representation.
+        AssetId id = AssetId::create(ref);
+        if (id != AssetId::empty && contains(id))
+        {
+            return id;
+        }
+        else
+        {
+            return AssetId::empty;
+        }
     }
     else
     {
-        // Attempt to resolve AssetId by string representation.
-        AssetId refId = AssetId::create(ref);
-        if (contains(refId))
-            return refId;
-        else
-            return AssetId::base;
+        return AssetId::empty;
     }
 }
 
-std::set<IObjectsStorage::Ref> MemoryObjectsStorage::references() const
+std::set<refs::Ref> MemoryObjectsStorage::references() const
 {
-    std::set<IObjectsStorage::Ref> result;
+    std::set<refs::Ref> result;
     for (References::const_iterator i = refs_.begin(), end = refs_.end(); i != end; ++i)
     {
         result.insert(*i);

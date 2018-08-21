@@ -38,9 +38,23 @@
 
 namespace piel { namespace lib {
 
+namespace errors {
+    // Common put error
+    struct attempt_to_put_non_readable_asset {};
+    struct unable_to_insert_new_reference {};
+}
+
+namespace refs {
+    typedef std::pair<std::string, AssetId>             Ref;
+    typedef std::pair<Ref,Ref>                          RefsRange;
+    typedef std::pair<Ref::first_type,Ref::first_type>  Range;
+}
+
 class IObjectsStorage
 {
 public:
+    typedef boost::shared_ptr<IObjectsStorage> Ptr;
+
     virtual ~IObjectsStorage();
 
     // Put readable asset into storage.
@@ -51,18 +65,20 @@ public:
     virtual bool contains(const AssetId& id) const = 0;
 
     // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    virtual Asset asset(const AssetId& id) const = 0;
+    virtual Asset asset(const Ptr& storage, const AssetId& id) const = 0;
 
     // Get input stream for reading asset data. Low level API used by Asset implementation.
     //External code must use get().istream() call sequense.
     virtual boost::shared_ptr<std::istream> istream_for(const AssetId& id) const = 0;
 
     // References related API
-    typedef std::pair<std::string, AssetId> Ref;
+    //typedef std::pair<std::string, AssetId> Ref;
+    virtual void create_reference(const refs::Ref& ref) = 0;
+    virtual void destroy_reference(const refs::Ref::first_type& ref_name) = 0;
+    virtual void update_reference(const refs::Ref& ref) = 0;
 
-    virtual void put(const Ref& ref) = 0;
     virtual AssetId resolve(const std::string& refName) const = 0;
-    virtual std::set<Ref> references() const = 0;
+    virtual std::set<refs::Ref> references() const = 0;
 
 };
 

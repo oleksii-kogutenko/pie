@@ -26,8 +26,9 @@
  *
  */
 
-#include <artconstants.h>
+#include <iostream>
 #include <artbasedownloadhandlers.h>
+#include <logging.h>
 
 //      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
 CURLH_T_(art::lib::ArtBaseDownloadHandlers,\
@@ -37,6 +38,7 @@ namespace art { namespace lib {
 
 ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token)
     : ArtBaseApiHandlers(api_token)
+    , id_()
     , dest_(0)
     , checksums_builder_()
 {
@@ -45,6 +47,7 @@ ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token)
 
 ArtBaseDownloadHandlers::ArtBaseDownloadHandlers(const std::string& api_token, std::ostream *dest)
     : ArtBaseApiHandlers(api_token)
+    , id_()
     , dest_(dest)
     , checksums_builder_()
 {
@@ -63,8 +66,20 @@ void ArtBaseDownloadHandlers::set_destination(std::ostream *dest)
 
 /*virtual*/ size_t ArtBaseDownloadHandlers::handle_output(char *ptr, size_t size)
 {
-    if (dest_) dest_->write(ptr, size);
+    LOGT << "Received buffer for id: " << id_ << " at:" << (void*)ptr << " size: " << size << ELOG;
+
+    if (dest_)
+    {
+        dest_->write(ptr, size);
+    }
+
     checksums_builder_.update(ptr, size);
+
+    on_buffer_({
+        .id = id_,
+        .size = size,
+    });
+
     return size;
 }
 

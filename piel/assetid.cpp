@@ -31,10 +31,14 @@
 
 namespace piel { namespace lib {
 
-const AssetId AssetId::base("<base>");
+const AssetId AssetId::not_calculated("<not calculated>");
+const AssetId AssetId::empty("<empty>");
+
+const std::string AssetId::digest_algo      = Sha256::t::name();
+const unsigned int AssetId::str_digest_len  = Sha256::t::len() * 2;
 
 AssetId::AssetId()
-    : id_(AssetId::base.id_)
+    : id_(AssetId::empty.id_)
 {
 }
 
@@ -48,8 +52,7 @@ AssetId::AssetId(std::istream& is)
 {
     ChecksumsDigestBuilder digestBuilder;
     ChecksumsDigestBuilder::StrDigests str_digests = digestBuilder.str_digests_for(is);
-
-    id_ = str_digests[Sha256::t::name()];
+    id_ = str_digests[AssetId::digest_algo];
 }
 
 AssetId::AssetId(const AssetId& src)
@@ -86,7 +89,7 @@ AssetId AssetId::create(const std::string& id)
     return AssetId(id);
 }
 
-std::string AssetId::presentation() const
+std::string AssetId::string() const
 {
     return id_;
 }

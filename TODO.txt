@@ -1,0 +1,2 @@
+- Checksums must be uploaded on upload commands.
+- symlinks ???

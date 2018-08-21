@@ -69,3 +69,15 @@ BOOST_AUTO_TEST_CASE(Properties)
     BOOST_CHECK_NE( "123", p["    test_prop5  "] );
 }
 
+BOOST_AUTO_TEST_CASE(Properties_from_env)
+{
+    piel::lib::Properties p;
+
+    BOOST_CHECK_EQUAL("def_val",                    p.get(piel::lib::Properties::Property("test_prop", "def_val", "")).value());
+    BOOST_CHECK_EQUAL("test_env_var_default_value", p.get(piel::lib::Properties::Property("test_prop", "def_val", "").default_from_env("test_env_var")).value());
+
+    p.set("test_prop", "test_value");
+
+    BOOST_CHECK_EQUAL("test_value",                 p.get(piel::lib::Properties::Property("test_prop", "def_val", "")).value());
+    BOOST_CHECK_EQUAL("test_value",                 p.get(piel::lib::Properties::Property("test_prop", "def_val", "").default_from_env("test_env_var")).value());
+}

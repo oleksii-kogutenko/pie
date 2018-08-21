@@ -1,13 +1,15 @@
 src_tree := $(CURDIR)
 build_tree := ${src_tree}/_build
 
+export CTEST_OUTPUT_ON_FAILURE=1
+
 .PHONY: prepare-%
 
 all: build
 	make -C ${build_tree} test
 
 build: prepare
-	make -C ${build_tree}
+	make -C ${build_tree} -j4
 
 prepare: 
 	mkdir -p ${build_tree}

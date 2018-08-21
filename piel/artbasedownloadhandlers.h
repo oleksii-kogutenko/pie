@@ -34,12 +34,19 @@
 
 #include <string>
 #include <ostream>
+#include <boost/signals2.hpp>
 
 namespace art { namespace lib {
 
 class ArtBaseDownloadHandlers: public ArtBaseApiHandlers
 {
 public:
+    struct BufferInfo
+    {
+        std::string id;
+        size_t size;
+    };
+
     ArtBaseDownloadHandlers(const std::string& api_token);
     ArtBaseDownloadHandlers(const std::string& api_token, std::ostream* dest);
     virtual ~ArtBaseDownloadHandlers();
@@ -50,10 +57,20 @@ public:
 
     void set_destination(std::ostream* dest);
 
+    void set_id(const std::string& id)  { id_ = id; }
+    std::string id() const              { return id_; }
+
+    template<typename FuncObj>
+    void connect(FuncObj obj) {
+        on_buffer_.connect(obj);
+    }
+
 private:
-    std::string api_token_;                                 //!< Artifactory server REST api access token.
-    std::ostream* dest_;                                    //!< Destination stream.
-    piel::lib::ChecksumsDigestBuilder checksums_builder_;   //!< Checksums digest builder for the content.
+    std::string id_;                                                //!< Download id.
+    std::string api_token_;                                         //!< Artifactory server REST API access token.
+    std::ostream* dest_;                                            //!< Destination stream.
+    piel::lib::ChecksumsDigestBuilder checksums_builder_;           //!< Checksums digest builder for the content.
+    boost::signals2::signal<void (const BufferInfo& m)> on_buffer_; //!< Signal processed buffer
 };
 
 } } // namespace art::lib

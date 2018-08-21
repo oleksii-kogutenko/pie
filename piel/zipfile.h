@@ -32,6 +32,7 @@
 #include <string>
 #include <zip.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/categories.hpp>
 
@@ -45,9 +46,15 @@ namespace piel { namespace lib {
 
 // Forward
 struct ZipEntry;
+struct ZipSource;
 
 //! ZipEntry extended attributes.
 struct ZipEntryAttributes {
+
+    ZipEntryAttributes()
+        : opsys(0)
+        , attributes(0)
+    {}
 
     zip_uint8_t opsys;          //!< See libzip zip_file_get_external_attributes function docs for the details.
     zip_uint32_t attributes;    //!< See libzip zip_file_get_external_attributes function docs for the details.
@@ -59,10 +66,20 @@ struct ZipEntryAttributes {
         return attributes >> 16;
     }
 
+    void set_mode(int mode) {
+        attributes |= (zip_uint32_t(mode) & 0xFFFF) << 16;
+    }
+
     //! Check is the entry is a unix symlink.
     //! \return true if the entry is unix symlink, false otherwise.
     bool symlink() const {
         return (ZIP_OPSYS_UNIX == opsys) & S_ISLNK(mode());
+    }
+
+    //! Check is the entry is directory.
+    //! \return true if the entry is directory, false otherwise.
+    bool dir() const {
+        return S_ISDIR(mode());
     }
 };
 
@@ -96,31 +113,52 @@ class ZipFile
 {
 public:
 
-    typedef boost::shared_ptr<ZipEntry> EntryPtr;   //!< Pointer to ZipEntry.
-    typedef boost::shared_ptr<ZipFile>  FilePtr;    //!< Pointer to ZipFile.
+    typedef boost::shared_ptr<ZipSource> SourcePtr;   //!< Pointer to ZipSourceEntry.
+    typedef boost::shared_ptr<ZipEntry>  EntryPtr;   //!< Pointer to ZipEntry.
+    typedef boost::shared_ptr<ZipFile>   FilePtr;    //!< Pointer to ZipFile.
+    typedef boost::weak_ptr<ZipFile>     WeakFilePtr;    //!< Pointer to ZipFile.
+    typedef boost::shared_ptr<std::istream> IStreamPtr;   //!< Pointer to ZipSourceEntry.
+    typedef boost::weak_ptr<std::istream>   IStreamWeakPtr;   //!< Pointer to ZipSourceEntry.
 
     //! Constructor.
     //! Will init internal libzip handle (zip_t*) to archive.
     //! \sa libzip zip_open docs.
     //! \param filename Path to archive.
-    ZipFile(const std::string& filename)
+    ZipFile()
         : libzip_error_(0)
         , zip_()
-        , filename_(filename)
+        , filename_()
         , entries_owner_()
+        , flags_()
     {
-        zip_ = ::zip_open(filename_.c_str(), ZIP_RDONLY, &libzip_error_);
-        entries_owner_ = FilePtr(new ZipFile(*this));
     }
 
     //! Copy constructor.
     ZipFile(const ZipFile& src)
-        : libzip_error_(0)
-        , zip_()
+        : libzip_error_(src.libzip_error_)
+        , zip_(src.zip_)
         , filename_(src.filename_)
         , entries_owner_(src.entries_owner_)
+        , flags_(src.flags_)
     {
-        zip_ = ::zip_open(filename_.c_str(), ZIP_RDONLY, &libzip_error_);
+    }
+
+    static FilePtr create(const std::string& filename)
+    {
+        FilePtr ret_val = FilePtr(new ZipFile(filename));
+        ret_val->flags_ = ZIP_CREATE;// | ZIP_TRUNCATE;
+        ret_val->zip_ = ::zip_open(ret_val->filename_.c_str(), ret_val->flags_, &ret_val->libzip_error_);
+        ret_val->entries_owner_ = ret_val;
+        return ret_val;
+    }
+
+    static FilePtr open(const std::string& filename)
+    {
+        FilePtr ret_val = FilePtr(new ZipFile(filename));
+        ret_val->flags_ = ZIP_RDONLY;
+        ret_val->zip_ = ::zip_open(ret_val->filename_.c_str(), ret_val->flags_, &ret_val->libzip_error_);
+        ret_val->entries_owner_ = ret_val;
+        return ret_val;
     }
 
     //! Destructor.
@@ -151,11 +189,52 @@ public:
     //! \return Pointer to ZipEntry.
     EntryPtr entry(zip_int64_t entry_index);
 
+    zip_int64_t add_file(const std::string& entry_name, const std::string& file_name, int mode = -1)
+    {
+        return add_source(create_file_source(entry_name, file_name), mode);
+    }
+
+    zip_int64_t add_buffer(const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0, int mode = -1)
+    {
+        return add_source(create_buffer_source(entry_name, data, len, freep), mode);
+    }
+
+    zip_int64_t add_istream(const std::string& entry_name, IStreamWeakPtr stream_ptr, int mode = -1)
+    {
+        return add_source(create_istream_source(entry_name, stream_ptr), mode);
+    }
+
+    bool add_symlink(const std::string& entry_name, const std::string& target, int mode = -1)
+    {
+        return false;
+    }
+
 protected:
+    SourcePtr create_file_source(const std::string& entry_name, const std::string& file_name);
+
+    SourcePtr create_file_source(zip_int64_t entry_index);
+
+    SourcePtr create_buffer_source(const std::string& entry_name, const void *data, zip_uint64_t len, int freep = 0);
+
+    SourcePtr create_istream_source(const std::string& entry_name, IStreamWeakPtr source_ptr);
+
+    //! Constructor.
+    //! Will init internal libzip handle (zip_t*) to archive.
+    //! \sa libzip zip_open docs.
+    //! \param filename Path to archive.
+    ZipFile(const std::string& filename)
+        : libzip_error_(0)
+        , zip_()
+        , filename_(filename)
+        , entries_owner_()
+        , flags_()
+    {
+    }
 
     // Frienship is used for proper C api encapsulation. Api related to work
     //with the entries data must be accesible by ZipEntry instance only.
-    friend class ZipEntry;
+    friend struct ZipEntry;
+    friend struct ZipSource;
 
     //! Low level api. Open libzip zip_file_t handle by entry name.
     //! \param entry_name Archive entry name.
@@ -220,11 +299,13 @@ protected:
     //! \return ZipEntryAttribute struct with extenden attributes.
     ZipEntryAttributes file_get_external_attributes(const std::string& entry_name) const;
 
+    zip_int64_t add_source(const SourcePtr& source, int mode = -1);
 private:
-    int libzip_error_;                  //!< libzip last error code.
-    zip_t *zip_;                        //!< libzip archive handle.
-    std::string filename_;              //!< stored filename
-    ZipFile::FilePtr entries_owner_;    //!< owner for entries;
+    int                     libzip_error_;    //!< libzip last error code.
+    zip_t                   *zip_;            //!< libzip archive handle.
+    std::string             filename_;        //!< stored filename
+    ZipFile::WeakFilePtr    entries_owner_;   //!< owner for entries;
+    int                     flags_;
 };
 
 //! libzip C api wrapper. Encapsulated api to work with archive entry.
@@ -239,7 +320,7 @@ struct ZipEntry {
     //! \param buf Data buffer.
     //! \param size Data buffer size.
     //! \return number of readed bytes.
-    zip_int64_t read(void *buf, zip_int64_t size) const {
+    zip_int64_t read(void *buf, ::zip_int64_t size) const {
         return owner_->fread(zip_file_, buf, size);
     }
 
@@ -285,6 +366,13 @@ struct ZipEntry {
         return attrs.symlink();
     }
 
+    //! Check if the entry is directory.
+    //! \return true if the entry is directory, false otherwise.
+    bool dir() const {
+        ZipEntryAttributes attrs = attributes();
+        return attrs.dir();
+    }
+
     //! Read symlink target.
     //! \return The path symlink points to.
     //! \sa bool symlink() const
@@ -310,11 +398,12 @@ protected:
     //! \param owner ZipFile instance.
     //! \param name zip archive entry name.
     //! \param zip_file zip_file_t libzip handle.
-    ZipEntry(ZipFile::FilePtr owner, const std::string& name, zip_file_t* zip_file)
-        : owner_(owner)
+    ZipEntry(ZipFile::WeakFilePtr owner, const std::string& name, zip_file_t* zip_file)
+        : owner_(owner.lock())
         , name_(name)
         , zip_file_(zip_file)
-    {}
+    {
+    }
 
 private:
     ZipFile::FilePtr owner_;            //!< Reference to zip file.

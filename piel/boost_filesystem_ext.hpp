@@ -29,40 +29,90 @@
 #ifndef BOOST_FILESYSTEM_EXT_HPP
 #define BOOST_FILESYSTEM_EXT_HPP
 
+#include <iostream>
+#include <fstream>
 #include <boost/filesystem.hpp>
+
+#include <commonconstants.h>
+#include <assetid.h>
+#include <checksumsdigestbuilder.hpp>
 
 namespace boost { namespace filesystem {
 
 // Return path when appended to a_From will resolve to same as a_To
-path make_relative( path a_From, path a_To )
+inline path make_relative( const path& from_arg, const path& to_arg )
 {
-    a_From = absolute( a_From );
-    a_To = absolute( a_To );
+    path result;
 
-    path ret;
-    path::const_iterator itrFrom( a_From.begin() );
-    path::const_iterator itrTo( a_To.begin() );
+    path from    = absolute( from_arg );
+    path to      = absolute( to_arg );
+
+    path::const_iterator from_iter( from.begin() );
+    path::const_iterator to_iter( to.begin() );
 
     // Find common base
-    for( path::const_iterator toEnd( a_To.end() ), fromEnd( a_From.end() ) ; itrFrom != fromEnd && itrTo != toEnd && *itrFrom == *itrTo; ++itrFrom, ++itrTo );
+    for( path::const_iterator to_end( to.end() ), from_end( from.end() ) ; from_iter != from_end && to_iter != to_end && *from_iter == *to_iter; ++from_iter, ++to_iter );
 
     // Navigate backwards in directory to reach previously found base
-    for( path::const_iterator fromEnd( a_From.end() ); itrFrom != fromEnd; ++itrFrom )
+    for( path::const_iterator from_end( from.end() ); from_iter != from_end; ++from_iter )
     {
-        if( (*itrFrom) != "." )
-            ret /= "..";
+        if( (*from_iter) != "." )
+            result /= "..";
     }
 
     // Now navigate down the directory branch
-    for( ; itrTo != a_To.end() ; ++itrTo )
-        ret /= *itrTo;
+    for( ; to_iter != to.end() ; ++to_iter )
+        result /= *to_iter;
 
-    return ret;
+    return result;
+}
+
+inline boost::shared_ptr<std::istream> istream( const path& from )
+{
+    return boost::shared_ptr<std::istream>(new std::ifstream(from.string().c_str(), std::ifstream::in|std::ifstream::binary));
+}
+
+inline boost::shared_ptr<std::ostream> ostream( const path& from )
+{
+    return boost::shared_ptr<std::ostream>(new std::ofstream(from.string().c_str(), std::ofstream::out|std::ifstream::binary));
+}
+
+inline void remove_directory_content(const path& dir, const path& exclude)
+{
+    if (!is_directory(dir)) return;
+
+    for (directory_iterator i = directory_iterator(dir), end = directory_iterator(); i != end; i++)
+    {
+        directory_entry e           = *i;
+        if (exclude.empty() || e.path() != exclude)
+        {
+            remove_all(e.path());
+        }
+    }
+}
+
+inline std::string copy_into(boost::shared_ptr<std::ostream> osp, boost::shared_ptr<std::istream> isp)
+{
+    typedef std::vector<char> BufferType;
+
+    piel::lib::ChecksumsDigestBuilder digest_builder;
+    digest_builder.init();
+
+    BufferType copy_buffer(piel::lib::CommonConstants::io_buffer_size);
+    do {
+        BufferType::size_type readed = isp->read(copy_buffer.data(), copy_buffer.size()).gcount();
+        if (readed) {
+            osp->write(copy_buffer.data(), readed);
+            digest_builder.update(copy_buffer.data(), readed);
+        }
+    } while(!isp->eof() & !isp->fail() & !isp->bad());
+
+    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
+            digest_builder.finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
+
+    return str_digests[piel::lib::AssetId::digest_algo];
 }
 
 } } // namespace boost::filesystem
 
-
-
 #endif // BOOST_FILESYSTEM_EXT_HPP
-

@@ -28,12 +28,51 @@
 
 #include <application.h>
 #include <gavccommand.h>
+#include <gavccachecleancommand.h>
+#include <gavccacheinitcommand.h>
+#include <initworkingcopycommand.h>
+#include <createcommand.h>
+#include <destroycommand.h>
+#include <checkoutcommand.h>
+#include <statuscommand.h>
+#include <resetcommand.h>
+#include <commitcommand.h>
+#include <logcommand.h>
+#include <diffcommand.h>
+#include <treecommand.h>
+#include <pushcommand.h>
+#include <uploadcommand.h>
+#include <pullcommand.h>
+#include <configcommand.h>
+
+namespace pa = pie::app;
 
 int main(int argc, char **argv)
 {
-    Application application(argc, argv);
+    pa::Application app(argc, argv);
 
-    application.register_command(new CommmandConstructor<GavcCommand>("gavc", "GAVC query implementation"));
+#define C_(x,y,z) app.register_command( new pa::CommmandConstructor< x >( y, z ) )
 
-    return application.run();
+    C_ ( pa::GavcCommand,               "gavc",     "GAVC query implementation." );
+    C_ ( pa::GavcCacheCleanCommand,     "gavccacheclean", "GAVC cache clean implementation." );
+    C_ ( pa::GavcCacheInitCommand,      "gavccacheinit",  "GAVC cache init implementation." );
+    C_ ( pa::UploadCommand,             "upload",   "Upload to Artifactory server." );
+    C_ ( pa::PullCommand,               "pull",     "Pull from Artifactory server." );
+    C_ ( pa::PushCommand,               "push",     "Push to Artifactory server." );
+
+    C_ ( pa::InitWorkingCopyCommand,    "init",     "Initialize working copy in current directory." );
+    C_ ( pa::CreateCommand,             "create",   "Create new tree." );
+    C_ ( pa::DestroyCommand,            "destroy",  "Destroy tree." );
+    C_ ( pa::CheckoutCommand,           "checkout", "Checkout the tree state into working copy." );
+    C_ ( pa::StatusCommand,             "status",   "Show working copy status in compare with current tree state." );
+    C_ ( pa::ResetCommand,              "reset",    "Reset working copy content to the tree state." );
+    C_ ( pa::CommitCommand,             "commit",   "Commit current working copy state as new head tree state." );
+    C_ ( pa::TreeCommand,               "tree",     "Show trees names." );
+    C_ ( pa::LogCommand,                "log",      "Show tree log." );
+    C_ ( pa::DiffCommand,               "diff",     "Show difference between references." );
+    C_ ( pa::ConfigCommand,             "config",   "Setup configuration parameter." );
+
+#undef C_
+
+    return app.run();
 }

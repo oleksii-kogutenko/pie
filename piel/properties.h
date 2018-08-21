@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <boost/function.hpp>
 
 namespace piel { namespace lib {
 
@@ -40,25 +41,138 @@ class Properties
 public:
     typedef std::map<std::string, std::string> MapType;
 
+    // Forward
+    struct DefaultFromEnv;
+
+    struct Property
+    {
+        typedef MapType::value_type::first_type name_type;
+        typedef MapType::value_type::second_type value_type;
+
+        explicit Property(const name_type& name, const value_type& value, const std::string& description)
+             : value_(name, value)
+             , description_(description)
+        {
+        }
+
+        Property(const Property& src)
+            : value_(src.name(), src.value())
+            , description_(src.description())
+        {
+        }
+
+        virtual ~Property()
+        {
+        }
+
+        name_type name() const
+        {
+            return value_.first;
+        }
+
+        virtual value_type value() const
+        {
+            return value_.second;
+        }
+
+        std::string description() const
+        {
+            return description_;
+        }
+
+        DefaultFromEnv default_from_env(const std::string& env_var)
+        {
+            return DefaultFromEnv(*this, env_var);
+        }
+
+    private:
+        MapType::value_type value_;
+        std::string description_;
+    };
+
+    struct DefaultFromEnv : public Property
+    {
+        DefaultFromEnv(const Property& property, const std::string& env_var)
+            : Property(property)
+            , env_var_(env_var)
+        {
+        }
+
+        virtual ~DefaultFromEnv()
+        {
+        }
+
+        value_type value() const
+        {
+            const char *env = ::getenv(env_var_.c_str());
+            if (env)
+            {
+                return env;
+            }
+            else
+            {
+                return Property::value();
+            }
+        }
+
+        std::string env_var() const
+        {
+            return env_var_;
+        }
+
+    private:
+        std::string env_var_;
+    };
+
     Properties();
+    Properties(const Properties& src);
     ~Properties();
 
     static Properties load(std::istream &is);
     void store(std::ostream &os) const;
 
-    MapType& data()
+    void set(const Property::name_type& name, const Property::value_type& value);
+    Property::value_type get(const Property::name_type& name, const Property::value_type& default_value) const;
+    bool contains(const Property::name_type& name) const;
+
+    template<class Property>
+    void set(const Property& prop)
     {
-        return data_;
+        set(prop.name(), prop.value());
     }
 
-    MapType::mapped_type& operator[](const MapType::key_type& key)
+    template<class P>
+    Property get(const P& prop) const
     {
-        return data_[key];
+        return Property(prop.name(), get(prop.name(), prop.value()), prop.description());
     }
 
-    void clear()
+    const MapType& data() const;
+    MapType& data();
+    MapType::mapped_type& operator[](const MapType::key_type& key);
+    void clear();
+
+    static Properties from_map(const MapType &map) {
+        Properties result;
+        result.data_.insert(map.begin(), map.end());
+        return result;
+    }
+
+    enum JoinDirection {
+        JoinDirection_left,
+        JoinDirection_right,
+    };
+
+    template<JoinDirection direction=JoinDirection_right>
+    Properties join(const Properties& right) const
     {
-        data_.clear();
+        Properties result = *this;
+
+        for (MapType::const_iterator i = right.data_.begin(), end = right.data_.end(); i != end; ++i)
+            if (direction == JoinDirection_right || result.data_.find(i->first) == result.data_.end())
+                result.data_[i->first] = i->second;
+
+        return result;
     }
 
 private:

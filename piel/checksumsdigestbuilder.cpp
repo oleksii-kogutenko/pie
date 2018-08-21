@@ -27,10 +27,12 @@
  */
 
 #include <checksumsdigestbuilder.hpp>
+#include <commonconstants.h>
+#include <logging.h>
 
 namespace piel { namespace lib {
 
-const size_t DigestConstants::buf_size = 640*1024;   //!< Size of the internal IO buffers.
+const size_t DigestConstants::buf_size = piel::lib::CommonConstants::io_buffer_size;       //!< Size of the internal IO buffers.
 
 template<> char const* const DigestTraits<Sha256>::name_    = "SHA-256";
 template<> const int DigestTraits<Sha256>::len_             = SHA256_DIGEST_LENGTH;
@@ -159,7 +161,7 @@ ChecksumsDigestBuilder::finalize<ChecksumsDigestBuilder::StrDigests>()
 {
     ChecksumsDigestBuilder::StrDigests result;
     for(ChecksumsDigestBuilder::CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
-        result.insert(std::make_pair<std::string, std::string>((*i)->name(), (*i)->format((*i)->finalize())));
+        result.insert(std::make_pair((*i)->name(), (*i)->format((*i)->finalize())));
     }
     return result;
 }
@@ -170,7 +172,7 @@ ChecksumsDigestBuilder::finalize<ChecksumsDigestBuilder::Digests>()
 {
     ChecksumsDigestBuilder::Digests result;
     for(ChecksumsDigestBuilder::CtxIter i = contexts_.begin(); i != contexts_.end(); i++) {
-        result.insert(std::make_pair<std::string, IDigestContext::Digest>((*i)->name(), (*i)->finalize()));
+        result.insert(std::make_pair((*i)->name(), (*i)->finalize()));
     }
     return result;
 }

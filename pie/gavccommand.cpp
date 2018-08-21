@@ -29,16 +29,28 @@
 #include <iostream>
 #include <cstdlib>
 #include <gavccommand.h>
-#include <artbasedownloadhandlers.h>
-#include <artgavchandlers.h>
+#include <gavccache.h>
 #include <logging.h>
 #include <mavenmetadata.h>
 
 #include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
+#include <boost/filesystem.hpp>
+
+namespace pie { namespace app {
 
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
+
+namespace utils {
+
+std::string get_default_cache_path() {
+    static const std::string default_cache_path = "/.pie/gavc/cache";
+    static const char *home_c_str = ::getenv("HOME");
+    return std::string(home_c_str) + default_cache_path;
+}
+
+}//namespace utils
 
 GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     : ICommand(app)
@@ -49,32 +61,14 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , server_repository_()
     , query_()
     , have_to_download_results_(false)
+    , output_file_()
+    , cache_path_(utils::get_default_cache_path())
+    , disable_cache_(false)
 {
 }
 
 GavcCommand::~GavcCommand()
 {
-}
-
-bool GavcCommand::get_from_env(po::variables_map& vm,
-                               const std::string& opt_name,
-                               const std::string& env_var,
-                               std::string& var)
-{
-    if (!vm.count(opt_name)) {
-        const char *value = ::getenv(env_var.c_str());
-        if (value)
-        {
-            LOG_T << "Got " << env_var << " environment variable. Value: " << value << ".";
-            var = std::string(value);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return true;
 }
 
 void GavcCommand::show_command_help_message(const po::options_description& desc)
@@ -91,6 +85,9 @@ bool GavcCommand::parse_arguments()
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
+        ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
+        ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("disable-cache",                                                       "Do not use local cache (enabled by default).")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -106,12 +103,12 @@ bool GavcCommand::parse_arguments()
     std::string query_str(argv_[1]);
 
     // Parce query
-    LOG_T << "query to perform: " << query_str;
+    LOGT << "query to perform: " << query_str << ELOG;
 
     boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
     {
-        std::cout << "Wrong gavc query: " << query_str << "!" << std::endl;
+        std::cerr << "Wrong gavc query: " << query_str << "!" << std::endl;
         show_command_help_message(desc);
         return false;
     }
@@ -132,82 +129,17 @@ bool GavcCommand::parse_arguments()
     get_env_flag &= get_from_env(vm, "token",       "GAVC_SERVER_API_ACCESS_TOKEN", server_api_access_token_);
     get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              server_url_);
     get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       server_repository_);
+                    get_from_env(vm, "cache",       "GAVC_CACHE",                   cache_path_);
 
     if (!get_env_flag) {
         show_command_help_message(desc);
         return false;
     }
 
-    have_to_download_results_ = vm.count("download");
+    have_to_download_results_   = vm.count("download");
+    disable_cache_              = vm.count("disable-cache");
 
     return true;
-}
-
-std::string GavcCommand::create_url(const std::string& version_to_query) const
-{
-    std::string url = server_url_;
-    url.append("/api/search/gavc");
-    url.append("?r=").append(server_repository_);
-    url.append("&g=").append(query_.group());
-    url.append("&a=").append(query_.name());
-    if (!version_to_query.empty()) {
-        url.append("&v=").append(version_to_query);
-    }
-    if (!query_.classifier().empty()) {
-        url.append("&c=").append(query_.classifier());
-    }
-    return url;
-}
-
-struct BeforeOutputCallback: public art::lib::ArtBaseApiHandlers::IBeforeCallback
-{
-    virtual void callback(art::lib::ArtBaseApiHandlers *handlers)
-    {
-        std::string output_filename = handlers->headers()["X-Artifactory-Filename"];
-        LOG_T << "Artifactory filename: " << output_filename;
-
-        _dest = boost::shared_ptr<std::ofstream>(new std::ofstream(output_filename.c_str()));
-
-        dynamic_cast<art::lib::ArtBaseDownloadHandlers*>(handlers)->set_destination(_dest.get());
-    }
-private:
-    boost::shared_ptr<std::ofstream> _dest;
-};
-
-void GavcCommand::on_object(pt::ptree::value_type obj)
-{
-    boost::optional<std::string> op = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
-    if (!op)
-    {
-        LOG_F << "Can't find downloadUri property!";
-        return;
-    }
-
-    std::string download_uri = *op;
-    LOG_T << "download_uri: " << download_uri;
-
-    if (have_to_download_results_) {
-
-        art::lib::ArtBaseDownloadHandlers download_handlers(server_api_access_token_);
-
-        BeforeOutputCallback before_output;
-        download_handlers.set_before_output_callback(&before_output);
-
-        piel::lib::CurlEasyClient<art::lib::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
-
-        std::cout << "Downloading file from: " << download_uri << std::endl;
-
-        if (!download_client.perform())
-        {
-            LOG_E << "Error on downloading file attempt!";
-            LOG_E << download_client.curl_error().presentation();
-        }
-
-    } else {
-
-        std::cout << "Download url: " << download_uri << std::endl;
-
-    }
 }
 
 /*virtual*/ int GavcCommand::perform()
@@ -218,61 +150,80 @@ void GavcCommand::on_object(pt::ptree::value_type obj)
         return result;
     }
 
-    // Get maven metadata
-    art::lib::ArtGavcHandlers download_metadata_handlers(server_api_access_token_);
-    piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> get_metadata_client(
-        query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
+    try {
+        if (disable_cache_) {
+            piel::cmd::GAVC gavc(server_api_access_token_,
+                             server_url_,
+                             server_repository_,
+                             query_,
+                             have_to_download_results_,
+                             output_file_);
 
-    if (!get_metadata_client.perform())
-    {
-        LOG_E << "Error on requesting maven metadata.";
-        LOG_E << get_metadata_client.curl_error().presentation();
-        return result;
-    }
+            if (output_file_.empty()) {
+                gavc.set_path_to_download(boost::filesystem::current_path());
+            }
 
-    // Try to parse server response.
-    boost::optional<art::lib::MavenMetadata> metadata_op = boost::none;
-    try
-    {
-        metadata_op = art::lib::MavenMetadata::parse(download_metadata_handlers.responce_stream());
-    }
-    catch (...)
-    {
-        LOG_E << "Error on parsing maven metadata. Server response has non expected format.";
-    }
+            gavc();
+        }
+        else {
+            piel::cmd::GAVCCache gavccache(server_api_access_token_,
+                             server_url_,
+                             server_repository_,
+                             query_,
+                             have_to_download_results_,
+                             cache_path_,
+                             output_file_);
 
-    if (!metadata_op) {
-        LOG_E << "Can't retrieve maven metadata!";
-        return result;
-    }
+            if (output_file_.empty()) {
+                gavccache.set_path_to_download(boost::filesystem::current_path());
+            }
 
-    art::lib::MavenMetadata metadata = *metadata_op;
-
-    std::vector<std::string> versions_to_process = metadata.versions_for(query_);
-
-    for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
-    {
-        LOG_T << "Process version: " << *i;
-
-        art::lib::ArtGavcHandlers api_handlers(server_api_access_token_);
-        piel::lib::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(*i), &api_handlers);
-
-        if (!client.perform())
-        {
-            LOG_E << "Error on processing version: " << *i << "!";
-            LOG_E << client.curl_error().presentation();
-            return result;
+            gavccache();
         }
 
-        // Create a root
-        pt::ptree root;
-
-        // Load the json file into this ptree
-        pt::read_json(api_handlers.responce_stream(), root);
-        pt::each(root.get_child("results"), boost::bind(&GavcCommand::on_object, this, _1));
+    }
+    catch (piel::cmd::errors::unable_to_parse_maven_metadata&) {
+        std::cerr << "Error on parsing maven metadata. Server response has non expected format." << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::no_server_maven_metadata& e) {
+        std::cerr << "Error on requesting maven metadata." << std::endl;
+        std::cerr << e.error << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::error_processing_version& e) {
+        std::cerr << "Error on processing version: " << e.ver << "!"    << std::endl;
+        std::cerr <<  e.error << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cant_get_maven_metadata& ) {
+        std::cerr << "Can't retrieve maven metadata!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cant_find_version_for_query& ) {
+        std::cerr << "Can't find any version for query!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::gavc_download_file_error& ) {
+        std::cerr << "Can't download file!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cache_no_cache_for_query& e) {
+        std::cerr << "Can't find anything for query: " << e.query << " in cache!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cache_no_file_for_classifier& e) {
+        std::cerr << "Can't find any file in cache for classifier: " << e.classifier << "!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::cache_not_valid_file& e) {
+        std::cerr << "Can't not valid or broken file in cache for classifier: " << e.classifier << "!" << std::endl;
+        return -1;
     }
 
     result = 0;
 
     return result;
 }
+
+} } // namespace pie::app

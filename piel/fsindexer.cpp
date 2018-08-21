@@ -46,14 +46,14 @@ FsIndexer::~FsIndexer()
 {
 }
 
-Index FsIndexer::build(const fs::path& dir) const
+/*static*/ TreeIndex::Ptr FsIndexer::build(const fs::path& dir, const fs::path& exclude)
 {
     if (!is_directory(dir)) {
-        LOG_F << dir << " is not a directory!";
-        return Index();
+        LOGF << dir << " is not a directory!" << ELOG;
+        return TreeIndex::Ptr(new TreeIndex());
     }
 
-    Index                   result;
+    TreeIndex::Ptr          result(new TreeIndex());
     std::queue<fs::path>    directories;
 
     directories.push( dir );
@@ -63,7 +63,7 @@ Index FsIndexer::build(const fs::path& dir) const
         fs::path p = directories.front();
         directories.pop();
 
-        LOG_T << "d " << p.generic_string();
+        LOGT << "d " << p.generic_string() << ELOG;
 
         for (fs::directory_iterator i = fs::directory_iterator(p), end = fs::directory_iterator(); i != end; i++)
         {
@@ -75,33 +75,40 @@ Index FsIndexer::build(const fs::path& dir) const
             {
                 std::string target = fs::read_symlink( e.path() ).generic_string();
 
-                LOG_T << "s " << name;
+                LOGT << "s " << name << ELOG;
 
-                if (result.insert(name, Asset::create_for(target)))
+                if (result->insert_path(name, Asset::create_for(target)))
                 {
                     PredefinedAttributes::fill_symlink_attrs(result, name, e.path());
                 }
                 else
                 {
-                    LOG_F << "Can't insert element " << name << " into index! Probably index already have element with such name.";
+                    LOGF << "Can't insert element " << name << " into index! Probably index already have element with such name." << ELOG;
                 }
             }
             else if ( fs::is_regular_file( e.path() ) )
             {
-                LOG_T << "f " << name;
+                LOGT << "f " << name << ELOG;
 
-                if (result.insert(name, Asset::create_for(e.path())))
+                if (result->insert_path(name, Asset::create_for(e.path())))
                 {
                     PredefinedAttributes::fill_file_attrs(result, name, e.path());
                 }
                 else
                 {
-                    LOG_F << "Can't insert element " << name << " into index! Probably index already have element with such name.";
+                    LOGF << "Can't insert element " << name << " into index! Probably index already have element with such name." << ELOG;
                 }
             }
             else if ( fs::is_directory(e.path()) )
             {
-                directories.push( e.path() );
+                if ( exclude.empty() || e.path() != exclude )
+                {
+                    directories.push( e.path() );
+                }
+                else
+                {
+                    LOGT << "exclude directory:" << e.path() << ELOG;
+                }
             }
         }
     }

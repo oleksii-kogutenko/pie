@@ -38,31 +38,33 @@ namespace piel { namespace lib {
 class MemoryObjectsStorage: public IObjectsStorage
 {
 public:
-    typedef char                                        Byte;
-    typedef std::vector<Byte>                           Object;
-    typedef std::map<AssetId,Object>                    Storage;
-    typedef std::map<Ref::first_type,Ref::second_type>  References;
+    typedef char                                                    Byte;
+    typedef std::vector<Byte>                                       Object;
+    typedef std::map<AssetId,Object>                                Storage;
+    typedef std::map<refs::Ref::first_type,std::string>             References;
 
     MemoryObjectsStorage();
     virtual ~MemoryObjectsStorage();
 
-    // Put readable asset into storage.
+    // Put readable asset(s) into storage.
     void put(const Asset& asset);
     void put(std::set<Asset> assets);
-    void put(const IObjectsStorage::Ref& ref);
+    void create_reference(const refs::Ref& ref);
+    void destroy_reference(const refs::Ref::first_type& ref_name);
+    void update_reference(const refs::Ref& ref);
 
     // Check if readable asset available in storage.
     bool contains(const AssetId& id) const;
 
     // Make attempt to get readable asset from storage. Non readable Asset will be returned on fail.
-    Asset asset(const AssetId& id) const;
+    Asset asset(const IObjectsStorage::Ptr& storage, const AssetId& id) const;
 
     // Get input stream for reading asset data. Low level API used by Asset implementation.
     //External code must use get().istream() call sequense.
     boost::shared_ptr<std::istream> istream_for(const AssetId& id) const;
 
     AssetId resolve(const std::string& ref) const;
-    std::set<IObjectsStorage::Ref> references() const;
+    std::set<refs::Ref> references() const;
 
 private:
     Storage     assets_;

@@ -46,26 +46,31 @@ ZipIndexer::~ZipIndexer()
 
 }
 
-Index ZipIndexer::build(const fs::path& zip_file) const
+/*static*/ TreeIndex::Ptr ZipIndexer::build(const fs::path& zip_file)
 {
-    Index                   result;
-    ZipFile                 zip( zip_file.native() );
+    TreeIndex::Ptr          result(new TreeIndex());
+    ZipFile::FilePtr        zip = ZipFile::open(zip_file.native());
 
-    for (zip_int64_t i = 0; i < zip.num_entries(); i++)
+    for (zip_int64_t i = 0; i < zip->num_entries(); i++)
     {
-        boost::shared_ptr<ZipEntry>         entry       = zip.entry( i );
+        boost::shared_ptr<ZipEntry>         entry       = zip->entry( i );
         ZipEntryAttributes                  attrs       = entry->attributes();
 
-        LOG_T   << std::string( entry->symlink() ? "s " +  entry->target() + " " : "f " )
+        LOGT    << std::string( entry->symlink() ? "s " +  entry->target() + " " : "f " )
                 << entry->name()
                 << " os:"
                 << boost::format( "%1$08x" ) % ( int )attrs.opsys
                 << " attributes: "
                 << boost::format( "%1$08x" ) % ( int )attrs.attributes
                 << " mode: "
-                << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 );
+                << boost::format( "%1$04o" ) % ( int )( attrs.mode() & 0777 ) << ELOG;
 
-        if (result.insert( entry->name(), Asset::create_for(entry) ))
+        if (entry->dir())
+        {
+            LOGT << "The folder " << entry->name() << " will skip" << ELOG;
+            continue;
+        }
+        if (result->insert_path( entry->name(), Asset::create_for(entry) ))
         {
             if (entry->symlink())
             {
@@ -78,7 +83,7 @@ Index ZipIndexer::build(const fs::path& zip_file) const
         }
         else
         {
-            LOG_F << "Can't insert element " << entry->name() << " into index! Probably index already have element with such name.";
+            LOGF << "Can't insert element " << entry->name() << " into index! Probably index already have element with such name." << ELOG;
         }
     }
 
