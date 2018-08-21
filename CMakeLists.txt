@@ -36,6 +36,9 @@ message ("CMAKE_FILES_DIRECTORY : ${CMAKE_FILES_DIRECTORY}")
 
 include_directories("third-party/libzip-1.4.0/lib", "${CMAKE_BINARY_DIR}/third-party/libzip-1.4.0")
 
+add_definitions(-DPIE_VERSION="$ENV{PIE_VERSION}")
+message(STATUS "!!! PIE_VERSION: $ENV{PIE_VERSION}")
+
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)

@@ -93,6 +93,7 @@ int UnknownCommand::perform()
 {
     std::cerr << "Incorrect command line or unknown command."               << std::endl;
 
+    std::cout << "Version: " << PIE_VERSION                                 << std::endl;
     std::cout << "Usage:"                                                   << std::endl;
     std::cout << "\t" << argv_[0] << " <command name> [command arguments]"  << std::endl;
     std::cout << "Help:"                                                    << std::endl;
