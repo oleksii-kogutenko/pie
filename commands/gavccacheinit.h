@@ -26,31 +26,26 @@
  *
  */
 
-#ifndef GAVCCACHECLEAN_H_
-#define GAVCCACHECLEAN_H_
+#ifndef GAVCCACHEINIT_H_
+#define GAVCCACHEINIT_H_
 
 #include <iostreamsholder.h>
 #include <boost/filesystem.hpp>
 
 namespace piel { namespace cmd {
 
-class GAVCCacheClean: public piel::lib::IOstreamsHolder
+class GAVCCacheInit: public piel::lib::IOstreamsHolder
 {
 public:
-    GAVCCacheClean( const std::string& cache_path
-         , int max_age);
+    GAVCCacheInit( const std::string& cache_path);
 
-    virtual ~GAVCCacheClean();
+    virtual ~GAVCCacheInit();
     void operator()();
 
 private:
-    bool clean(boost::filesystem::path path);
-
-private:
     std::string cache_path_;
-    int         max_age_;
 };
 
 } } // namespace piel::cmd
 
-#endif /* GAVCCACHECLEAN_H_ */
+#endif /* GAVCCACHEINIT_H_ */

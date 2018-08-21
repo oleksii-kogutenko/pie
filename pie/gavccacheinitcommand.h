@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2017, Dmytro Iakovliev daemondzk@gmail.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,10 +13,10 @@
  *     names of its contributors may be used to endorse or promote products
  *     derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY diakovliev ''AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY Dmytro Iakovliev daemondzk@gmail.com ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL diakovliev BE LIABLE FOR ANY
+ * DISCLAIMED. IN NO EVENT SHALL Dmytro Iakovliev daemondzk@gmail.com BE LIABLE FOR ANY
  * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -26,31 +26,36 @@
  *
  */
 
-#ifndef GAVCCACHECLEAN_H_
-#define GAVCCACHECLEAN_H_
+#ifndef GAVCCACHEINITCOMMAND_H
+#define GAVCCACHEINITCOMMAND_H
 
-#include <iostreamsholder.h>
+#include <application.h>
+#include <gavcquery.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
-namespace piel { namespace cmd {
+namespace pie { namespace app {
 
-class GAVCCacheClean: public piel::lib::IOstreamsHolder
+class GavcCacheInitCommand: public ICommand
 {
 public:
-    GAVCCacheClean( const std::string& cache_path
-         , int max_age);
+    GavcCacheInitCommand(Application *app, int argc, char **argv);
+    virtual ~GavcCacheInitCommand();
 
-    virtual ~GAVCCacheClean();
-    void operator()();
+    virtual int perform();
+
+protected:
+    bool parse_arguments();
+    void show_command_help_message(const boost::program_options::options_description& desc);
 
 private:
-    bool clean(boost::filesystem::path path);
+    int argc_;
+    char **argv_;
 
-private:
     std::string cache_path_;
-    int         max_age_;
 };
 
-} } // namespace piel::cmd
+} } // namespace pie::app
 
-#endif /* GAVCCACHECLEAN_H_ */
+#endif // GAVCCACHECLEANCOMMAND_H
