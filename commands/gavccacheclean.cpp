@@ -89,8 +89,8 @@ bool GAVCCacheClean::clean(fs::path path)
             LOGT << "->" << entry.path().c_str() << " do_remove:" << do_remove << " do_remove_entry:" << do_remove_entry << ELOG;
 
             if (do_remove_entry) {
-                std::cout << "Removing " << entry.path().c_str() << std::endl;
-                std::cout.flush();
+                cout() << "Removing " << entry.path().c_str() << std::endl;
+                cout().flush();
 
                 LOGT << "Removing " << entry.path().c_str() << ELOG;
 

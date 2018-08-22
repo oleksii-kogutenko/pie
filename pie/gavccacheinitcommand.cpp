@@ -98,27 +98,9 @@ bool GavcCacheInitCommand::parse_arguments()
         return result;
     }
 
-    try {
-        {
-            piel::cmd::GAVCCacheInit gavccachecheinit(
-                             cache_path_);
+    piel::cmd::GAVCCacheInit gavccachecheinit(cache_path_);
 
-            gavccachecheinit();
-        }
-
-    }
-    catch (piel::cmd::errors::cant_find_version_for_query& ) {
-        std::cerr << "Can't find any version for query!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::gavc_download_file_error& ) {
-        std::cerr << "Can't download file!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::cache_folder_does_not_exist& e) {
-        std::cerr << "cache_folder_does_not_exist: " << e.folder << "!" << std::endl;
-        return -1;
-    }
+    gavccachecheinit();
 
     result = 0;
 
