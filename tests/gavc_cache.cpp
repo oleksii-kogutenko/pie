@@ -29,9 +29,22 @@
 #define BOOST_TEST_MODULE GavcCache
 
 #include <boost/test/unit_test.hpp>
+#include "test_utils.hpp"
+#include "logging.h"
+#include <gavccache.h>
+#include <gavccacheinit.h>
 
-BOOST_AUTO_TEST_CASE(without_cache) {
+namespace fs=boost::filesystem;
+namespace lib=piel::lib;
+namespace cmd=piel::cmd;
 
+BOOST_AUTO_TEST_CASE(cache_init) {
+    fs::path cache_dir = fs::temp_directory_path() / fs::unique_path();
+    cmd::GAVCCache::init(cache_dir.generic_string());
+
+    for (int j = 0; j < 1000000; ++j) {
+        BOOST_CHECK(cmd::GAVCCache::validate(cache_dir.generic_string()));
+    }
 }
 
 #if 0
@@ -45,7 +58,7 @@ BOOST_AUTO_TEST_CASE(without_cache) {
 namespace al=art::lib;
 namespace cmd=piel::cmd;
 namespace lib=piel::lib;
-namespace fs=boost::filesystem;
+
 namespace tst=lib::test_utils;
 
 std::string server_url        = "http://server/art";

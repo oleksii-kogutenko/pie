@@ -72,9 +72,7 @@ GAVCCacheInit::~GAVCCacheInit()
 void GAVCCacheInit::operator()()
 {
     if (!GAVCCache::validate(cache_path_)) {
-        try {
-            fs::remove_all(cache_path_);
-        } catch (...) {}
+        fs::remove_all(cache_path_);
         GAVCCache::init(cache_path_);
     }
 }

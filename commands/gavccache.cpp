@@ -251,10 +251,8 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
 
 /*static*/ void GAVCCache::init(const std::string& cache_path)
 {
-    if (!fs::is_directory(cache_path)) {
-        if (fs::exists(cache_path)) {
-            fs::remove(cache_path);
-        }
+    if (!fs::is_directory(cache_path) || !fs::exists(cache_path)) {
+        fs::remove_all(cache_path);
         fs::create_directories(cache_path);
     }
 

@@ -37,7 +37,7 @@ namespace piel { namespace cmd {
 class GAVCCacheInit: public piel::lib::IOstreamsHolder
 {
 public:
-    GAVCCacheInit( const std::string& cache_path);
+    GAVCCacheInit(const std::string& cache_path);
 
     virtual ~GAVCCacheInit();
     void operator()();
