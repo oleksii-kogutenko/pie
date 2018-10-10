@@ -114,6 +114,8 @@ private:
     paths_list list_of_actual_files_;
     query_results query_results_;
     std::string output_file_;
+    unsigned int max_attempts_;
+    unsigned int retry_timeout_s_;
 };
 
 } } // namespace piel::cmd

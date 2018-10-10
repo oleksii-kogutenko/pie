@@ -90,7 +90,8 @@ public:
     static void init(const std::string& cache_path);
     static bool validate(const std::string& cache_path);
 
-private:
+protected:
+    void perform();
     static std::string now_string();
     bool is_force_offline() const;
     static std::string cache_properties_file(const std::string& cache_path);
@@ -104,6 +105,8 @@ private:
     bool have_to_download_results_;
     std::string output_file_;
     std::string cache_path_;
+    unsigned int max_attempts_;
+    unsigned int retry_timeout_s_;
 };
 
 } } // namespace piel::cmd

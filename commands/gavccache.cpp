@@ -77,6 +77,8 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , have_to_download_results_(have_to_download_results)
     , output_file_(output_file)
     , cache_path_(cache_path)
+    , max_attempts_(3)
+    , retry_timeout_s_(5)
 {
 }
 
@@ -286,7 +288,7 @@ bool GAVCCache::is_force_offline() const
     return offline;
 }
 
-void GAVCCache::operator()()
+void GAVCCache::perform()
 {
     if (!validate(cache_path_)) {
         try {
@@ -382,6 +384,29 @@ void GAVCCache::operator()()
 
             fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
             update_last_access_time(*f);
+        }
+    }
+}
+
+void GAVCCache::operator()()
+{
+    unsigned int        attempt = 0;
+    const unsigned int  max_attempts = std::max(1u, max_attempts_);
+    while(true) {
+        try {
+            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
+            perform();
+            LOGT << "GAVCCache query attempt: " << attempt << " success." <<  ELOG;
+            break;
+        } catch (...) {
+            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " failed." <<  ELOG;
+            if (attempt++ >= max_attempts) {
+                LOGT << "GAVCCache rethrow." << ELOG;
+                throw;
+            } else {
+                LOGT << "GAVCCache sleep: " << retry_timeout_s_ << "s." <<  ELOG;
+                sleep(retry_timeout_s_);
+            }
         }
     }
 }

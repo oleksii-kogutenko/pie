@@ -72,6 +72,8 @@ GAVC::GAVC(const std::string& server_api_access_token
     , list_of_actual_files_()
     , query_results_()
     , output_file_(output_file)
+    , max_attempts_(3)
+    , retry_timeout_s_(5)
 {
 }
 
@@ -446,8 +448,26 @@ void GAVC::process_versions(const std::vector<std::string>& versions_to_process)
 
 void GAVC::operator()()
 {
-    std::vector<std::string> versions_to_process = get_versions_to_process();
-    process_versions(versions_to_process);
+    unsigned int        attempt = 0;
+    const unsigned int  max_attempts = std::max(1u, max_attempts_);
+    while(true) {
+        try {
+            LOGT << "GAVC query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
+            std::vector<std::string> versions_to_process = get_versions_to_process();
+            process_versions(versions_to_process);
+            LOGT << "GAVC query attempt: " << attempt << " success." <<  ELOG;
+            break;
+        } catch (...) {
+            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " failed." <<  ELOG;
+            if (attempt++ >= max_attempts) {
+                LOGT << "GAVCCache rethrow." << ELOG;
+                throw;
+            } else {
+                LOGT << "GAVCCache sleep: " << retry_timeout_s_ << "s." <<  ELOG;
+                sleep(retry_timeout_s_);
+            }
+        }
+    }
 }
 
 void GAVC::set_path_to_download(const boost::filesystem::path& path)
