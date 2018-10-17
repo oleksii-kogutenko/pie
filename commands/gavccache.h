@@ -69,7 +69,10 @@ public:
          , const art::lib::GavcQuery& query
          , const bool have_to_download_results
          , const std::string& cache_path = std::string()
-         , const std::string& output_file = std::string());
+         , const std::string& output_file = std::string()
+         , const std::string& notifications_file = std::string()
+         , unsigned int max_attempts = 3
+         , unsigned int retry_timeout_s = 5);
 
     virtual ~GAVCCache();
 
@@ -107,6 +110,7 @@ private:
     std::string cache_path_;
     unsigned int max_attempts_;
     unsigned int retry_timeout_s_;
+    std::string notifications_file_;
 };
 
 } } // namespace piel::cmd

@@ -67,7 +67,10 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const art::lib::GavcQuery& query
            , const bool have_to_download_results
            , const std::string &cache_path
-           , const std::string& output_file)
+           , const std::string& output_file
+           , const std::string& notifications_file
+           , unsigned int max_attempts
+           , unsigned int retry_timeout_s)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -77,8 +80,9 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , have_to_download_results_(have_to_download_results)
     , output_file_(output_file)
     , cache_path_(cache_path)
-    , max_attempts_(3)
-    , retry_timeout_s_(5)
+    , max_attempts_(max_attempts)
+    , retry_timeout_s_(retry_timeout_s)
+    , notifications_file_(notifications_file)
 {
 }
 
@@ -303,7 +307,8 @@ void GAVCCache::perform()
          server_repository_,
          query_,
          have_to_download_results_,
-         "");
+         "",
+         notifications_file_);
 
     gavc.set_cache_mode(true);
 
@@ -343,12 +348,14 @@ void GAVCCache::perform()
 
     if (offline) {
         for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
-            cout() << "Version: "       << *ver     << std::endl;
+            cout() << "Version: " << *ver << std::endl;
             if (force_offline) {
                 cout() << "Mode: force offline"     << std::endl;
             } else {
                 cout() << "Mode: offline"           << std::endl;
             }
+
+            gavc.notify_gavc_version(*ver);
         }
 
         versions_to_process = versions_to_process_cache;
@@ -391,7 +398,8 @@ void GAVCCache::perform()
 void GAVCCache::operator()()
 {
     unsigned int        attempt = 0;
-    const unsigned int  max_attempts = std::max(1u, max_attempts_);
+    const unsigned int  max_attempts  = std::max(1u, max_attempts_);
+    const unsigned int  retry_timeout = std::max(5u, retry_timeout_s_);
     while(true) {
         try {
             LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
@@ -404,8 +412,8 @@ void GAVCCache::operator()()
                 LOGT << "GAVCCache rethrow." << ELOG;
                 throw;
             } else {
-                LOGT << "GAVCCache sleep: " << retry_timeout_s_ << "s." <<  ELOG;
-                sleep(retry_timeout_s_);
+                LOGT << "GAVCCache sleep: " << retry_timeout << "s." <<  ELOG;
+                sleep(retry_timeout);
             }
         }
     }

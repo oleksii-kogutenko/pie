@@ -64,6 +64,9 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , output_file_()
     , cache_path_(utils::get_default_cache_path())
     , disable_cache_(false)
+    , notifications_file_()
+    , max_attempts_(3)
+    , retry_timeout_s_(5)
 {
 }
 
@@ -88,6 +91,9 @@ bool GavcCommand::parse_arguments()
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
         ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
         ("disable-cache",                                                       "Do not use local cache (enabled by default).")
+        ("notifications,n", po::value<std::string>(&notifications_file_),       "If specified, PIE will generate notifications file with actions details.")
+        ("max-attempts",    po::value<unsigned int>(&max_attempts_),            "Max attempts on IO errors.")
+        ("retry-timeout",   po::value<unsigned int>(&retry_timeout_s_),         "Retry timeout on IO errors.")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -157,7 +163,10 @@ bool GavcCommand::parse_arguments()
                              server_repository_,
                              query_,
                              have_to_download_results_,
-                             output_file_);
+                             output_file_,
+                             notifications_file_,
+                             max_attempts_,
+                             retry_timeout_s_);
 
             if (output_file_.empty()) {
                 gavc.set_path_to_download(boost::filesystem::current_path());
@@ -172,7 +181,10 @@ bool GavcCommand::parse_arguments()
                              query_,
                              have_to_download_results_,
                              cache_path_,
-                             output_file_);
+                             output_file_,
+                             notifications_file_,
+                             max_attempts_,
+                             retry_timeout_s_);
 
             if (output_file_.empty()) {
                 gavccache.set_path_to_download(boost::filesystem::current_path());

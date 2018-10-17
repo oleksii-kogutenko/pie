@@ -82,6 +82,12 @@ public:
     std::string classifier() const      { return data_.classifier; }
     std::string extension() const       { return data_.extension; }
 
+    void set_group(const std::string& group)            { data_.group = group; }
+    void set_name(const std::string& name)              { data_.name = name; }
+    void set_version(const std::string& version)        { data_.version = version; }
+    void set_classifier(const std::string& classifier)  { data_.classifier = classifier; }
+    void set_extension(const std::string& extension)    { data_.extension = extension; }
+
     std::string group_path() const;
 
     boost::optional<std::vector<gavc::OpType> > query_version_ops() const;

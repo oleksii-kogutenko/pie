@@ -31,6 +31,7 @@
 
 #include <gavcquery.h>
 #include <iostreamsholder.h>
+#include <notificationsfile.h>
 #include <properties.h>
 
 #include <boost/property_tree/ptree.hpp>
@@ -73,7 +74,10 @@ public:
          , const std::string& server_repository
          , const art::lib::GavcQuery& query
          , const bool have_to_download_results
-         , const std::string& output_file = std::string());
+         , const std::string& output_file = std::string()
+         , const std::string& notifications_file = std::string()
+         , unsigned int max_attempts = 3
+         , unsigned int retry_timeout_s = 5);
 
     virtual ~GAVC();
 
@@ -85,7 +89,7 @@ public:
     query_results get_query_results() const;
 
     std::vector<std::string> get_versions_to_process() const;
-    void process_versions(const std::vector<std::string>& );
+    void process_versions(const std::vector<std::string>&);
     void process_version(const std::string&);
     std::string get_maven_metadata_path() const;
 
@@ -96,6 +100,8 @@ public:
 
     void set_cache_mode(bool value);
     static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
+
+    void notify_gavc_version(const std::string& version);
 
 protected:
     std::string create_url(const std::string& version_to_query, const std::string& classifier) const;
@@ -116,6 +122,7 @@ private:
     std::string output_file_;
     unsigned int max_attempts_;
     unsigned int retry_timeout_s_;
+    piel::lib::NotificationsFile notifications_file_;
 };
 
 } } // namespace piel::cmd

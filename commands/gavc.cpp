@@ -60,7 +60,10 @@ GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& server_repository
            , const art::lib::GavcQuery& query
            , const bool have_to_download_results
-           , const std::string& output_file)
+           , const std::string& output_file
+           , const std::string& notifications_file
+           , unsigned int max_attempts
+           , unsigned int retry_timeout_s)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -72,8 +75,9 @@ GAVC::GAVC(const std::string& server_api_access_token
     , list_of_actual_files_()
     , query_results_()
     , output_file_(output_file)
-    , max_attempts_(3)
-    , retry_timeout_s_(5)
+    , max_attempts_(max_attempts)
+    , retry_timeout_s_(retry_timeout_s)
+    , notifications_file_(notifications_file)
 {
 }
 
@@ -408,6 +412,8 @@ void GAVC::process_version(const std::string& i)
 {
     LOGT << "Version: " << i << ELOG;
 
+    GAVC::notify_gavc_version(i);
+
     cout() << "Version: "       << i << std::endl;
     cout() << "Mode: online"         << std::endl;
 
@@ -450,6 +456,7 @@ void GAVC::operator()()
 {
     unsigned int        attempt = 0;
     const unsigned int  max_attempts = std::max(1u, max_attempts_);
+    const unsigned int  retry_timeout = std::max(5u, retry_timeout_s_);
     while(true) {
         try {
             LOGT << "GAVC query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
@@ -463,8 +470,8 @@ void GAVC::operator()()
                 LOGT << "GAVCCache rethrow." << ELOG;
                 throw;
             } else {
-                LOGT << "GAVCCache sleep: " << retry_timeout_s_ << "s." <<  ELOG;
-                sleep(retry_timeout_s_);
+                LOGT << "GAVCCache sleep: " << retry_timeout << "s." <<  ELOG;
+                sleep(retry_timeout);
             }
         }
     }
@@ -493,6 +500,17 @@ GAVC::query_results GAVC::get_query_results() const
 void GAVC::set_cache_mode(bool value)
 {
     cache_mode_ = value;
+}
+
+void GAVC::notify_gavc_version(const std::string& version)
+{
+    al::GavcQuery q = query_;
+    q.set_version(version);
+
+    LOGT << "notify version: " << version << " query: " << q.to_string() << ELOG;
+
+    notifications_file_.notify("VERSION", version);
+    notifications_file_.notify("GAVC", q.to_string());
 }
 
 } } // namespace piel::cmd

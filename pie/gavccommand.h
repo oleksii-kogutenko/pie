@@ -70,6 +70,10 @@ private:
     std::string output_file_;
     std::string cache_path_;
     bool disable_cache_;
+
+    std::string notifications_file_;
+    unsigned int max_attempts_;
+    unsigned int retry_timeout_s_;
 };
 
 } } // namespace pie::app
