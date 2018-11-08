@@ -124,9 +124,8 @@ std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path)
     al::GavcVersionsComparator comparator(ops);
     al::GavcVersionsFilter     filter(ops);
 
-    result = filter.filtered(result);
-
     std::sort(result.begin(), result.end(), comparator);
+    result = filter.filtered(result);
 
     return result;
 }
