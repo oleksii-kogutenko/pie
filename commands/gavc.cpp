@@ -301,7 +301,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
     cout() << "? " << object_id << "\r";
     cout().flush();
 
-    bool local_file_is_actual   = validate_local_file(object_path, pl::Properties::from_map(server_checksums));
+    bool local_file_is_actual   = (cache_mode_) ? validate_local_file(object_path, pl::Properties::from_map(server_checksums)) : false;
     bool do_download            = !local_file_is_actual;
 
     if (have_to_download_results_ && do_download)
@@ -309,7 +309,9 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         cout() << "- " << object_id << "\r";
         cout().flush();
 
-        fs::create_directories(object_path.parent_path());
+        if (!object_path.parent_path().string().empty()) {
+            fs::create_directories(object_path.parent_path());
+        }
 
         download_file(object_path, object_id, *op_download_uri);
 
