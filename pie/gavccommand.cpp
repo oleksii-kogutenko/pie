@@ -67,6 +67,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , notifications_file_()
     , max_attempts_(3)
     , retry_timeout_s_(5)
+    , force_offline_(false)
 {
 }
 
@@ -94,6 +95,7 @@ bool GavcCommand::parse_arguments()
         ("notifications,n", po::value<std::string>(&notifications_file_),       "If specified, PIE will generate notifications file with actions details.")
         ("max-attempts",    po::value<unsigned int>(&max_attempts_),            "Max attempts on IO errors.")
         ("retry-timeout",   po::value<unsigned int>(&retry_timeout_s_),         "Retry timeout on IO errors.")
+        ("force-offline,f",                                                     "Forcing offline mode.")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -144,6 +146,7 @@ bool GavcCommand::parse_arguments()
 
     have_to_download_results_   = vm.count("download");
     disable_cache_              = vm.count("disable-cache");
+    force_offline_              = vm.count("force-offline");
 
     return true;
 }
@@ -166,7 +169,8 @@ bool GavcCommand::parse_arguments()
                              output_file_,
                              notifications_file_,
                              max_attempts_,
-                             retry_timeout_s_);
+                             retry_timeout_s_,
+                             force_offline_);
 
             if (output_file_.empty()) {
                 gavc.set_path_to_download(boost::filesystem::current_path());
@@ -184,7 +188,8 @@ bool GavcCommand::parse_arguments()
                              output_file_,
                              notifications_file_,
                              max_attempts_,
-                             retry_timeout_s_);
+                             retry_timeout_s_,
+                             force_offline_);
 
             if (output_file_.empty()) {
                 gavccache.set_path_to_download(boost::filesystem::current_path());

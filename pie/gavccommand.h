@@ -74,6 +74,8 @@ private:
     std::string notifications_file_;
     unsigned int max_attempts_;
     unsigned int retry_timeout_s_;
+
+    bool force_offline_;
 };
 
 } } // namespace pie::app

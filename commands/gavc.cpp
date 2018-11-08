@@ -63,7 +63,8 @@ GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& output_file
            , const std::string& notifications_file
            , unsigned int max_attempts
-           , unsigned int retry_timeout_s)
+           , unsigned int retry_timeout_s
+           , bool force_offline)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -78,6 +79,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , max_attempts_(max_attempts)
     , retry_timeout_s_(retry_timeout_s)
     , notifications_file_(notifications_file)
+    , force_offline_(force_offline)
 {
 }
 

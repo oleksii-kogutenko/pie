@@ -70,7 +70,8 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const std::string& output_file
            , const std::string& notifications_file
            , unsigned int max_attempts
-           , unsigned int retry_timeout_s)
+           , unsigned int retry_timeout_s
+           , bool force_offline)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -83,6 +84,7 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , max_attempts_(max_attempts)
     , retry_timeout_s_(retry_timeout_s)
     , notifications_file_(notifications_file)
+    , force_offline_(force_offline)
 {
 }
 
@@ -283,10 +285,12 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
 
 bool GAVCCache::is_force_offline() const
 {
-    bool offline            = false;
-    const char *offline_str = ::getenv("PIE_GAVC_FORCE_OFFLINE");
-    if (offline_str) {
-        offline = std::string(offline_str) == "1" || std::string(offline_str) == "true";
+    bool offline            = force_offline_;
+    if (!offline) {
+        const char *offline_str = ::getenv("PIE_GAVC_FORCE_OFFLINE");
+        if (offline_str) {
+            offline = std::string(offline_str) == "1" || std::string(offline_str) == "true";
+        }
     }
     LOGT << "Force offline mode: " << offline << ELOG;
     return offline;

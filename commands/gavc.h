@@ -77,7 +77,8 @@ public:
          , const std::string& output_file = std::string()
          , const std::string& notifications_file = std::string()
          , unsigned int max_attempts = 3
-         , unsigned int retry_timeout_s = 5);
+         , unsigned int retry_timeout_s = 5
+         , bool force_offline = false);
 
     virtual ~GAVC();
 
@@ -123,6 +124,7 @@ private:
     unsigned int max_attempts_;
     unsigned int retry_timeout_s_;
     piel::lib::NotificationsFile notifications_file_;
+    bool force_offline_;
 };
 
 } } // namespace piel::cmd
